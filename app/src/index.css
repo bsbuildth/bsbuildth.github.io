@@ -41,6 +41,11 @@ html {
 }
 main > section { scroll-snap-align: start; }
 
+/* Failsafe: if AOS never fires for an element (stale offsets on async-loaded
+   sections), reveal it anyway after a few seconds so content is never stuck. */
+@keyframes aosFailsafe { to { opacity: 1; transform: none; } }
+[data-aos] { animation: aosFailsafe 0.6s ease 4s forwards; }
+
 html, body {
   font-family: var(--font-body);
   background-color: var(--bg);

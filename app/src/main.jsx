@@ -17,6 +17,13 @@ const RootApp = () => {
       easing: 'ease-out-cubic',
     });
 
+    // Firestore data loads async and changes the page height, which makes AOS's
+    // cached trigger offsets stale (sections can stay stuck at opacity:0).
+    // Recalculate after load + a few delays so every section reveals reliably.
+    const refresh = () => { try { AOS.refreshHard(); } catch (e) {} };
+    window.addEventListener('load', refresh);
+    const timers = [600, 1400, 2600, 4000].map(t => setTimeout(refresh, t));
+
     // Custom scroll-reveal for .reveal elements (incl. async Firestore sections)
     initReveal();
 
