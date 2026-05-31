@@ -379,6 +379,28 @@ const Admin = ({ setIsAuthenticated }) => {
     await Promise.all(newProjects.map((p, i) => updateItem('projects', p.id, { sort_order: i })));
   };
 
+  // ── drag-to-reorder for Reference images ──
+  const dragRefIdx = React.useRef(null);
+  const dragOverRefIdx = React.useRef(null);
+  const [dragOverRefId, setDragOverRefId] = React.useState(null);
+
+  const handleRefDragStart = (idx) => { dragRefIdx.current = idx; };
+  const handleRefDragOver = (e, idx, id) => { e.preventDefault(); dragOverRefIdx.current = idx; setDragOverRefId(id); };
+  const handleRefDragLeave = () => setDragOverRefId(null);
+  const handleRefDrop = async () => {
+    setDragOverRefId(null);
+    const from = dragRefIdx.current;
+    const to = dragOverRefIdx.current;
+    if (from === null || to === null || from === to) return;
+    const list = [...references];
+    const [moved] = list.splice(from, 1);
+    list.splice(to, 0, moved);
+    setReferences(list);
+    dragRefIdx.current = null;
+    dragOverRefIdx.current = null;
+    await Promise.all(list.map((r, i) => updateItem('references', r.id, { sort_order: i })));
+  };
+
   const handleManageImages = async (project) => {
     setManagingImagesForProject(project);
     const data = await getProject(project.id);
@@ -1156,6 +1178,7 @@ const Admin = ({ setIsAuthenticated }) => {
         <table className="admin-table" style={{ marginTop: '1.5rem' }}>
           <thead>
             <tr>
+              <th style={{ width: 30 }}></th>
               <th>รูป</th>
               <th>ชื่อ</th>
               <th>หมวด</th>
@@ -1165,12 +1188,21 @@ const Admin = ({ setIsAuthenticated }) => {
             </tr>
           </thead>
           <tbody>
-            {references.map(ref => (
-              <tr key={ref.id}>
+            {references.map((ref, idx) => (
+              <tr
+                key={ref.id}
+                draggable
+                onDragStart={() => handleRefDragStart(idx)}
+                onDragOver={(e) => handleRefDragOver(e, idx, ref.id)}
+                onDragLeave={handleRefDragLeave}
+                onDrop={handleRefDrop}
+                className={dragOverRefId === ref.id ? 'drag-over' : ''}
+              >
+                <td style={{ textAlign: 'center', fontSize: '1.1rem', color: '#bbb', cursor: 'grab', userSelect: 'none' }} title="ลากเพื่อเรียงลำดับ">⠿</td>
                 <td><img src={`${API}${ref.img_path}`} alt={ref.title} style={{ width: 70, height: 50, objectFit: 'cover', borderRadius: 4 }} /></td>
                 <td>{ref.title}</td>
                 <td>{ref.category}</td>
-                <td>{ref.sort_order}</td>
+                <td style={{ textAlign: 'center', color: '#aaa' }}>{idx + 1}</td>
                 <td>
                   <ToggleSwitch checked={!!ref.is_visible} onChange={() => handleToggleRefVisible(ref)} />
                 </td>
