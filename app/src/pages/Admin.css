@@ -237,3 +237,39 @@ body:has(.admin-dashboard) { background: var(--adm-bg); }
   .admin-section { padding: 1.25rem; }
   .admin-form { padding: 1rem; }
 }
+
+/* ── Reference form: tidy, consistent field grid ── */
+.ref-form .ref-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem 1.25rem;
+  margin-top: 0.75rem;
+}
+.ref-field { display: flex; flex-direction: column; gap: 0.4rem; }
+.ref-field label { font-size: 0.82rem; font-weight: 600; color: #444; }
+.ref-field input,
+.ref-field textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d8d8d8;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-family: inherit;
+  background: #fff;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.ref-field textarea { resize: vertical; min-height: 76px; line-height: 1.5; }
+.ref-field input:focus,
+.ref-field textarea:focus {
+  outline: none;
+  border-color: var(--gold, #c19a6b);
+  box-shadow: 0 0 0 3px rgba(193, 154, 107, 0.15);
+}
+.ref-field .ref-file {
+  padding: 0.5rem;
+  background: #faf8f4;
+  cursor: pointer;
+}
+.ref-field--full { margin-top: 1rem; }
+.ref-actions { display: flex; gap: 0.6rem; margin-top: 1.4rem; flex-wrap: wrap; }

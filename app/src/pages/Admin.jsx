@@ -1112,44 +1112,43 @@ const Admin = ({ setIsAuthenticated }) => {
       <section className="admin-section" id="ref-form" style={{ display: activeTab === 'references' ? 'block' : 'none' }}>
         <h2>Manage Reference Images</h2>
 
-        <form className="admin-form" onSubmit={handleAddReference}>
-          <h3>{editingRefId ? 'แก้ไขรูป Reference' : 'เพิ่มรูป Reference ใหม่'}</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div>
+        <form className="admin-form ref-form" onSubmit={handleAddReference}>
+          <h3>{editingRefId ? '✏️ แก้ไขรูป Reference' : '➕ เพิ่มรูป Reference ใหม่'}</h3>
+
+          <div className="ref-form-grid">
+            <div className="ref-field">
               <label>ประเภทห้อง *</label>
               <input value={refRoomType} onChange={e => setRefRoomType(e.target.value)} placeholder="เช่น ห้องนอน, ห้องครัว, ห้องนั่งเล่น" required />
             </div>
-            <div>
+            <div className="ref-field">
               <label>หมวดหมู่</label>
               <input value={refCategory} onChange={e => setRefCategory(e.target.value)} placeholder="เช่น ห้องนั่งเล่น, ห้องนอน, ภายนอก" />
             </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.75rem' }}>
-            <div>
-              <label>รูปภาพ {editingRefId ? '(เว้นว่างถ้าไม่เปลี่ยน)' : '*'}</label>
-              <input type="file" accept="image/*" onChange={e => setRefImage(e.target.files[0])} required={!editingRefId} />
-            </div>
-            <div>
-              <label>ลำดับ (Sort Order)</label>
-              <input type="number" value={refSortOrder} onChange={e => setRefSortOrder(e.target.value)} />
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.75rem' }}>
-            <div>
+            <div className="ref-field">
               <label>Style (สไตล์)</label>
               <input value={refStyle} onChange={e => setRefStyle(e.target.value)} placeholder="เช่น Modern, Luxury, Minimal" />
             </div>
-            <div>
+            <div className="ref-field">
               <label>โทนสี</label>
               <input value={refColorTone} onChange={e => setRefColorTone(e.target.value)} placeholder="เช่น ขาว-ไม้, ดำ-ทอง" />
             </div>
+            <div className="ref-field">
+              <label>ลำดับการแสดง</label>
+              <input type="number" value={refSortOrder} onChange={e => setRefSortOrder(e.target.value)} />
+            </div>
+            <div className="ref-field">
+              <label>รูปภาพ {editingRefId ? '(เว้นว่างถ้าไม่เปลี่ยน)' : '*'}</label>
+              <input className="ref-file" type="file" accept="image/*" onChange={e => setRefImage(e.target.files[0])} required={!editingRefId} />
+            </div>
           </div>
-          <div style={{ marginTop: '0.75rem' }}>
+
+          <div className="ref-field ref-field--full">
             <label>รายละเอียด</label>
-            <textarea value={refDetail} onChange={e => setRefDetail(e.target.value)} rows="3" placeholder="อธิบายงาน/วัสดุ/จุดเด่น..." style={{ width: '100%', fontFamily: 'inherit', padding: '0.5rem' }} />
+            <textarea value={refDetail} onChange={e => setRefDetail(e.target.value)} rows="3" placeholder="อธิบายงาน / วัสดุ / จุดเด่น..." />
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-            <button type="submit" className="btn-primary">{editingRefId ? 'บันทึกการแก้ไข' : 'เพิ่มรูป'}</button>
+
+          <div className="ref-actions">
+            <button type="submit" className="btn-primary">{editingRefId ? '💾 บันทึกการแก้ไข' : '➕ เพิ่มรูป'}</button>
             {editingRefId && <button type="button" className="btn-secondary" onClick={() => { setEditingRefId(null); setRefTitle(''); setRefCategory('ทั่วไป'); setRefSortOrder('0'); setRefImage(null); setRefRoomType(''); setRefStyle(''); setRefColorTone(''); setRefDetail(''); }}>ยกเลิก</button>}
           </div>
         </form>
