@@ -6,8 +6,8 @@ const BeforeAfter = () => {
   const [sliderPos, setSliderPos] = useState(50);
   const containerRef = useRef(null);
   const [images, setImages] = useState({
-    after: '/website/after_living_room.png',
-    before: '/website/before_living_room.png'
+    after: '/after_living_room.png',
+    before: '/before_living_room.png'
   });
   const [loading, setLoading] = useState(true);
 
@@ -23,8 +23,8 @@ const BeforeAfter = () => {
         });
 
         setImages({
-          after: imageMap['before_after_after']?.image_path || '/website/after_living_room.png',
-          before: imageMap['before_after_before']?.image_path || '/website/before_living_room.png'
+          after: imageMap['before_after_after']?.image_path || '/after_living_room.png',
+          before: imageMap['before_after_before']?.image_path || '/before_living_room.png'
         });
       } catch (err) {
         console.error('Error fetching before/after images:', err);

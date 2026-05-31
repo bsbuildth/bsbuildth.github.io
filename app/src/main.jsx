@@ -30,7 +30,7 @@ const RootApp = () => {
   }, []);
 
   return (
-    <BrowserRouter basename="/website/">
+    <BrowserRouter basename="/">
       <App />
     </BrowserRouter>
   );

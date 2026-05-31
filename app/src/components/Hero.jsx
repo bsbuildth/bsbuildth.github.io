@@ -8,7 +8,7 @@ const Hero = () => {
     title: 'EXCEPTIONAL CRAFTSMANSHIP',
     description: 'ต่อเติม · รีโนเวท · ครบวงจร',
   });
-  const [heroImg, setHeroImg] = useState('/website/hero.jpg');
+  const [heroImg, setHeroImg] = useState('/hero.jpg');
   const [mediaType, setMediaType] = useState('image');
   const apiUrl = import.meta.env.VITE_API_URL || '';
   const parallaxRef = useParallax(0.15);
