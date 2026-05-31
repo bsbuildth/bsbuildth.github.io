@@ -15,9 +15,15 @@ const sortBy = (arr, key) =>
   [...arr].sort((a, b) => (Number(a[key] ?? 0)) - (Number(b[key] ?? 0)));
 
 const isVisible = (v) => v === 1 || v === true;
+// "shown" defaults to visible unless explicitly turned off (for collections
+// whose existing docs may not have an is_visible field yet)
+const shown = (v) => v !== 0 && v !== false;
 
 // ─────────────────────────── PUBLIC READS ───────────────────────────
 export async function getProjects() {
+  return sortBy(toArray(await getDocs(collection(db, 'projects'))), 'sort_order').filter((p) => shown(p.is_visible));
+}
+export async function getAllProjects() {
   return sortBy(toArray(await getDocs(collection(db, 'projects'))), 'sort_order');
 }
 
@@ -35,10 +41,16 @@ export async function getAllReviews() {
 }
 
 export async function getCalculatorTypes() {
+  return sortBy(toArray(await getDocs(collection(db, 'calculator_types'))), 'sort_order').filter((c) => shown(c.is_visible));
+}
+export async function getAllCalculatorTypes() {
   return sortBy(toArray(await getDocs(collection(db, 'calculator_types'))), 'sort_order');
 }
 
 export async function getServices() {
+  return sortBy(toArray(await getDocs(collection(db, 'services'))), 'sort_order').filter((s) => shown(s.is_visible));
+}
+export async function getAllServices() {
   return sortBy(toArray(await getDocs(collection(db, 'services'))), 'sort_order');
 }
 
@@ -49,7 +61,9 @@ export async function getBusinessInfo() {
 
 export async function getContentByKey(key) {
   const d = await getDoc(doc(db, 'content', key));
-  return d.exists() ? d.data() : {};
+  if (!d.exists()) return {};
+  const data = d.data();
+  return shown(data.is_visible) ? data : {};
 }
 
 export async function getAllContent() {

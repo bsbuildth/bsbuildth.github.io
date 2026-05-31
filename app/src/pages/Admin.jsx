@@ -5,7 +5,7 @@ import { auth } from '../firebase/config';
 import ToggleSwitch from '../components/ToggleSwitch';
 import './Admin.css';
 import {
-  getProjects, getProject, getAllReviews, getCalculatorTypes, getServices,
+  getAllProjects, getProject, getAllReviews, getAllCalculatorTypes, getAllServices,
   getBusinessInfo, getAllContent, getSettings, getAllReferences, getMenus,
   getImages, getContacts, addItem, updateItem, deleteItem, setItem,
   fileToResizedDataURL,
@@ -18,6 +18,8 @@ const API = '';
 const Admin = ({ setIsAuthenticated }) => {
   const [projects, setProjects] = useState([]);
   const [contacts, setContacts] = useState([]);
+  const [editingContactId, setEditingContactId] = useState(null);
+  const [contactEdit, setContactEdit] = useState({ name: '', contact_info: '', email: '', message: '' });
   const [title, setTitle] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [projectCategory, setProjectCategory] = useState('renovation');
@@ -171,7 +173,7 @@ const Admin = ({ setIsAuthenticated }) => {
   };
 
   const fetchDatabaseServices = () => {
-    getServices().then(data => setDbServices(data)).catch(err => console.error(err));
+    getAllServices().then(data => setDbServices(data)).catch(err => console.error(err));
   };
 
   const fetchWebsiteSettings = () => {
@@ -265,13 +267,46 @@ const Admin = ({ setIsAuthenticated }) => {
     fetchReferences();
   };
 
+  // shown unless explicitly turned off (matches the public-site default)
+  const isShown = (it) => it.is_visible !== 0 && it.is_visible !== false;
+  const handleToggleProjectVisible = async (p) => {
+    await updateItem('projects', p.id, { is_visible: isShown(p) ? 0 : 1 });
+    fetchProjects();
+  };
+  const handleToggleCalcVisible = async (c) => {
+    await updateItem('calculator_types', c.id, { is_visible: isShown(c) ? 0 : 1 });
+    fetchCalculatorTypes();
+  };
+  const handleToggleServiceVisible = async (s) => {
+    await updateItem('services', s.id, { is_visible: isShown(s) ? 0 : 1 });
+    fetchDatabaseServices();
+  };
+  const handleToggleContentVisible = async (c) => {
+    await updateItem('content', c.id, { is_visible: isShown(c) ? 0 : 1 });
+    fetchWebsiteContent();
+  };
+  const handleDeleteContact = async (id) => {
+    if (!window.confirm('ลบข้อความนี้?')) return;
+    await deleteItem('contacts', id);
+    fetchContacts();
+  };
+  const handleEditContact = (c) => {
+    setEditingContactId(c.id);
+    setContactEdit({ name: c.name || '', contact_info: c.contact_info || '', email: c.email || '', message: c.message || '' });
+  };
+  const handleUpdateContact = async () => {
+    await updateItem('contacts', editingContactId, contactEdit);
+    setEditingContactId(null);
+    fetchContacts();
+  };
+
   const handleToggleReviewVisible = async (review) => {
     await updateItem('reviews', review.id, { is_visible: review.is_visible === 1 ? 0 : 1 });
     fetchReviews();
   };
 
   const fetchProjects = () => {
-    getProjects().then(data => setProjects(data)).catch(err => console.error(err));
+    getAllProjects().then(data => setProjects(data)).catch(err => console.error(err));
   };
 
   const fetchContacts = () => {
@@ -279,7 +314,7 @@ const Admin = ({ setIsAuthenticated }) => {
   };
 
   const fetchCalculatorTypes = () => {
-    getCalculatorTypes().then(data => setCalculatorTypes(data)).catch(err => console.error(err));
+    getAllCalculatorTypes().then(data => setCalculatorTypes(data)).catch(err => console.error(err));
   };
 
   const fetchReviews = () => {
@@ -1012,6 +1047,7 @@ const Admin = ({ setIsAuthenticated }) => {
                 <th>ชื่อโครงการ</th>
                 <th>หมวดหมู่</th>
                 <th>รายละเอียด</th>
+                <th>แสดง</th>
                 <th>จัดการ</th>
               </tr>
             </thead>
@@ -1042,6 +1078,7 @@ const Admin = ({ setIsAuthenticated }) => {
                   <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.85rem', color: '#666' }}>
                     {p.description || '-'}
                   </td>
+                  <td><ToggleSwitch checked={isShown(p)} onChange={() => handleToggleProjectVisible(p)} /></td>
                   <td style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                     <button onClick={() => handleEditProject(p)} style={{ background: '#4a6fa5', color: '#fff', border: 'none', borderRadius: 6, padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.8rem' }}>✏️ แก้ไข</button>
                     <button onClick={() => handleManageImages(p)} style={{ background: '#2d8a4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.8rem' }}>📸 รูป</button>
@@ -1104,6 +1141,7 @@ const Admin = ({ setIsAuthenticated }) => {
                 <th>Base Price</th>
                 <th>Image</th>
                 <th>Sort Order</th>
+                <th>แสดง</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -1119,6 +1157,7 @@ const Admin = ({ setIsAuthenticated }) => {
                     )}
                   </td>
                   <td>{t.sort_order}</td>
+                  <td><ToggleSwitch checked={isShown(t)} onChange={() => handleToggleCalcVisible(t)} /></td>
                   <td>
                     <button onClick={() => handleEditCalculatorType(t)} className="btn-edit" style={{ marginRight: '0.5rem' }}>Edit</button>
                     <button onClick={() => handleDeleteCalculatorType(t.id)} className="btn-delete">Delete</button>
@@ -1566,6 +1605,7 @@ const Admin = ({ setIsAuthenticated }) => {
                 <th>Contact (Line/Phone)</th>
                 <th>Email</th>
                 <th>Message</th>
+                <th>จัดการ</th>
               </tr>
             </thead>
             <tbody>
@@ -1575,15 +1615,39 @@ const Admin = ({ setIsAuthenticated }) => {
                   <td>{c.name}</td>
                   <td>{c.contact_info}</td>
                   <td>{c.email || '-'}</td>
-                  <td>{c.message || '-'}</td>
+                  <td style={{ maxWidth: '220px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.message || '-'}</td>
+                  <td style={{ display: 'flex', gap: '0.4rem' }}>
+                    <button onClick={() => handleEditContact(c)} className="btn-edit" style={{ fontSize: '0.8rem' }}>✏️ แก้ไข</button>
+                    <button onClick={() => handleDeleteContact(c.id)} className="btn-delete" style={{ fontSize: '0.8rem' }}>🗑️ ลบ</button>
+                  </td>
                 </tr>
               ))}
               {contacts.length === 0 && (
-                <tr><td colSpan="5" style={{ textAlign:'center' }}>No inquiries yet.</td></tr>
+                <tr><td colSpan="6" style={{ textAlign:'center' }}>No inquiries yet.</td></tr>
               )}
             </tbody>
           </table>
         </div>
+
+        {editingContactId && (
+          <div key={`contact-editor-${editingContactId}`} style={{ marginTop: '1.5rem', padding: '1.5rem', background: '#f5f5f5', borderRadius: 8, maxWidth: 560 }}>
+            <h3 style={{ marginTop: 0 }}>แก้ไขข้อความลูกค้า</h3>
+            <div style={{ display: 'grid', gap: '0.75rem' }}>
+              <div><label style={{ fontSize: '0.82rem', color: '#444', fontWeight: 600 }}>ชื่อ</label>
+                <input value={contactEdit.name} onChange={e => setContactEdit({ ...contactEdit, name: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: 8, border: '1px solid #d8d8d8' }} /></div>
+              <div><label style={{ fontSize: '0.82rem', color: '#444', fontWeight: 600 }}>ติดต่อ (Line/เบอร์)</label>
+                <input value={contactEdit.contact_info} onChange={e => setContactEdit({ ...contactEdit, contact_info: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: 8, border: '1px solid #d8d8d8' }} /></div>
+              <div><label style={{ fontSize: '0.82rem', color: '#444', fontWeight: 600 }}>Email</label>
+                <input value={contactEdit.email} onChange={e => setContactEdit({ ...contactEdit, email: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: 8, border: '1px solid #d8d8d8' }} /></div>
+              <div><label style={{ fontSize: '0.82rem', color: '#444', fontWeight: 600 }}>ข้อความ</label>
+                <textarea rows="3" value={contactEdit.message} onChange={e => setContactEdit({ ...contactEdit, message: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: 8, border: '1px solid #d8d8d8', fontFamily: 'inherit' }} /></div>
+            </div>
+            <div style={{ marginTop: '1rem', display: 'flex', gap: '0.6rem' }}>
+              <button onClick={handleUpdateContact} className="btn btn-solid">บันทึก</button>
+              <button onClick={() => setEditingContactId(null)} className="btn btn-outline">ยกเลิก</button>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="admin-section" style={{ display: activeTab === 'content' ? 'block' : 'none' }}>
@@ -1595,6 +1659,7 @@ const Admin = ({ setIsAuthenticated }) => {
                 <th>Section</th>
                 <th>Key</th>
                 <th>Content</th>
+                <th>แสดง</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -1604,6 +1669,7 @@ const Admin = ({ setIsAuthenticated }) => {
                   <td>{content.section_name}</td>
                   <td>{content.section_key}</td>
                   <td style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{content.thai_content}</td>
+                  <td><ToggleSwitch checked={isShown(content)} onChange={() => handleToggleContentVisible(content)} /></td>
                   <td>
                     <button onClick={() => handleEditContent(content)} className="btn-edit">Edit</button>
                   </td>
@@ -1682,6 +1748,7 @@ const Admin = ({ setIsAuthenticated }) => {
                 <th>Title (Thai)</th>
                 <th>Description</th>
                 <th>Sort Order</th>
+                <th>แสดง</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -1692,6 +1759,7 @@ const Admin = ({ setIsAuthenticated }) => {
                   <td>{s.title_thai}</td>
                   <td style={{ maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.description_thai}</td>
                   <td>{s.sort_order}</td>
+                  <td><ToggleSwitch checked={isShown(s)} onChange={() => handleToggleServiceVisible(s)} /></td>
                   <td>
                     <button onClick={() => handleEditService(s)} className="btn-edit" style={{ marginRight: '0.5rem' }}>Edit</button>
                     <button onClick={() => handleDeleteService(s.id)} className="btn-delete">Delete</button>
