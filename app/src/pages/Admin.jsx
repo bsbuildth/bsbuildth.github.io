@@ -1773,59 +1773,51 @@ const Admin = ({ setIsAuthenticated }) => {
 
       <section className="admin-section" style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
         <h2>Website Settings</h2>
-        <form className="admin-form" onSubmit={handleSaveSettings}>
-          <div className="form-group">
-            <label>Total Projects (e.g., 500+)</label>
-            <input
-              type="text"
-              value={websiteSettings.projects_count || ''}
-              onChange={e => setWebsiteSettings({ ...websiteSettings, projects_count: e.target.value })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Team Members (e.g., 30+)</label>
-            <input
-              type="text"
-              value={websiteSettings.team_count || ''}
-              onChange={e => setWebsiteSettings({ ...websiteSettings, team_count: e.target.value })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Customer Satisfaction (e.g., 95%)</label>
-            <input
-              type="text"
-              value={websiteSettings.satisfaction_percent || ''}
-              onChange={e => setWebsiteSettings({ ...websiteSettings, satisfaction_percent: e.target.value })}
-            />
-          </div>
-          <div className="form-group">
-            <ToggleSwitch
-              checked={websiteSettings.show_about_stats !== false}
-              onChange={checked => setWebsiteSettings({ ...websiteSettings, show_about_stats: checked })}
-              label="Show About Us Stats (300+, 30+, 95%)"
-            />
-          </div>
-          <hr style={{ margin: '1.5rem 0', border: 'none', borderTop: '1px solid #e0e0e0' }} />
-          <h3 style={{ margin: '0 0 1rem', fontSize: '1rem' }}>เปิด/ปิดแต่ละส่วนของหน้าเว็บ</h3>
-          {[
-            { key: 'show_hero', label: 'Hero (แบนเนอร์บนสุด)' },
-            { key: 'show_beforeafter', label: 'Before / After (ก่อน-หลัง)' },
-            { key: 'show_projects', label: 'ผลงานที่ผ่านมา (Featured Projects)' },
-            { key: 'show_reference', label: 'รูปอ้างอิง (Reference)' },
-            { key: 'show_calculator', label: 'ประเมินงบเบื้องต้น (Calculator)' },
-            { key: 'show_about', label: 'เกี่ยวกับเรา (About Us)' },
-            { key: 'show_services', label: 'บริการ (Services)' },
-            { key: 'show_reviews', label: 'รีวิวลูกค้า (Client Reviews)' },
-          ].map(s => (
-            <div className="form-group" key={s.key}>
-              <ToggleSwitch
-                checked={websiteSettings[s.key] !== false}
-                onChange={checked => setWebsiteSettings({ ...websiteSettings, [s.key]: checked })}
-                label={s.label}
-              />
+        <form className="admin-form ws-form" onSubmit={handleSaveSettings}>
+          <div className="ws-card">
+            <h3 className="ws-card-title">📊 สถิติ "เกี่ยวกับเรา"</h3>
+            <div className="ws-grid-3">
+              <div className="ref-field">
+                <label>ผลงานทั้งหมด (เช่น 500+)</label>
+                <input type="text" value={websiteSettings.projects_count || ''} onChange={e => setWebsiteSettings({ ...websiteSettings, projects_count: e.target.value })} />
+              </div>
+              <div className="ref-field">
+                <label>จำนวนทีมงาน (เช่น 30+)</label>
+                <input type="text" value={websiteSettings.team_count || ''} onChange={e => setWebsiteSettings({ ...websiteSettings, team_count: e.target.value })} />
+              </div>
+              <div className="ref-field">
+                <label>ความพึงพอใจ (เช่น 95%)</label>
+                <input type="text" value={websiteSettings.satisfaction_percent || ''} onChange={e => setWebsiteSettings({ ...websiteSettings, satisfaction_percent: e.target.value })} />
+              </div>
             </div>
-          ))}
-          <button type="submit" className="btn btn-solid">Save Settings</button>
+            <div className="ws-toggle-row" style={{ borderBottom: 'none', marginTop: '0.5rem' }}>
+              <span>แสดงแถบสถิติในส่วน "เกี่ยวกับเรา"</span>
+              <ToggleSwitch checked={websiteSettings.show_about_stats !== false} onChange={checked => setWebsiteSettings({ ...websiteSettings, show_about_stats: checked })} />
+            </div>
+          </div>
+
+          <div className="ws-card">
+            <h3 className="ws-card-title">🧩 เปิด/ปิดแต่ละส่วนของหน้าเว็บ</h3>
+            <div className="ws-toggle-grid">
+              {[
+                { key: 'show_hero', label: 'Hero (แบนเนอร์บนสุด)' },
+                { key: 'show_beforeafter', label: 'Before / After (ก่อน-หลัง)' },
+                { key: 'show_projects', label: 'ผลงานที่ผ่านมา' },
+                { key: 'show_reference', label: 'รูปอ้างอิง (Reference)' },
+                { key: 'show_calculator', label: 'ประเมินงบเบื้องต้น' },
+                { key: 'show_about', label: 'เกี่ยวกับเรา (About Us)' },
+                { key: 'show_services', label: 'บริการ (Services)' },
+                { key: 'show_reviews', label: 'รีวิวลูกค้า' },
+              ].map(s => (
+                <div className="ws-toggle-row" key={s.key}>
+                  <span>{s.label}</span>
+                  <ToggleSwitch checked={websiteSettings[s.key] !== false} onChange={checked => setWebsiteSettings({ ...websiteSettings, [s.key]: checked })} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button type="submit" className="btn btn-solid">💾 บันทึกการตั้งค่า</button>
         </form>
       </section>
     </div>
