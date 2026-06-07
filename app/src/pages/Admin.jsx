@@ -7,7 +7,7 @@ import './Admin.css';
 import {
   getAllProjects, getProject, getAllReviews, getAllCalculatorTypes, getAllServices,
   getBusinessInfo, getAllContent, getSettings, getAllReferences, getMenus,
-  getImages, getContacts, getAllArticles, addItem, updateItem, deleteItem, setItem,
+  getImages, getContacts, getAllArticles, getContentByKey, addItem, updateItem, deleteItem, setItem,
   fileToResizedDataURL,
 } from '../firebase/api';
 
@@ -93,6 +93,9 @@ const Admin = ({ setIsAuthenticated }) => {
     notif_line: true,
     notif_messenger: true
   });
+  const [heroTitle, setHeroTitle] = useState('');
+  const [heroSubtitle, setHeroSubtitle] = useState('');
+  const [savingHeroText, setSavingHeroText] = useState(false);
   const [heroBgImage, setHeroBgImage] = useState(null);
   const [heroBgFile, setHeroBgFile] = useState(null);
   const [heroBgUploading, setHeroBgUploading] = useState(false);
@@ -131,7 +134,33 @@ const Admin = ({ setIsAuthenticated }) => {
     fetchMenus();
     fetchHeroBg();
     fetchArticles();
+    fetchHeroText();
   }, []);
+
+  const fetchHeroText = async () => {
+    try {
+      const [t, d] = await Promise.all([
+        getContentByKey('hero_title'),
+        getContentByKey('hero_description'),
+      ]);
+      setHeroTitle(t.thai_content || 'BSBuildTh รับเหมาต่อเติม–รีโนเวทบ้านครบวงจร ย่านเพชรเกษม-บางแค');
+      setHeroSubtitle(d.thai_content || 'ต่อเติม · รีโนเวท · ตกแต่งภายใน — ประสบการณ์กว่า 30 ปี รับประกันงาน 1 ปี');
+    } catch (err) { console.error(err); }
+  };
+
+  const handleSaveHeroText = async () => {
+    setSavingHeroText(true);
+    try {
+      await setItem('content', 'hero_title', { section_key: 'hero_title', section_name: 'Hero', thai_content: heroTitle, is_visible: 1 });
+      await setItem('content', 'hero_description', { section_key: 'hero_description', section_name: 'Hero', thai_content: heroSubtitle, is_visible: 1 });
+      fetchWebsiteContent();
+      alert('บันทึกข้อความ Hero แล้ว!');
+    } catch (err) {
+      alert('❌ ' + err.message);
+    } finally {
+      setSavingHeroText(false);
+    }
+  };
 
   const fetchArticles = () => {
     getAllArticles().then(data => setArticles(data)).catch(err => console.error(err));
@@ -1382,6 +1411,23 @@ const Admin = ({ setIsAuthenticated }) => {
 
       {/* ─── Hero Background (Image or Video) ─── */}
       <section className="admin-section" style={{ display: activeTab === 'hero' ? 'block' : 'none' }}>
+        <h2>🎬 ข้อความ Hero (หัวข้อหลักหน้าแรก)</h2>
+        <div style={{ border: '1.5px solid #e0e0e0', borderRadius: 10, padding: '1.5rem', maxWidth: 640, marginBottom: '2rem' }}>
+          <div className="ref-field" style={{ marginBottom: '1rem' }}>
+            <label>Hero Title (หัวข้อใหญ่ — H1 มีผลต่อ SEO)</label>
+            <textarea value={heroTitle} onChange={e => setHeroTitle(e.target.value)} rows="2"
+              placeholder="เช่น BSBuildTh รับเหมาต่อเติม–รีโนเวทบ้านครบวงจร ย่านเพชรเกษม-บางแค" />
+          </div>
+          <div className="ref-field" style={{ marginBottom: '1rem' }}>
+            <label>Hero Subtitle (คำโปรยใต้หัวข้อ)</label>
+            <textarea value={heroSubtitle} onChange={e => setHeroSubtitle(e.target.value)} rows="2"
+              placeholder="เช่น ต่อเติม · รีโนเวท · ตกแต่งภายใน — ประสบการณ์กว่า 30 ปี รับประกันงาน 1 ปี" />
+          </div>
+          <button className="btn btn-solid" onClick={handleSaveHeroText} disabled={savingHeroText}>
+            {savingHeroText ? '⏳ กำลังบันทึก...' : '💾 บันทึกข้อความ Hero'}
+          </button>
+        </div>
+
         <h2>🖼️ Hero Background (รูป / วิดีโอ)</h2>
         <p style={{ color: '#888', marginBottom: '1rem', fontSize: '0.9rem' }}>
           พื้นหลังของส่วน Hero — รองรับทั้ง <strong>รูปภาพ</strong> และ <strong>วิดีโอเต็มเฟรม</strong>
