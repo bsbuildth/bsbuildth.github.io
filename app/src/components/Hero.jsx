@@ -4,10 +4,8 @@ import { useParallax } from '../lib/motion';
 import './Hero.css';
 
 const Hero = () => {
-  const [content, setContent] = useState({
-    title: 'BSBuildTh รับเหมาต่อเติม–รีโนเวทบ้านครบวงจร ย่านเพชรเกษม-บางแค',
-    description: 'ต่อเติม · รีโนเวท · ตกแต่งภายใน — ประสบการณ์กว่า 30 ปี รับประกันงาน 1 ปี',
-  });
+  // Empty by default — only show what the admin actually fills in (no fallback text)
+  const [content, setContent] = useState({ title: '', description: '' });
   const [heroImg, setHeroImg] = useState('/hero.jpg');
   const [mediaType, setMediaType] = useState('image');
   const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -48,8 +46,8 @@ const Hero = () => {
 
       <div className="container hero-content" data-aos="fade-up">
         <p className="hero-eyebrow">BS BUILD · PROFESSIONAL CONSTRUCTION</p>
-        <h1 className="hero-title">{content.title}</h1>
-        <p className="hero-description">{content.description}</p>
+        {content.title && <h1 className="hero-title">{content.title}</h1>}
+        {content.description && <p className="hero-description">{content.description}</p>}
         <a href="#contact" className="btn btn-solid hero-cta">ปรึกษาฟรี</a>
       </div>
 

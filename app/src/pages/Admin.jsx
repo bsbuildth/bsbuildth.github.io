@@ -143,8 +143,8 @@ const Admin = ({ setIsAuthenticated }) => {
         getContentByKey('hero_title'),
         getContentByKey('hero_description'),
       ]);
-      setHeroTitle(t.thai_content || 'BSBuildTh รับเหมาต่อเติม–รีโนเวทบ้านครบวงจร ย่านเพชรเกษม-บางแค');
-      setHeroSubtitle(d.thai_content || 'ต่อเติม · รีโนเวท · ตกแต่งภายใน — ประสบการณ์กว่า 30 ปี รับประกันงาน 1 ปี');
+      setHeroTitle(t.thai_content || '');
+      setHeroSubtitle(d.thai_content || '');
     } catch (err) { console.error(err); }
   };
 
