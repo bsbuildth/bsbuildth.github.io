@@ -7,7 +7,7 @@ import './Admin.css';
 import {
   getAllProjects, getProject, getAllReviews, getAllCalculatorTypes, getAllServices,
   getBusinessInfo, getAllContent, getSettings, getAllReferences, getMenus,
-  getImages, getContacts, addItem, updateItem, deleteItem, setItem,
+  getImages, getContacts, getAllArticles, addItem, updateItem, deleteItem, setItem,
   fileToResizedDataURL,
 } from '../firebase/api';
 
@@ -20,6 +20,14 @@ const Admin = ({ setIsAuthenticated }) => {
   const [contacts, setContacts] = useState([]);
   const [editingContactId, setEditingContactId] = useState(null);
   const [contactEdit, setContactEdit] = useState({ name: '', contact_info: '', email: '', message: '' });
+  const [articles, setArticles] = useState([]);
+  const [artTitle, setArtTitle] = useState('');
+  const [artSlug, setArtSlug] = useState('');
+  const [artCategory, setArtCategory] = useState('ความรู้');
+  const [artExcerpt, setArtExcerpt] = useState('');
+  const [artContent, setArtContent] = useState('');
+  const [artCover, setArtCover] = useState(null);
+  const [editingArtId, setEditingArtId] = useState(null);
   const [title, setTitle] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [projectCategory, setProjectCategory] = useState('renovation');
@@ -80,6 +88,7 @@ const Admin = ({ setIsAuthenticated }) => {
     show_calculator: true,
     show_about: true,
     show_services: true,
+    show_blog: true,
     notif_email: true,
     notif_line: true,
     notif_messenger: true
@@ -121,7 +130,62 @@ const Admin = ({ setIsAuthenticated }) => {
     fetchNotifSettings();
     fetchMenus();
     fetchHeroBg();
+    fetchArticles();
   }, []);
+
+  const fetchArticles = () => {
+    getAllArticles().then(data => setArticles(data)).catch(err => console.error(err));
+  };
+
+  const slugify = (s) => (s || '')
+    .toString().trim().toLowerCase()
+    .replace(/[\s/]+/g, '-')
+    .replace(/[^฀-๿a-z0-9-]/g, '')
+    .replace(/-+/g, '-').replace(/^-|-$/g, '') || ('post-' + Date.now());
+
+  const handleSaveArticle = async (e) => {
+    e.preventDefault();
+    if (!artTitle.trim()) { alert('กรุณากรอกหัวข้อบทความ'); return; }
+    try {
+      const payload = {
+        title: artTitle.trim(),
+        slug: (artSlug.trim() || slugify(artTitle)),
+        category: artCategory.trim(),
+        excerpt: artExcerpt.trim(),
+        content: artContent,
+      };
+      if (artCover) payload.cover = await fileToResizedDataURL(artCover);
+      if (editingArtId) {
+        await updateItem('articles', editingArtId, payload);
+      } else {
+        await addItem('articles', { ...payload, is_visible: 1, sort_order: articles.length, created_at: new Date().toISOString() });
+      }
+      setArtTitle(''); setArtSlug(''); setArtCategory('ความรู้'); setArtExcerpt('');
+      setArtContent(''); setArtCover(null); setEditingArtId(null);
+      fetchArticles();
+    } catch (err) {
+      alert('❌ ' + err.message);
+    }
+  };
+  const handleEditArticle = (a) => {
+    setEditingArtId(a.id);
+    setArtTitle(a.title || ''); setArtSlug(a.slug || ''); setArtCategory(a.category || 'ความรู้');
+    setArtExcerpt(a.excerpt || ''); setArtContent(a.content || ''); setArtCover(null);
+    window.scrollTo({ top: document.getElementById('article-form')?.offsetTop - 80, behavior: 'smooth' });
+  };
+  const handleDeleteArticle = async (id) => {
+    if (!window.confirm('ลบบทความนี้?')) return;
+    await deleteItem('articles', id);
+    fetchArticles();
+  };
+  const handleToggleArticleVisible = async (a) => {
+    await updateItem('articles', a.id, { is_visible: (a.is_visible === 0 || a.is_visible === false) ? 1 : 0 });
+    fetchArticles();
+  };
+  const cancelEditArticle = () => {
+    setEditingArtId(null); setArtTitle(''); setArtSlug(''); setArtCategory('ความรู้');
+    setArtExcerpt(''); setArtContent(''); setArtCover(null);
+  };
 
   const fetchHeroBg = () => {
     getImages('hero')
@@ -712,7 +776,7 @@ const Admin = ({ setIsAuthenticated }) => {
       // boolean settings — must persist false too (don't gate behind a truthy check)
       const boolKeys = [
         'show_about_stats', 'show_reviews', 'show_hero', 'show_beforeafter',
-        'show_projects', 'show_reference', 'show_calculator', 'show_about', 'show_services',
+        'show_projects', 'show_reference', 'show_calculator', 'show_about', 'show_services', 'show_blog',
       ];
       for (const key of boolKeys) {
         await setItem('settings', key, { setting_key: key, setting_value: websiteSettings[key] !== false });
@@ -753,6 +817,7 @@ const Admin = ({ setIsAuthenticated }) => {
           { key: 'services', label: '🛠️ บริการ' },
           { key: 'calculator', label: '🧮 คำนวณราคา' },
           { key: 'content', label: '📝 เนื้อหา' },
+          { key: 'articles', label: '📰 บทความ' },
           { key: 'hero', label: '🎬 Hero' },
           { key: 'business', label: '🏢 ข้อมูลธุรกิจ' },
           { key: 'notifications', label: '🔔 แจ้งเตือน' },
@@ -1248,6 +1313,66 @@ const Admin = ({ setIsAuthenticated }) => {
                 <td>
                   <button className="btn-edit" onClick={() => handleEditReference(ref)}>แก้ไข</button>
                   <button className="btn-delete" onClick={() => handleDeleteReference(ref.id)}>ลบ</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      {/* ─── Blog / Articles ─── */}
+      <section className="admin-section" id="article-form" style={{ display: activeTab === 'articles' ? 'block' : 'none' }}>
+        <h2>📰 จัดการบทความ (Blog)</h2>
+
+        <form className="admin-form ref-form" onSubmit={handleSaveArticle}>
+          <h3>{editingArtId ? '✏️ แก้ไขบทความ' : '➕ เขียนบทความใหม่'}</h3>
+          <div className="ref-form-grid">
+            <div className="ref-field">
+              <label>หัวข้อบทความ *</label>
+              <input value={artTitle} onChange={e => setArtTitle(e.target.value)} placeholder="เช่น 5 ไอเดียต่อเติมครัวไทยให้โปร่งโล่ง" required />
+            </div>
+            <div className="ref-field">
+              <label>Slug (URL) — เว้นว่าง = สร้างอัตโนมัติ</label>
+              <input value={artSlug} onChange={e => setArtSlug(e.target.value)} placeholder="เช่น kitchen-extension-ideas" />
+            </div>
+            <div className="ref-field">
+              <label>หมวดหมู่</label>
+              <input value={artCategory} onChange={e => setArtCategory(e.target.value)} placeholder="เช่น ความรู้, ไอเดีย" />
+            </div>
+            <div className="ref-field">
+              <label>รูปปก {editingArtId ? '(เว้นว่างถ้าไม่เปลี่ยน)' : ''}</label>
+              <input className="ref-file" type="file" accept="image/*" onChange={e => setArtCover(e.target.files[0])} />
+            </div>
+          </div>
+          <div className="ref-field ref-field--full">
+            <label>เกริ่นนำ (excerpt) — แสดงในการ์ด</label>
+            <textarea value={artExcerpt} onChange={e => setArtExcerpt(e.target.value)} rows="2" placeholder="สรุปสั้นๆ 1-2 ประโยค" />
+          </div>
+          <div className="ref-field ref-field--full">
+            <label>เนื้อหาบทความ (เว้นบรรทัดว่างเพื่อขึ้นย่อหน้าใหม่)</label>
+            <textarea value={artContent} onChange={e => setArtContent(e.target.value)} rows="10" placeholder="เขียนเนื้อหาบทความที่นี่..." />
+          </div>
+          <div className="ref-actions">
+            <button type="submit" className="btn-primary">{editingArtId ? '💾 บันทึก' : '➕ เผยแพร่บทความ'}</button>
+            {editingArtId && <button type="button" className="btn-secondary" onClick={cancelEditArticle}>ยกเลิก</button>}
+          </div>
+        </form>
+
+        <table className="admin-table" style={{ marginTop: '1.5rem' }}>
+          <thead>
+            <tr><th>ปก</th><th>หัวข้อ</th><th>หมวด</th><th>แสดง</th><th>จัดการ</th></tr>
+          </thead>
+          <tbody>
+            {articles.length === 0 && <tr><td colSpan="5" style={{ textAlign: 'center', color: '#888' }}>ยังไม่มีบทความ</td></tr>}
+            {articles.map(a => (
+              <tr key={a.id}>
+                <td>{a.cover ? <img src={a.cover} alt={a.title} style={{ width: 70, height: 46, objectFit: 'cover', borderRadius: 4 }} /> : '—'}</td>
+                <td style={{ maxWidth: 280 }}>{a.title}</td>
+                <td>{a.category}</td>
+                <td><ToggleSwitch checked={isShown(a)} onChange={() => handleToggleArticleVisible(a)} /></td>
+                <td style={{ display: 'flex', gap: '0.4rem' }}>
+                  <button className="btn-edit" onClick={() => handleEditArticle(a)}>แก้ไข</button>
+                  <button className="btn-delete" onClick={() => handleDeleteArticle(a.id)}>ลบ</button>
                 </td>
               </tr>
             ))}
@@ -1808,6 +1933,7 @@ const Admin = ({ setIsAuthenticated }) => {
                 { key: 'show_about', label: 'เกี่ยวกับเรา (About Us)' },
                 { key: 'show_services', label: 'บริการ (Services)' },
                 { key: 'show_reviews', label: 'รีวิวลูกค้า' },
+                { key: 'show_blog', label: 'บทความ (Blog teaser)' },
               ].map(s => (
                 <div className="ws-toggle-row" key={s.key}>
                   <span>{s.label}</span>

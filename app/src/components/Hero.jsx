@@ -5,8 +5,8 @@ import './Hero.css';
 
 const Hero = () => {
   const [content, setContent] = useState({
-    title: 'EXCEPTIONAL CRAFTSMANSHIP',
-    description: 'ต่อเติม · รีโนเวท · ครบวงจร',
+    title: 'BSBuildTh รับเหมาต่อเติม–รีโนเวทบ้านครบวงจร ย่านเพชรเกษม-บางแค',
+    description: 'ต่อเติม · รีโนเวท · ตกแต่งภายใน — ประสบการณ์กว่า 30 ปี รับประกันงาน 1 ปี',
   });
   const [heroImg, setHeroImg] = useState('/hero.jpg');
   const [mediaType, setMediaType] = useState('image');

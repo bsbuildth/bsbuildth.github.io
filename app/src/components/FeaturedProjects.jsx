@@ -128,7 +128,7 @@ const FeaturedProjects = () => {
       onClick={() => { if (!dragRef.current.moved) handleOpenDetail(project); }}
     >
       <div className="project-img-wrapper">
-        <img src={getImgSrc(project.img)} alt={project.title} className="project-img" decoding="async" />
+        <img src={getImgSrc(project.img)} alt={project.title} className="project-img" loading="lazy" decoding="async" />
         <div className="project-shade" />
         <div className="project-caption">
           <span className="project-cat">{CATEGORY_LABELS[project.category] || 'รีโนเวท'}</span>

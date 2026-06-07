@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { getMenus } from '../firebase/api';
 import './Header.css';
 
@@ -7,6 +8,8 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [menus, setMenus] = useState([]);
   const [lang, setLang] = useState('th');
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   useEffect(() => {
     const savedLang = localStorage.getItem('website_lang');
@@ -28,6 +31,22 @@ const Header = () => {
   const toggleMenu = () => setMobileMenuOpen(!mobileMenuOpen);
   const closeMenu = () => setMobileMenuOpen(false);
 
+  // Section links work from any route: scroll if already home, else go home + scroll.
+  const goSection = (e, id) => {
+    closeMenu();
+    if (pathname === '/') {
+      e.preventDefault();
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      e.preventDefault();
+      navigate('/#' + id);
+    }
+  };
+  const goHome = (e) => {
+    closeMenu();
+    if (pathname === '/') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  };
+
   const toggleLang = () => {
     const newLang = lang === 'th' ? 'en' : 'th';
     setLang(newLang);
@@ -40,24 +59,25 @@ const Header = () => {
   return (
     <header className={`header ${scrolled ? 'scrolled' : ''}`}>
       <div className="container header-container">
-        <a
-          href="#"
+        <Link
+          to="/"
           className="logo"
-          onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); closeMenu(); }}
+          onClick={goHome}
           style={{ cursor: 'pointer', textDecoration: 'none' }}
           title="กลับหน้าหลัก"
         >
           <span className="logo-text">BSBuildTh</span>
           <span className="logo-subtext">Professional Construction</span>
-        </a>
+        </Link>
         
         <nav className={`nav-menu ${mobileMenuOpen ? 'active' : ''}`}>
           {menus.length === 0 ? (
             <>
-              <a href="#services" className="nav-link" onClick={closeMenu}>บริการ</a>
-              <a href="#calculator" className="nav-link" onClick={closeMenu}>ประเมินราคา</a>
-              <a href="#projects" className="nav-link" onClick={closeMenu}>ผลงาน</a>
-              <a href="#contact" className="btn btn-solid nav-btn" onClick={closeMenu}>ขอใบเสนอราคา</a>
+              <a href="/#services" className="nav-link" onClick={(e) => goSection(e, 'services')}>บริการ</a>
+              <a href="/#calculator" className="nav-link" onClick={(e) => goSection(e, 'calculator')}>ประเมินราคา</a>
+              <a href="/#projects" className="nav-link" onClick={(e) => goSection(e, 'projects')}>ผลงาน</a>
+              <Link to="/blog" className="nav-link" onClick={closeMenu}>บทความ</Link>
+              <a href="/#contact" className="btn btn-solid nav-btn" onClick={(e) => goSection(e, 'contact')}>ขอใบเสนอราคา</a>
             </>
           ) : (
             <>

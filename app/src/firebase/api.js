@@ -87,6 +87,23 @@ export async function getMenus() {
   return sortBy(toArray(await getDocs(collection(db, 'menus'))), 'sort_order');
 }
 
+// ─────────────────────────── BLOG / ARTICLES ───────────────────────────
+// Newest first: higher sort_order (or created_at) on top.
+const byNewest = (arr) =>
+  [...arr].sort((a, b) => (Number(b.sort_order ?? 0) - Number(a.sort_order ?? 0))
+    || String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')));
+
+export async function getArticles() {
+  return byNewest(toArray(await getDocs(collection(db, 'articles'))).filter((a) => shown(a.is_visible)));
+}
+export async function getAllArticles() {
+  return byNewest(toArray(await getDocs(collection(db, 'articles'))));
+}
+export async function getArticleBySlug(slug) {
+  const all = toArray(await getDocs(collection(db, 'articles')));
+  return all.find((a) => a.slug === slug && shown(a.is_visible)) || null;
+}
+
 export async function getImages(category) {
   const all = toArray(await getDocs(collection(db, 'images')));
   return category ? all.filter((i) => i.image_category === category) : all;

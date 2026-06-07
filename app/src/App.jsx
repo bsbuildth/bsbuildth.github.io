@@ -14,8 +14,11 @@ import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
 import Reference from './components/Reference';
 import LineButton from './components/LineButton';
+import BlogTeaser from './components/BlogTeaser';
 import Admin from './pages/Admin';
 import AdminLogin from './pages/AdminLogin';
+import Blog from './pages/Blog';
+import Article from './pages/Article';
 import { getSettings } from './firebase/api';
 
 const MainSite = () => {
@@ -29,6 +32,17 @@ const MainSite = () => {
         setShow(obj);
       })
       .catch(err => console.error('Error fetching section settings:', err));
+  }, []);
+
+  // Scroll to a #hash target after mount (e.g. arriving from /blog via "/#contact")
+  useEffect(() => {
+    if (window.location.hash) {
+      const id = window.location.hash.slice(1);
+      const t = setTimeout(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+      }, 600);
+      return () => clearTimeout(t);
+    }
   }, []);
 
   // default visible: only hide when the flag is explicitly false
@@ -46,6 +60,7 @@ const MainSite = () => {
         {on('show_about') && <AboutUs />}
         {on('show_services') && <Services />}
         {on('show_reviews') && <Testimonials />}
+        {on('show_blog') && <BlogTeaser />}
         <Footer />
       </main>
       <LineButton />
@@ -76,6 +91,8 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<MainSite />} />
+      <Route path="/blog" element={<Blog />} />
+      <Route path="/blog/:slug" element={<Article />} />
       <Route path="/admin/login" element={<AdminLogin setIsAuthenticated={setIsAuthenticated} />} />
       <Route
         path="/admin"

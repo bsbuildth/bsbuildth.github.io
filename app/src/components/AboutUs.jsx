@@ -73,7 +73,7 @@ const AboutUs = () => {
           }
         </div>
         <div className="about-image-wrapper">
-          <img src="/project_1.png" alt="Professional team at construction site" className="about-image" />
+          <img src="/project_1.png" alt="ทีมงาน BSBuildTh ที่หน้างานก่อสร้าง" className="about-image" loading="lazy" decoding="async" />
           <div className="about-image-accent"></div>
         </div>
       </div>
