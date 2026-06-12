@@ -28,6 +28,11 @@
 
   --maxw: 1280px;
   --ease: cubic-bezier(.22, .61, .36, 1);
+
+  /* Soft layered shadows (warm-tinted to match the paper palette) */
+  --shadow-sm: 0 2px 6px rgba(26, 23, 20, 0.05), 0 8px 24px rgba(26, 23, 20, 0.06);
+  --shadow-md: 0 6px 16px rgba(26, 23, 20, 0.08), 0 18px 40px rgba(26, 23, 20, 0.12);
+  --shadow-lg: 0 12px 28px rgba(26, 23, 20, 0.14), 0 32px 64px rgba(26, 23, 20, 0.18);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -125,19 +130,23 @@ a, button { -webkit-tap-highlight-color: transparent; }
   font-size: .95rem;
   font-weight: 600;
   letter-spacing: .02em;
-  border-radius: 2px;
+  border-radius: 12px;
   border: 1px solid transparent;
+  min-height: 44px; /* comfortable tap target */
   transition: all .3s var(--ease);
 }
 .btn-solid {
   background-color: var(--gold);
   color: #fff;
   border-color: var(--gold);
+  box-shadow: var(--shadow-sm);
 }
 .btn-solid:hover {
   background-color: var(--ink);
   border-color: var(--ink);
   color: #fff;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 .btn-outline {
   background-color: transparent;
@@ -147,6 +156,8 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .btn-outline:hover {
   background-color: var(--ink);
   color: #fff;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 .btn-ghost {
   background: transparent;

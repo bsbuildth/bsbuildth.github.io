@@ -1,8 +1,6 @@
-.about-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(3rem, 6vw, 6rem);
-  align-items: center;
+.about-head {
+  max-width: 720px;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
 }
 
 .text-left { text-align: left; margin-bottom: 1.5rem; }
@@ -10,69 +8,151 @@
 .about-text {
   font-size: 1.12rem;
   color: var(--ink-soft);
-  margin-bottom: 3rem;
   line-height: 1.85;
-  max-width: 46ch;
+  white-space: pre-line;
 }
 
-.about-stats {
+/* ═══ Bento grid (no people photos) ═══ */
+.about-bento {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 1.1rem;
+}
+
+.bento-cell {
+  background: var(--surface);
+  border-radius: 18px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.45s var(--ease), box-shadow 0.45s var(--ease);
+}
+.bento-cell:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+/* large photo tile spans both rows */
+.bento-photo {
+  grid-row: 1 / 3;
+  position: relative;
+  overflow: hidden;
+  min-height: 420px;
+}
+.bento-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s var(--ease);
+}
+.bento-photo:hover img { transform: scale(1.05); }
+.bento-photo-tag {
+  position: absolute;
+  left: 1.1rem;
+  bottom: 1.1rem;
+  z-index: 2;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: rgba(22, 19, 15, 0.55);
+  backdrop-filter: blur(6px);
+  padding: 0.45rem 0.9rem;
+  border-radius: 30px;
+  border: 1px solid rgba(255,255,255,0.25);
+}
+
+/* stats tile spans two columns on the top row */
+.bento-stats {
+  grid-column: 2 / 4;
   display: flex;
-  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: center;
+  justify-content: space-around;
+  gap: 1rem;
+  padding: 1.8rem 1.5rem;
   flex-wrap: wrap;
 }
 
 .stat-item {
   text-align: left;
-  padding-top: 1.5rem;
+  padding-top: 1.1rem;
   border-top: 2px solid var(--gold);
 }
-
 .stat-number {
   font-family: var(--font-display);
-  font-size: clamp(2.4rem, 4vw, 3.2rem);
+  font-size: clamp(2.1rem, 3.4vw, 2.9rem);
   font-weight: 600;
   color: var(--ink);
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.3rem;
   line-height: 1;
   letter-spacing: -0.02em;
 }
-
 .stat-label {
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.74rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--ink-soft);
 }
 
-.about-image-wrapper {
-  position: relative;
-  width: 100%;
-  height: clamp(380px, 48vw, 560px);
+/* guarantee badge */
+.bento-guarantee {
+  padding: 1.7rem 1.6rem;
+  background: linear-gradient(135deg, #221c14 0%, #16130f 100%);
+  color: #f6f3ee;
+}
+.bento-guarantee-icon {
+  display: inline-flex;
+  color: var(--gold);
+  margin-bottom: 0.8rem;
+}
+.bento-guarantee h3 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.4rem;
+  color: #fff;
+}
+.bento-guarantee p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(246, 243, 238, 0.72);
+  line-height: 1.65;
 }
 
-.about-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 6px;
-  position: relative;
-  z-index: 2;
+/* why-us list */
+.bento-why { padding: 1.7rem 1.6rem; }
+.bento-why h3 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 0.9rem;
+}
+.bento-why ul { list-style: none; margin: 0; padding: 0; }
+.bento-why li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  font-size: 0.93rem;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  padding: 0.4rem 0;
+}
+.bento-why li span { color: var(--gold); font-weight: 700; }
+
+@media (max-width: 900px) {
+  .about-bento {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+  }
+  .bento-photo { grid-row: auto; grid-column: 1 / 3; min-height: 300px; }
+  .bento-stats { grid-column: 1 / 3; }
 }
 
-.about-image-accent {
-  position: absolute;
-  top: 1.75rem;
-  right: -1.75rem;
-  width: 100%;
-  height: 100%;
-  background-color: var(--gold);
-  z-index: 1;
-  border-radius: 6px;
-  opacity: 0.16;
-}
-
-@media (max-width: 768px) {
-  .about-container { grid-template-columns: 1fr; }
-  .about-image-accent { right: -1rem; top: 1rem; }
+@media (max-width: 560px) {
+  .about-bento { grid-template-columns: 1fr; }
+  .bento-photo, .bento-stats { grid-column: auto; }
+  .bento-stats { justify-content: flex-start; gap: 1.75rem; }
 }

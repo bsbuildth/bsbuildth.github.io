@@ -89,6 +89,7 @@ const Admin = ({ setIsAuthenticated }) => {
     show_about: true,
     show_services: true,
     show_blog: true,
+    show_process: true,
     notif_email: true,
     notif_line: true,
     notif_messenger: true
@@ -805,7 +806,7 @@ const Admin = ({ setIsAuthenticated }) => {
       // boolean settings — must persist false too (don't gate behind a truthy check)
       const boolKeys = [
         'show_about_stats', 'show_reviews', 'show_hero', 'show_beforeafter',
-        'show_projects', 'show_reference', 'show_calculator', 'show_about', 'show_services', 'show_blog',
+        'show_projects', 'show_reference', 'show_calculator', 'show_about', 'show_services', 'show_blog', 'show_process',
       ];
       for (const key of boolKeys) {
         await setItem('settings', key, { setting_key: key, setting_value: websiteSettings[key] !== false });
@@ -1980,6 +1981,7 @@ const Admin = ({ setIsAuthenticated }) => {
                 { key: 'show_services', label: 'บริการ (Services)' },
                 { key: 'show_reviews', label: 'รีวิวลูกค้า' },
                 { key: 'show_blog', label: 'บทความ (Blog teaser)' },
+                { key: 'show_process', label: 'ขั้นตอนการทำงาน' },
               ].map(s => (
                 <div className="ws-toggle-row" key={s.key}>
                   <span>{s.label}</span>

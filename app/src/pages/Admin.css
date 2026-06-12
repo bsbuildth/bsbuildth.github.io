@@ -161,12 +161,17 @@ body:has(.admin-dashboard) { background: var(--adm-bg); }
   color: #fff;
   border: none;
   padding: .6rem 1.2rem;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
-  transition: filter .15s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: filter .15s, transform .15s ease, box-shadow .15s ease;
 }
-.btn.btn-solid:hover, .btn-primary:hover { filter: brightness(1.07); }
+.btn.btn-solid:hover, .btn-primary:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
 .btn.btn-outline, .btn-secondary {
   background: #fff;
   color: var(--adm-ink);

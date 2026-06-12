@@ -15,6 +15,7 @@ import Footer from './components/Footer';
 import Reference from './components/Reference';
 import LineButton from './components/LineButton';
 import BlogTeaser from './components/BlogTeaser';
+import WorkProcess from './components/WorkProcess';
 import Admin from './pages/Admin';
 import AdminLogin from './pages/AdminLogin';
 import Blog from './pages/Blog';
@@ -57,6 +58,7 @@ const MainSite = () => {
         {on('show_projects') && <FeaturedProjects />}
         {on('show_reference') && <Reference />}
         {on('show_calculator') && <Calculator />}
+        {on('show_process') && <WorkProcess />}
         {on('show_about') && <AboutUs />}
         {on('show_services') && <Services />}
         {on('show_reviews') && <Testimonials />}
