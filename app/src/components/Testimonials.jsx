@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import MarqueeLib from 'react-fast-marquee';
 import { getReviews, getSettings } from '../firebase/api';
 import './Testimonials.css';

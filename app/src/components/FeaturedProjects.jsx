@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getProjects, getProject } from '../firebase/api';
 import './FeaturedProjects.css';
 

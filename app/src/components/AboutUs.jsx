@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { getContentByKey, getSettings } from '../firebase/api';
 import { useCountUp } from '../lib/motion';
 import './AboutUs.css';

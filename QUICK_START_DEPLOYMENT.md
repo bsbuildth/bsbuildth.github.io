@@ -1,3 +1,5 @@
+> เอกสารประวัติ: เนื้อหาด้านล่างอ้างสถานะ/แผนเดิม ไม่ใช่รายการงานปัจจุบัน โปรดใช้ [แผนงานหลัก](docs/project-plan.md) และ [ผลตรวจล่าสุด](docs/validation-current.md) ก่อนดำเนินการ
+
 # Quick Start: GitHub Deployment in 5 Steps
 
 ⚡ **Fast-track deployment guide** | See `DEPLOYMENT.md` for full details

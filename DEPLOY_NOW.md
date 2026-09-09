@@ -1,3 +1,5 @@
+> เอกสารประวัติ: เนื้อหาด้านล่างอ้างสถานะ/แผนเดิม ไม่ใช่รายการงานปัจจุบัน โปรดใช้ [แผนงานหลัก](docs/project-plan.md) และ [ผลตรวจล่าสุด](docs/validation-current.md) ก่อนดำเนินการ
+
 # 🚀 Deploy Backend NOW (One Click Required)
 
 Your website is **95% ready**. Just need to deploy the backend with one simple action.

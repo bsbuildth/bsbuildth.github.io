@@ -1,6 +1,7 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import { getCalculatorTypes, getBusinessInfo, submitContact, getSettings } from '../firebase/api';
 import './Footer.css';
+import { createContactSender } from '../lib/contact';
 
 const Footer = () => {
   const [formData, setFormData] = useState({
@@ -31,8 +32,8 @@ const Footer = () => {
         ]);
 
         setCalculatorTypes(types);
-        if (types.length > 0 && !formData.serviceType) {
-          setFormData(prev => ({ ...prev, serviceType: types[0].type_name }));
+        if (types.length > 0) {
+          setFormData(prev => prev.serviceType ? prev : { ...prev, serviceType: types[0].type_name });
         }
 
         const s = {};
@@ -82,53 +83,31 @@ const Footer = () => {
   };
 
 
+  const [sending, setSending] = useState(false);
+  const sendContact = useMemo(() => createContactSender(submitContact, (data) => {
+    const url = import.meta.env.VITE_APPS_SCRIPT_URL;
+    if (!url) return;
+    return fetch(url, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+      body: JSON.stringify({ ...data, notify: notifEnable }),
+    });
+  }), [notifEnable]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Validation (email is optional — most customers prefer Line or phone)
-    if (!formData.name || !formData.contactInfo || !formData.serviceType) {
-      setStatus('⚠️ โปรดกรอกข้อมูลให้ครบถ้วน');
-      return;
-    }
-
+    if (sending) return;
+    setSending(true);
     setStatus('⏳ กำลังส่ง...');
-
-    // Apps Script URL handles the email notification (still free, serverless).
-    const APPS_SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL ||
-      'https://script.google.com/macros/s/AKfycbw56D651ABDA_cpQWrlqPjNl65RvR-0xkXu8YBqtF3OTRALNqOGuYDbx3AeOsvEMkQDJw/exec';
-
     try {
-      // 1) Save to Firestore so it shows up in the admin inbox
-      await submitContact(formData);
-    } catch (err) {
-      console.error('Firestore submit error:', err);
-    }
-
-    // 2) Fire-and-forget the Apps Script email notification
-    if (APPS_SCRIPT_URL) {
-      fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          contactInfo: formData.contactInfo,
-          email: formData.email,
-          serviceType: formData.serviceType,
-          message: formData.message,
-          notify: notifEnable
-        })
-      }).catch(err => console.error('Apps Script notify error:', err));
-    }
-
-    setStatus('✅ ส่งคำขอประมาณการเรียบร้อย! เราจะติดต่อคุณเร็วที่สุด');
-    setFormData({
-      name: '',
-      contactInfo: '',
-      email: '',
-      message: '',
-      serviceType: calculatorTypes.length > 0 ? calculatorTypes[0].type_name : ''
-    });
+      const saved = await sendContact(formData);
+      if (!saved) return;
+      setStatus('✅ บันทึกคำขอแล้ว เราจะติดต่อกลับตามข้อมูลที่ให้ไว้');
+      setFormData({ name: '', contactInfo: '', email: '', message: '', serviceType: calculatorTypes[0]?.type_name || '' });
+    } catch (error) {
+      console.error('Contact save failed:', error);
+      setStatus('⚠️ บันทึกไม่สำเร็จ กรุณาตรวจข้อมูลและลองอีกครั้ง ข้อมูลของคุณยังอยู่');
+    } finally { setSending(false); }
   };
 
   return (
@@ -162,7 +141,7 @@ const Footer = () => {
         <div className="footer-right">
           <form className="contact-form" onSubmit={handleSubmit} style={{background: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)'}}>
             <h3 style={{marginBottom: '1.5rem', color: 'var(--color-accent)'}}>ขอใบเสนอราคา (Quotation)</h3>
-            <div className="form-group">
+            <fieldset disabled={sending} style={{ border: 0, padding: 0, minWidth: 0 }}><div className="form-group">
               <input type="text" name="name" placeholder="ชื่อ-นามสกุล *" value={formData.name} onChange={handleChange} required style={{background: 'rgba(255, 255, 255, 0.15)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.4)', borderRadius: '4px', padding: '0.75rem', width: '100%'}} />
               <input type="text" name="contactInfo" placeholder="Line ID / เบอร์โทร *" value={formData.contactInfo} onChange={handleChange} required style={{background: 'rgba(255, 255, 255, 0.15)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.4)', borderRadius: '4px', padding: '0.75rem', width: '100%'}} />
             </div>
@@ -184,8 +163,9 @@ const Footer = () => {
             </div>
             <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} style={{marginTop: '1rem', background: 'rgba(255, 255, 255, 0.15)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.4)', borderRadius: '4px', padding: '0.75rem', width: '100%'}} />
             <textarea name="message" placeholder="รายละเอียดงานที่ต้องการ..." rows="3" value={formData.message} onChange={handleChange} style={{marginTop: '1rem', background: 'rgba(255, 255, 255, 0.15)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.4)', borderRadius: '4px', padding: '0.75rem', width: '100%'}}></textarea>
-            <button type="submit" className="btn btn-solid submit-btn" style={{width: '100%'}}>REQUEST QUOTATION</button>
-            {status && <p style={{ marginTop: '1rem', color: status.includes('✅') ? '#4caf50' : '#f44336', textAlign: 'center' }}>{status}</p>}
+            <button type="submit" disabled={sending} className="btn btn-solid submit-btn" style={{width: '100%'}}>{sending ? 'กำลังบันทึก...' : 'ขอใบเสนอราคา'}</button>
+            </fieldset>
+            {status && <p role="status" aria-live="polite" style={{ marginTop: '1rem', color: status.includes('✅') ? '#4caf50' : status.includes('⚠️') ? '#f44336' : '#ffca4b', textAlign: 'center' }}>{status}</p>}
           </form>
         </div>
       </div>

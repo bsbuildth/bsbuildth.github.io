@@ -1,3 +1,5 @@
+> เอกสารประวัติ: เนื้อหาด้านล่างอ้างสถานะ/แผนเดิม ไม่ใช่รายการงานปัจจุบัน โปรดใช้ [แผนงานหลัก](docs/project-plan.md) และ [ผลตรวจล่าสุด](docs/validation-current.md) ก่อนดำเนินการ
+
 # GitHub Deployment Infrastructure Guide
 
 This document explains how to set up and deploy your full-stack application using GitHub Actions.

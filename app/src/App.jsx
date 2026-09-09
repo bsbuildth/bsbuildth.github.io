@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onIdTokenChanged } from 'firebase/auth';
 import { auth } from './firebase/config';
 import './index.css';
 import Header from './components/Header';
@@ -16,11 +16,14 @@ import Reference from './components/Reference';
 import LineButton from './components/LineButton';
 import BlogTeaser from './components/BlogTeaser';
 import WorkProcess from './components/WorkProcess';
-import Admin from './pages/Admin';
-import AdminLogin from './pages/AdminLogin';
-import Blog from './pages/Blog';
-import Article from './pages/Article';
+const Admin = lazy(() => import('./pages/Admin'));
+const AdminLogin = lazy(() => import('./pages/AdminLogin'));
+const Blog = lazy(() => import('./pages/Blog'));
+const Article = lazy(() => import('./pages/Article'));
+import { hasAdminClaim } from './lib/admin-access';
 import { getSettings } from './firebase/api';
+
+const Quotations = lazy(() => import('./pages/Quotations'));
 
 const MainSite = () => {
   const [show, setShow] = useState({});
@@ -79,11 +82,17 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsAuthenticated(!!user);
-      setLoading(false);
+    let generation = 0;
+    const unsubscribe = onIdTokenChanged(auth, async (user) => {
+      const current = ++generation;
+      setIsAuthenticated(false);
+      try {
+        const token = user ? await user.getIdTokenResult() : null;
+        if (current === generation) setIsAuthenticated(hasAdminClaim(token?.claims));
+      } catch { if (current === generation) setIsAuthenticated(false); }
+      finally { if (current === generation) setLoading(false); }
     });
-    return unsubscribe;
+    return () => { generation++; unsubscribe(); };
   }, []);
 
   if (loading) {
@@ -91,7 +100,7 @@ function App() {
   }
 
   return (
-    <Routes>
+    <Suspense fallback={<p role="status">กำลังโหลด...</p>}><Routes>
       <Route path="/" element={<MainSite />} />
       <Route path="/blog" element={<Blog />} />
       <Route path="/blog/:slug" element={<Article />} />
@@ -100,7 +109,9 @@ function App() {
         path="/admin"
         element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<Admin setIsAuthenticated={setIsAuthenticated} />} />}
       />
-    </Routes>
+      <Route path="/admin/quotations" element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<Quotations />} />} />
+      <Route path="*" element={<main className="container"><h1>ไม่พบหน้านี้</h1><a href="/">กลับหน้าแรก</a></main>} />
+    </Routes></Suspense>
   );
 }
 

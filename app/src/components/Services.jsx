@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { FeatherIcon } from './IconMap';
 import { getServices } from '../firebase/api';
 import './Services.css';

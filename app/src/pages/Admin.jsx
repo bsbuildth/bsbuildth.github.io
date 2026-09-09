@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase/config';
@@ -6,7 +6,7 @@ import ToggleSwitch from '../components/ToggleSwitch';
 import './Admin.css';
 import {
   getAllProjects, getProject, getAllReviews, getAllCalculatorTypes, getAllServices,
-  getBusinessInfo, getAllContent, getSettings, getAllReferences, getMenus,
+  getBusinessInfo, getAllContent, getSettings, getAllReferences,
   getImages, getContacts, getAllArticles, getContentByKey, addItem, updateItem, deleteItem, setItem,
   fileToResizedDataURL,
 } from '../firebase/api';
@@ -65,7 +65,6 @@ const Admin = ({ setIsAuthenticated }) => {
     landmark: ''
   });
   const [websiteContent, setWebsiteContent] = useState([]);
-  const [contentKey, setContentKey] = useState('');
   const [contentName, setContentName] = useState('');
   const [contentValue, setContentValue] = useState('');
   const [editingContentId, setEditingContentId] = useState(null);
@@ -105,10 +104,9 @@ const Admin = ({ setIsAuthenticated }) => {
     line:     { enabled: false, config: { channel_access_token: '', admin_user_id: '' } },
     facebook: { enabled: false, config: { page_access_token: '', admin_psid: '' } }
   });
-  const [notifTestResult, setNotifTestResult] = useState({});
-  const [notifTesting, setNotifTesting] = useState({});
+  const [notifTestResult] = useState({});
+  const [notifTesting] = useState({});
   const [references, setReferences] = useState([]);
-  const [refTitle, setRefTitle] = useState('');
   const [refCategory, setRefCategory] = useState('ทั่วไป');
   const [refImage, setRefImage] = useState(null);
   const [refSortOrder, setRefSortOrder] = useState('0');
@@ -118,36 +116,17 @@ const Admin = ({ setIsAuthenticated }) => {
   const [refDetail, setRefDetail] = useState('');
   const [editingRefId, setEditingRefId] = useState(null);
   const [activeTab, setActiveTab] = useState('inbox');
-  const [menus, setMenus] = useState([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchProjects();
-    fetchContacts();
-    fetchCalculatorTypes();
-    fetchReviews();
-    fetchBusinessInfo();
-    fetchWebsiteContent();
-    fetchDatabaseServices();
-    fetchWebsiteSettings();
-    fetchReferences();
-    fetchNotifSettings();
-    fetchMenus();
-    fetchHeroBg();
-    fetchArticles();
-    fetchHeroText();
+  const fetchHeroText = useCallback(() => {
+    return Promise.all([
+      getContentByKey('hero_title'),
+      getContentByKey('hero_description'),
+    ]).then(([title, description]) => {
+      setHeroTitle(title.thai_content || '');
+      setHeroSubtitle(description.thai_content || '');
+    }).catch(err => console.error(err));
   }, []);
-
-  const fetchHeroText = async () => {
-    try {
-      const [t, d] = await Promise.all([
-        getContentByKey('hero_title'),
-        getContentByKey('hero_description'),
-      ]);
-      setHeroTitle(t.thai_content || '');
-      setHeroSubtitle(d.thai_content || '');
-    } catch (err) { console.error(err); }
-  };
 
   const handleSaveHeroText = async () => {
     setSavingHeroText(true);
@@ -163,9 +142,9 @@ const Admin = ({ setIsAuthenticated }) => {
     }
   };
 
-  const fetchArticles = () => {
+  const fetchArticles = useCallback(() => {
     getAllArticles().then(data => setArticles(data)).catch(err => console.error(err));
-  };
+  }, []);
 
   const slugify = (s) => (s || '')
     .toString().trim().toLowerCase()
@@ -217,14 +196,14 @@ const Admin = ({ setIsAuthenticated }) => {
     setArtExcerpt(''); setArtContent(''); setArtCover(null);
   };
 
-  const fetchHeroBg = () => {
+  const fetchHeroBg = useCallback(() => {
     getImages('hero')
       .then(data => {
         const bg = Array.isArray(data) ? data.find(i => i.image_key === 'hero_background') : null;
         if (bg) setHeroBgImage(bg);
       })
       .catch(err => console.error(err));
-  };
+  }, []);
 
   const handleUploadHeroBg = async () => {
     if (!heroBgFile) { alert('กรุณาเลือกไฟล์รูปก่อน'); return; }
@@ -248,29 +227,15 @@ const Admin = ({ setIsAuthenticated }) => {
     setHeroBgUploading(false);
   };
 
-  const fetchMenus = () => {
-    getMenus().then(data => setMenus(data)).catch(err => console.error(err));
-  };
-
-  const handleUpdateMenu = async (id, thai, eng) => {
-    try {
-      await updateItem('menus', id, { label_thai: thai, label_english: eng });
-      alert('Menu updated successfully!');
-      fetchMenus();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchWebsiteContent = () => {
+  const fetchWebsiteContent = useCallback(() => {
     getAllContent().then(data => setWebsiteContent(data)).catch(err => console.error(err));
-  };
+  }, []);
 
-  const fetchDatabaseServices = () => {
+  const fetchDatabaseServices = useCallback(() => {
     getAllServices().then(data => setDbServices(data)).catch(err => console.error(err));
-  };
+  }, []);
 
-  const fetchWebsiteSettings = () => {
+  const fetchWebsiteSettings = useCallback(() => {
     getSettings()
       .then(data => {
         const settingsObj = {};
@@ -278,15 +243,14 @@ const Admin = ({ setIsAuthenticated }) => {
         setWebsiteSettings(settingsObj);
       })
       .catch(err => console.error(err));
-  };
+  }, []);
 
-  const fetchReferences = () => {
+  const fetchReferences = useCallback(() => {
     getAllReferences().then(data => setReferences(data)).catch(err => console.error(err));
-  };
+  }, []);
 
   // Notifications run server-side (email/LINE/FB) and aren't available on the
   // serverless static host — the section is hidden in the JSX below.
-  const fetchNotifSettings = () => {};
   const handleSaveNotif = async () => {};
   const handleTestNotif = async () => {};
 
@@ -328,7 +292,7 @@ const Admin = ({ setIsAuthenticated }) => {
       } else {
         await addItem('references', { ...payload, is_visible: 1 });
       }
-      setRefTitle(''); setRefCategory('ทั่วไป'); setRefImage(null);
+      setRefCategory('ทั่วไป'); setRefImage(null);
       setRefSortOrder('0'); setEditingRefId(null);
       setRefRoomType(''); setRefStyle(''); setRefColorTone(''); setRefDetail('');
       fetchReferences();
@@ -339,7 +303,7 @@ const Admin = ({ setIsAuthenticated }) => {
 
   const handleEditReference = (ref) => {
     setEditingRefId(ref.id);
-    setRefTitle(ref.title);
+
     setRefCategory(ref.category);
     setRefSortOrder(String(ref.sort_order));
     setRefRoomType(ref.room_type || '');
@@ -399,23 +363,23 @@ const Admin = ({ setIsAuthenticated }) => {
     fetchReviews();
   };
 
-  const fetchProjects = () => {
+  const fetchProjects = useCallback(() => {
     getAllProjects().then(data => setProjects(data)).catch(err => console.error(err));
-  };
+  }, []);
 
-  const fetchContacts = () => {
+  const fetchContacts = useCallback(() => {
     getContacts().then(data => setContacts(data)).catch(err => console.error(err));
-  };
+  }, []);
 
-  const fetchCalculatorTypes = () => {
+  const fetchCalculatorTypes = useCallback(() => {
     getAllCalculatorTypes().then(data => setCalculatorTypes(data)).catch(err => console.error(err));
-  };
+  }, []);
 
-  const fetchReviews = () => {
+  const fetchReviews = useCallback(() => {
     getAllReviews().then(data => setReviews(data)).catch(err => console.error(err));
-  };
+  }, []);
 
-  const fetchBusinessInfo = () => {
+  const fetchBusinessInfo = useCallback(() => {
     getBusinessInfo()
       .then(data => {
         setBusinessInfo({
@@ -431,7 +395,22 @@ const Admin = ({ setIsAuthenticated }) => {
         });
       })
       .catch(err => console.error(err));
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchProjects();
+    fetchContacts();
+    fetchCalculatorTypes();
+    fetchReviews();
+    fetchBusinessInfo();
+    fetchWebsiteContent();
+    fetchDatabaseServices();
+    fetchWebsiteSettings();
+    fetchReferences();
+    fetchHeroBg();
+    fetchArticles();
+    fetchHeroText();
+  }, [fetchProjects, fetchContacts, fetchCalculatorTypes, fetchReviews, fetchBusinessInfo, fetchWebsiteContent, fetchDatabaseServices, fetchWebsiteSettings, fetchReferences, fetchHeroBg, fetchArticles, fetchHeroText]);
 
   const handleAddProject = async (e) => {
     e.preventDefault();
@@ -726,14 +705,14 @@ const Admin = ({ setIsAuthenticated }) => {
 
   const handleEditContent = (content) => {
     setEditingContentId(content.id);
-    setContentKey(content.section_key);
+
     setContentName(content.section_name);
     setContentValue(content.thai_content);
   };
 
   const handleCancelContentEdit = () => {
     setEditingContentId(null);
-    setContentKey('');
+
     setContentName('');
     setContentValue('');
   };
@@ -829,6 +808,7 @@ const Admin = ({ setIsAuthenticated }) => {
           </div>
         </div>
         <div className="admin-header-actions">
+          <button className="admin-btn" onClick={() => navigate('/admin/quotations')}>ใบเสนอราคา</button>
           <button onClick={() => navigate('/')} className="admin-btn admin-btn-ghost">
             ← กลับหน้าเว็บ
           </button>
@@ -1305,7 +1285,7 @@ const Admin = ({ setIsAuthenticated }) => {
 
           <div className="ref-actions">
             <button type="submit" className="btn-primary">{editingRefId ? '💾 บันทึกการแก้ไข' : '➕ เพิ่มรูป'}</button>
-            {editingRefId && <button type="button" className="btn-secondary" onClick={() => { setEditingRefId(null); setRefTitle(''); setRefCategory('ทั่วไป'); setRefSortOrder('0'); setRefImage(null); setRefRoomType(''); setRefStyle(''); setRefColorTone(''); setRefDetail(''); }}>ยกเลิก</button>}
+            {editingRefId && <button type="button" className="btn-secondary" onClick={() => { setEditingRefId(null); setRefCategory('ทั่วไป'); setRefSortOrder('0'); setRefImage(null); setRefRoomType(''); setRefStyle(''); setRefColorTone(''); setRefDetail(''); }}>ยกเลิก</button>}
           </div>
         </form>
 
@@ -1999,5 +1979,4 @@ const Admin = ({ setIsAuthenticated }) => {
 };
 
 export default Admin;
-
 

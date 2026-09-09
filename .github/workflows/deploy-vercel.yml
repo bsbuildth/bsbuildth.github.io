@@ -1,18 +1,13 @@
-name: Deploy Backend to Vercel
+name: Legacy Backend - Manual Vercel Deploy
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'api/**'
-      - '.github/workflows/deploy-vercel.yml'
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Deploy API to Vercel
         run: |

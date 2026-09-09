@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getReferences } from '../firebase/api';
 import './Reference.css';
 
@@ -29,11 +29,7 @@ const Reference = () => {
 
   const getImgSrc = (p) => p?.startsWith('http') ? p : `${apiUrl}${p}`;
 
-  const openLightbox = (img, idx) => { setLightbox(img); setLightboxIdx(idx); };
   const closeLightbox = () => setLightbox(null);
-
-  // reset the open accordion panel whenever the category filter changes
-  useEffect(() => { setActiveIdx(0); }, [filter]);
 
   const goPrev = useCallback(() => {
     if (lightboxIdx > 0) { setLightboxIdx(lightboxIdx - 1); setLightbox(filtered[lightboxIdx - 1]); }
@@ -54,9 +50,6 @@ const Reference = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, [lightbox, goPrev, goNext]);
 
-  // Assign size variant for masonry feel: tall / wide / normal
-  const sizeMap = ['normal', 'tall', 'normal', 'wide', 'normal', 'normal', 'tall', 'wide'];
-
   return (
     <section className="ref-section" id="reference">
       {/* Header */}
@@ -75,7 +68,7 @@ const Reference = () => {
             <button
               key={cat}
               className={`ref-tab ${filter === cat ? 'active' : ''}`}
-              onClick={() => setFilter(cat)}
+              onClick={() => { setFilter(cat); setActiveIdx(0); }}
             >
               {cat}
               <span className="ref-tab-count">{countFor(cat)}</span>
