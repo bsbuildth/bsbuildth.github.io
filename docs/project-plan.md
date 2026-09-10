@@ -27,7 +27,7 @@
 
 1. เพิ่ม `bsbuildth@gmail.com` เป็นสมาชิกของ Firebase/Google Cloud โปรเจกต์ `bs-build` จากบัญชีเจ้าของโปรเจกต์ บัญชีนี้เข้าสู่ Firebase CLI สำเร็จแล้วแต่ยังไม่มีสิทธิ์โปรเจกต์
 2. สำรอง Firestore แล้วรันคำสั่ง dry run สำหรับ visibility/media; ตรวจจำนวนก่อน `--apply`
-3. ตั้ง custom claim `admin` ให้บัญชี `bsbuildth@gmail.com` และให้ผู้ใช้ล็อกอินใหม่เพื่อรับ token ใหม่
+3. ตั้ง custom claim `admin` ให้ทั้งบัญชีเดิม `songyos2528@gmail.com` และบัญชีใหม่ `bsbuildth@gmail.com` แล้วให้ผู้ใช้ล็อกอินใหม่เพื่อรับ token ใหม่
 4. deploy Firestore/Storage Rules และตัวแปร GitHub Actions โดยเฉพาะ Firebase config, `VITE_USE_STORAGE` และ Apps Script URL ถ้ายังใช้การแจ้งเตือน
 5. ทดสอบ smoke test ด้วยข้อมูลสมมติบน production: หน้าแรก, บทความ, ฟอร์ม, admin, บันทึกร่าง, ออก revision และ Save as PDF
 6. push branch และเปิด PR เมื่อสิทธิ์ GitHub แบบเขียนพร้อมใช้งาน

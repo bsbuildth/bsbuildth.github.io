@@ -2,15 +2,17 @@
 import { initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
-const [operation, project, confirm] = process.argv.slice(2);
-if (!['grant-admin', 'visibility'].includes(operation) || !project) throw new Error('Usage: node scripts/admin-maintenance.mjs grant-admin|visibility PROJECT_ID [--apply]');
+const [operation, project, value, applyFlag] = process.argv.slice(2);
+if (!['grant-admin', 'visibility'].includes(operation) || !project) throw new Error('Usage: node scripts/admin-maintenance.mjs grant-admin PROJECT_ID EMAIL [--apply] | visibility PROJECT_ID [--apply]');
 initializeApp({ credential: applicationDefault(), projectId: project });
 if (operation === 'grant-admin') {
-  const user = await getAuth().getUserByEmail('bsbuildth@gmail.com');
+  if (!value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) throw new Error('Provide the administrator email');
+  const user = await getAuth().getUserByEmail(value.toLowerCase());
   if (!user.emailVerified) throw new Error('Verify the administrator email first');
-  if (confirm === '--apply') await getAuth().setCustomUserClaims(user.uid, { ...user.customClaims, admin: true });
-  console.log(confirm === '--apply' ? 'Admin claim applied; sign in again.' : 'Verified account found. Dry run; no claims changed.');
+  if (applyFlag === '--apply') await getAuth().setCustomUserClaims(user.uid, { ...user.customClaims, admin: true });
+  console.log(applyFlag === '--apply' ? `Admin claim applied to ${user.email}; sign in again.` : `Verified account found: ${user.email}. Dry run; no claims changed.`);
 } else {
+  const confirm = value;
   const db = getFirestore(); let count = 0;
   for (const col of ['projects','reviews','calculator_types','services','content','references','articles']) {
     const snap = await db.collection(col).get();
