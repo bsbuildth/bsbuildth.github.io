@@ -7,6 +7,7 @@ on:
     paths:
       - 'app/**'
       - '.github/workflows/deploy-frontend.yml'
+      - '.github/workflows/check-frontend.yml'
 
 permissions:
   contents: write
@@ -14,22 +15,27 @@ permissions:
   id-token: write
 
 jobs:
+  checks:
+    uses: ./.github/workflows/check-frontend.yml
   deploy:
+    needs: checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
 
       - name: Install dependencies
-        run: cd app && npm install
+        run: cd app && npm ci
 
       - name: Build
         run: cd app && npm run build
         env:
+          BUILD_PUBLIC_SITEMAP: 'true'
+          VITE_USE_STORAGE: ${{ vars.VITE_USE_STORAGE }}
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}

@@ -33,6 +33,10 @@ export function initReveal() {
   scan();
   const mo = new MutationObserver(scan);
   mo.observe(document.body, { childList: true, subtree: true });
+  return () => {
+    io.disconnect();
+    mo.disconnect();
+  };
 }
 
 /** Parallax: translate an element on scroll. speed ~0.1–0.4 (fraction of scroll). */
@@ -68,9 +72,9 @@ export function useParallax(speed = 0.25) {
  * scroll drives horizontal movement of an inner track. Desktop only
  * (>=992px) and disabled under reduced-motion — otherwise the section is a
  * normal-height vertical block (CSS handles the grid fallback).
- * Pass deps (e.g. [filteredCount]) so it recomputes when content changes.
+ * Pass a stable dependency key (for example filteredCount) to recompute when content changes.
  */
-export function useHorizontalPin(deps = []) {
+export function useHorizontalPin(dependencyKey = null) {
   const sectionRef = useRef(null);
   const trackRef = useRef(null);
   useEffect(() => {
@@ -111,8 +115,7 @@ export function useHorizontalPin(deps = []) {
       window.removeEventListener('resize', layout);
       if (raf) cancelAnimationFrame(raf);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
+  }, [dependencyKey]);
 
   return { sectionRef, trackRef };
 }

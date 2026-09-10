@@ -1,0 +1,13 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /website/{file} {
+      allow read: if true;
+      allow create: if request.auth != null && request.auth.token.admin == true
+        && request.resource.size < 25 * 1024 * 1024
+        && request.resource.contentType.matches('(image/(jpeg|png|webp)|video/mp4)');
+      allow delete: if request.auth != null && request.auth.token.admin == true;
+      allow update: if false;
+    }
+  }
+}

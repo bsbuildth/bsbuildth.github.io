@@ -1,9 +1,11 @@
+import { validateMedia, validateDocument } from '../lib/media';
 // Central data-access layer for the BS Build website, backed by Firestore.
 // Every function returns data in the same shape the components already expect
 // (id + flat fields) so the migration from the old REST API is drop-in.
+import { validateContact } from '../lib/contact';
 import { db } from './config';
 import {
-  collection, getDocs, getDoc, doc, query, orderBy,
+  collection, getDocs, getDoc, doc, query, orderBy, where, limit,
   addDoc, updateDoc, deleteDoc, setDoc, serverTimestamp,
 } from 'firebase/firestore';
 
@@ -17,11 +19,12 @@ const sortBy = (arr, key) =>
 const isVisible = (v) => v === 1 || v === true;
 // "shown" defaults to visible unless explicitly turned off (for collections
 // whose existing docs may not have an is_visible field yet)
-const shown = (v) => v !== 0 && v !== false;
+const shown = (v) => v === 1 || v === true;
+const publicCollection = name => query(collection(db, name), where('is_visible', 'in', [true, 1]));
 
 // ─────────────────────────── PUBLIC READS ───────────────────────────
 export async function getProjects() {
-  return sortBy(toArray(await getDocs(collection(db, 'projects'))), 'sort_order').filter((p) => shown(p.is_visible));
+  return sortBy(toArray(await getDocs(publicCollection('projects'))), 'sort_order').filter((p) => shown(p.is_visible));
 }
 export async function getAllProjects() {
   return sortBy(toArray(await getDocs(collection(db, 'projects'))), 'sort_order');
@@ -33,7 +36,7 @@ export async function getProject(id) {
 }
 
 export async function getReviews() {
-  return sortBy(toArray(await getDocs(collection(db, 'reviews'))), 'sort_order').filter((r) => isVisible(r.is_visible));
+  return sortBy(toArray(await getDocs(publicCollection('reviews'))), 'sort_order').filter((r) => isVisible(r.is_visible));
 }
 
 export async function getAllReviews() {
@@ -41,14 +44,14 @@ export async function getAllReviews() {
 }
 
 export async function getCalculatorTypes() {
-  return sortBy(toArray(await getDocs(collection(db, 'calculator_types'))), 'sort_order').filter((c) => shown(c.is_visible));
+  return sortBy(toArray(await getDocs(publicCollection('calculator_types'))), 'sort_order').filter((c) => shown(c.is_visible));
 }
 export async function getAllCalculatorTypes() {
   return sortBy(toArray(await getDocs(collection(db, 'calculator_types'))), 'sort_order');
 }
 
 export async function getServices() {
-  return sortBy(toArray(await getDocs(collection(db, 'services'))), 'sort_order').filter((s) => shown(s.is_visible));
+  return sortBy(toArray(await getDocs(publicCollection('services'))), 'sort_order').filter((s) => shown(s.is_visible));
 }
 export async function getAllServices() {
   return sortBy(toArray(await getDocs(collection(db, 'services'))), 'sort_order');
@@ -76,7 +79,7 @@ export async function getSettings() {
 }
 
 export async function getReferences() {
-  return sortBy(toArray(await getDocs(collection(db, 'references'))), 'sort_order').filter((r) => isVisible(r.is_visible));
+  return sortBy(toArray(await getDocs(publicCollection('references'))), 'sort_order').filter((r) => isVisible(r.is_visible));
 }
 
 export async function getAllReferences() {
@@ -94,14 +97,14 @@ const byNewest = (arr) =>
     || String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')));
 
 export async function getArticles() {
-  return byNewest(toArray(await getDocs(collection(db, 'articles'))).filter((a) => shown(a.is_visible)));
+  return byNewest(toArray(await getDocs(publicCollection('articles'))).filter((a) => shown(a.is_visible)));
 }
 export async function getAllArticles() {
   return byNewest(toArray(await getDocs(collection(db, 'articles'))));
 }
 export async function getArticleBySlug(slug) {
-  const all = toArray(await getDocs(collection(db, 'articles')));
-  return all.find((a) => a.slug === slug && shown(a.is_visible)) || null;
+  const snap = await getDocs(query(collection(db, 'articles'), where('slug', '==', slug), where('is_visible', 'in', [true, 1]), limit(1)));
+  return toArray(snap)[0] || null;
 }
 
 export async function getImages(category) {
@@ -110,7 +113,8 @@ export async function getImages(category) {
 }
 
 // ─────────────────────────── CONTACT FORM ───────────────────────────
-export async function submitContact(data) {
+export async function submitContact(input) {
+  const data = validateContact(input);
   return addDoc(collection(db, 'contacts'), {
     name: data.name,
     contact_info: data.contactInfo,
@@ -135,10 +139,10 @@ export async function getContacts() {
 }
 
 // ─────────────────────────── ADMIN CRUD ───────────────────────────
-export const addItem = (col, data) => addDoc(collection(db, col), data);
-export const updateItem = (col, id, data) => updateDoc(doc(db, col, String(id)), data);
+export const addItem = (col, data) => addDoc(collection(db, col), validateDocument({ is_visible: 1, ...data }));
+export const updateItem = (col, id, data) => updateDoc(doc(db, col, String(id)), validateDocument(data));
 export const deleteItem = (col, id) => deleteDoc(doc(db, col, String(id)));
-export const setItem = (col, id, data) => setDoc(doc(db, col, String(id)), data, { merge: true });
+export const setItem = (col, id, data) => setDoc(doc(db, col, String(id)), validateDocument(data), { merge: true });
 
 // ─────────────────────────── IMAGE HELPERS ───────────────────────────
 // Resize an image File client-side and return a JPEG data URL small enough to
@@ -153,9 +157,16 @@ export function fileToDataURL(file) {
   });
 }
 
-export function fileToResizedDataURL(file, maxW = 1280, quality = 0.8) {
+export async function fileToResizedDataURL(file, maxW = 1280, quality = 0.8) {
+  validateMedia(file);
+  if (import.meta.env.VITE_USE_STORAGE === 'true') {
+    const { getStorage, ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+    const target = ref(getStorage(), `website/${crypto.randomUUID()}`);
+    await uploadBytes(target, file, { contentType: file.type });
+    return getDownloadURL(target);
+  }
   // Videos / non-images: just return the raw data URL (caller should warn on size).
-  if (!file.type.startsWith('image/')) return fileToDataURL(file);
+  if (!file.type.startsWith('image/')) throw new Error('การอัปโหลดวิดีโอต้องเปิดใช้ที่เก็บสื่อก่อน');
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -166,7 +177,9 @@ export function fileToResizedDataURL(file, maxW = 1280, quality = 0.8) {
         canvas.width = Math.round(img.width * scale);
         canvas.height = Math.round(img.height * scale);
         canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        const result = canvas.toDataURL('image/jpeg', quality);
+        if (result.length > 650_000) { reject(new Error('รูปยังมีขนาดใหญ่เกินไป กรุณาลดขนาดภาพ')); return; }
+        resolve(result);
       };
       img.onerror = reject;
       img.src = e.target.result;

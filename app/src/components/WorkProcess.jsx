@@ -1,4 +1,3 @@
-import React from 'react';
 import './WorkProcess.css';
 
 const STEPS = [

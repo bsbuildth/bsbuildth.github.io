@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { getImages, getContentByKey } from '../firebase/api';
 import { useParallax } from '../lib/motion';
 import './Hero.css';

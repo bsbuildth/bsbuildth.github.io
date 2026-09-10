@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { getMenus } from '../firebase/api';
 import './Header.css';
@@ -7,14 +7,11 @@ const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [menus, setMenus] = useState([]);
-  const [lang, setLang] = useState('th');
+  const [lang, setLang] = useState(() => localStorage.getItem('website_lang') || 'th');
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
   useEffect(() => {
-    const savedLang = localStorage.getItem('website_lang');
-    if (savedLang) setLang(savedLang);
-
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };

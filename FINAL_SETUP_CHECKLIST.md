@@ -1,3 +1,5 @@
+> เอกสารประวัติ: เนื้อหาด้านล่างอ้างสถานะ/แผนเดิม ไม่ใช่รายการงานปัจจุบัน โปรดใช้ [แผนงานหลัก](docs/project-plan.md) และ [ผลตรวจล่าสุด](docs/validation-current.md) ก่อนดำเนินการ
+
 # ✅ Final Setup Checklist - Website Fully Functional
 
 Your website is **almost completely ready**. Follow this checklist to make it fully operational.

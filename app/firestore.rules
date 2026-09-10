@@ -1,29 +1,56 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Public content collections: anyone may read; only an authenticated
-    // admin may write.
-    match /projects/{id}        { allow read; allow write: if request.auth != null; }
-    match /reviews/{id}         { allow read; allow write: if request.auth != null; }
-    match /calculator_types/{id}{ allow read; allow write: if request.auth != null; }
-    match /services/{id}        { allow read; allow write: if request.auth != null; }
-    match /business_info/{id}   { allow read; allow write: if request.auth != null; }
-    match /content/{id}         { allow read; allow write: if request.auth != null; }
-    match /settings/{id}        { allow read; allow write: if request.auth != null; }
-    match /references/{id}      { allow read; allow write: if request.auth != null; }
-    match /menus/{id}           { allow read; allow write: if request.auth != null; }
-    match /images/{id}          { allow read; allow write: if request.auth != null; }
-    match /articles/{id}        { allow read; allow write: if request.auth != null; }
-
-    // Contact submissions: anyone may create (with basic field validation),
-    // but only an authenticated admin may read / update / delete.
+    function admin() { return request.auth != null && request.auth.token.admin == true; }
+    function visible() { return resource.data.is_visible in [true, 1]; }
+    match /{col}/{id} {
+      allow read: if col in ['projects','reviews','calculator_types','services','content','references','articles'] && (admin() || visible());
+      allow write: if col in ['projects','reviews','calculator_types','services','content','references','articles'] && admin();
+      allow read: if col in ['business_info','settings','menus','images'];
+      allow write: if col in ['business_info','settings','menus','images'] && admin();
+    }
     match /contacts/{id} {
-      allow create: if request.resource.data.name is string
-                    && request.resource.data.name.size() > 0
-                    && request.resource.data.contact_info is string
-                    && request.resource.data.contact_info.size() > 0;
-      allow read, update, delete: if request.auth != null;
+      allow create: if request.resource.data.keys().hasOnly(['name','contact_info','email','service_type','message','created_at'])
+        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 120
+        && request.resource.data.contact_info is string && request.resource.data.contact_info.size() > 0 && request.resource.data.contact_info.size() <= 160
+        && request.resource.data.email is string && request.resource.data.email.size() <= 254
+        && request.resource.data.service_type is string && request.resource.data.service_type.size() > 0 && request.resource.data.service_type.size() <= 160
+        && request.resource.data.message is string && request.resource.data.message.size() <= 5000
+        && request.resource.data.created_at == request.time;
+      allow read, update, delete: if admin();
+    }
+    match /quotations/{id} {
+      allow read: if admin();
+      allow create: if admin() && request.resource.data.status == 'draft' && request.resource.data.version == 1 && request.resource.data.revision == 0;
+      allow update: if admin() && request.resource.data.version == resource.data.version + 1
+        && (
+          (resource.data.status == 'draft' && request.resource.data.status == 'draft' && request.resource.data.revision == resource.data.revision)
+          || (resource.data.status == 'draft' && request.resource.data.status == 'issued'
+            && request.resource.data.revision == resource.data.revision + 1
+            && getAfter(/databases/$(database)/documents/quotations/$(id)/revisions/$(string(request.resource.data.revision))).data.quote == request.resource.data.quote
+            && getAfter(/databases/$(database)/documents/quotationNumbers/$(request.resource.data.quote.number)).data.quotationId == id)
+          || (resource.data.status == 'issued' && request.resource.data.status in ['draft','void']
+            && request.resource.data.quote == resource.data.quote && request.resource.data.revision == resource.data.revision
+            && request.resource.data.reason is string && request.resource.data.reason.size() > 0)
+        );
+      match /revisions/{revision} {
+        allow read: if admin();
+        allow create: if admin()
+          && get(/databases/$(database)/documents/quotations/$(id)).data.status == 'draft'
+          && request.resource.data.revision == get(/databases/$(database)/documents/quotations/$(id)).data.revision + 1
+          && revision == string(request.resource.data.revision)
+          && getAfter(/databases/$(database)/documents/quotations/$(id)).data.status == 'issued'
+          && request.resource.data.quote == getAfter(/databases/$(database)/documents/quotations/$(id)).data.quote;
+        allow update, delete: if false;
+      }
+    }
+    match /quotationNumbers/{number} {
+      allow read: if admin();
+      allow create: if admin()
+        && getAfter(/databases/$(database)/documents/quotations/$(request.resource.data.quotationId)).data.status == 'issued'
+        && getAfter(/databases/$(database)/documents/quotations/$(request.resource.data.quotationId)).data.quote.number == number;
+      allow update: if admin() && request.resource.data == resource.data;
+      allow delete: if false;
     }
   }
 }
