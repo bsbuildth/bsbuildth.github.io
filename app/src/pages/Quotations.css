@@ -96,6 +96,16 @@
 .quote-signatures>div{flex:1;border:1px dashed #cbd4e5;padding:15px}
 .quote-signatures span{display:block;margin-top:35px}
 .quote-watermark{text-align:center;background:#fff4cc;padding:8px}
+.quote-revision-badge{display:inline-block;margin:3px 0;padding:3px 9px;border-radius:999px;background:#e8efff;color:#17387a;font-weight:800;letter-spacing:.08em}
+.receipt-copy-label{margin:-5px 0 7px;text-align:right;color:#233e89;font-size:14px;font-weight:800;letter-spacing:.06em}
+.receipt-copies{display:grid;gap:24px}
+.receipt-copies .receipt-draft{max-width:210mm;box-sizing:border-box;margin:0 auto -12px;width:100%}
+.receipt-table th:first-child{width:auto}.receipt-table th:last-child{width:180px;text-align:right}
+.receipt-edit-table th:first-child{width:auto}.receipt-edit-table th:nth-child(2){width:180px}.receipt-edit-table th:last-child{width:52px}
+.receipt-edit-table td{padding:5px}.receipt-edit-table textarea{resize:vertical}
+.receipt-payment{margin:12px 0;padding:10px;border:1px solid #ccd5e5;background:#f8faff}
+.receipt-payment p{margin:3px 0}
+.receipt-form .quote-form-customer{grid-template-columns:1fr 1fr}
 .quote-payment,.quote-signatures,.quote-totals{break-inside:avoid}
 
 @media(max-width:700px){
@@ -138,4 +148,8 @@
   .quote-signatures{margin-top:8px}
   .quote-signatures>div{padding:7px}
   .quote-signatures span{margin-top:18px}
+  .receipt-copies{display:block}
+  .receipt-paper{break-after:page;min-height:275mm}
+  .receipt-paper:last-child{break-after:auto}
+  .receipt-draft{display:none!important}
 }

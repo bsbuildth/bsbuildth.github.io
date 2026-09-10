@@ -16,7 +16,16 @@ test('guest only reads published content; ordinary account has no admin access',
  await assertSucceeds(getDoc(doc(guest,'articles','public')));await assertFails(getDoc(doc(guest,'articles','draft')));
  await assertFails(getDocs(collection(guest,'articles')));await assertSucceeds(getDocs(query(collection(guest,'articles'),where('is_visible','in',[true,1]))));
  for(const db of [guest,user]){await assertFails(getDoc(doc(db,'contacts','private')));await assertFails(setDoc(doc(db,'articles','write'),{is_visible:1}));await assertFails(getDocs(collection(db,'quotations')));}
+ for(const db of [guest,user])await assertFails(getDocs(collection(db,'receipts')));
  await assertSucceeds(getDoc(doc(admin,'contacts','private')));
+});
+test('receipt number is unique and issued receipt is immutable',async()=>{
+ const ref=doc(admin,'receipts','r1'),receipt={number:'RC-TEST',payer:'Example'};
+ await assertSucceeds(setDoc(ref,{receipt,status:'draft',version:1}));
+ const batch=writeBatch(admin);batch.update(ref,{receipt,status:'issued',version:2});batch.set(doc(admin,'receiptNumbers','RC-TEST'),{receiptId:'r1'});await assertSucceeds(batch.commit());
+ await assertFails(updateDoc(ref,{receipt:{number:'CHANGED'},status:'issued',version:3}));
+ await assertFails(deleteDoc(ref));
+ await assertFails(setDoc(doc(admin,'receiptNumbers','RC-TEST'),{receiptId:'other'}));
 });
 test('contact schema rejects oversize and additional fields',async()=>{
  const valid={name:'Example',contact_info:'000',email:'',service_type:'test',message:'',created_at:serverTimestamp()};

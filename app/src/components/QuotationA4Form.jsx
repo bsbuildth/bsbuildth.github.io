@@ -1,6 +1,6 @@
 import { money } from '../lib/quotation';
 
-export default function QuotationA4Form({ quote, calculation, locked, actions, edit, sectionEdit, itemEdit, addItem, removeItem, addSection, removeSection }) {
+export default function QuotationA4Form({ quote, revision = 0, calculation, locked, actions, edit, sectionEdit, itemEdit, addItem, removeItem, addSection, removeSection }) {
   const totals = calculation.totals;
   return <article className="quote-paper quote-a4-form">
     <div className="quote-form-actions">{actions}</div>
@@ -10,7 +10,7 @@ export default function QuotationA4Form({ quote, calculation, locked, actions, e
           <label>ผู้เสนอราคา<input value={quote.seller} maxLength="300" onChange={e => edit('seller', e.target.value)} /></label>
           <label>เบอร์ผู้เสนอราคา<input value={quote.sellerPhone} maxLength="300" onChange={e => edit('sellerPhone', e.target.value)} /></label>
         </div>
-        <div><h1>ใบเสนอราคา</h1><label>เลขเอกสาร<input value={quote.number} maxLength="50" placeholder="QT-001" onChange={e => edit('number', e.target.value)} /></label><label>วันที่<input type="date" value={quote.date} onChange={e => edit('date', e.target.value)} /></label></div>
+        <div><h1>ใบเสนอราคา</h1><p className="quote-revision-badge">REV. {String(revision).padStart(2, '0')}</p><label>เลขเอกสาร<input value={quote.number} maxLength="50" placeholder="QT-001" onChange={e => edit('number', e.target.value)} /></label><label>วันที่<input type="date" value={quote.date} onChange={e => edit('date', e.target.value)} /></label></div>
       </header>
 
       <section className="quote-customer quote-form-customer">
