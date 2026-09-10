@@ -809,6 +809,7 @@ const Admin = ({ setIsAuthenticated }) => {
         </div>
         <div className="admin-header-actions">
           <button className="admin-btn" onClick={() => navigate('/admin/quotations')}>ใบเสนอราคา</button>
+          <button className="admin-btn" onClick={() => navigate('/admin/receipts')}>ใบเสร็จรับเงิน</button>
           <button onClick={() => navigate('/')} className="admin-btn admin-btn-ghost">
             ← กลับหน้าเว็บ
           </button>

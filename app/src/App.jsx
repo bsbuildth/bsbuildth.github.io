@@ -24,6 +24,7 @@ import { hasAdminAccess } from './lib/admin-access';
 import { getSettings } from './firebase/api';
 
 const Quotations = lazy(() => import('./pages/Quotations'));
+const Receipts = lazy(() => import('./pages/Receipts'));
 
 const MainSite = () => {
   const [show, setShow] = useState({});
@@ -110,6 +111,7 @@ function App() {
         element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<Admin setIsAuthenticated={setIsAuthenticated} />} />}
       />
       <Route path="/admin/quotations" element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<Quotations />} />} />
+      <Route path="/admin/receipts" element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<Receipts />} />} />
       <Route path="*" element={<main className="container"><h1>ไม่พบหน้านี้</h1><a href="/">กลับหน้าแรก</a></main>} />
     </Routes></Suspense>
   );

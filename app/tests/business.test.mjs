@@ -4,6 +4,7 @@ import { demoQuote, calculateQuote, validateIssue } from '../src/lib/quotation.j
 import { createContactSender } from '../src/lib/contact.js';
 import { hasAdminAccess, hasAdminClaim } from '../src/lib/admin-access.js';
 import { validateMedia, validateDocument } from '../src/lib/media.js';
+import { newReceipt, calculateReceipt, validateReceipt } from '../src/lib/receipt.js';
 test('sample quotation totals, free item and installments match the reference', () => {
  const q = demoQuote(), r = validateIssue(q);
  assert.equal(r.main,5501000); assert.equal(r.optional,4450000); assert.equal(r.total,9951000);
@@ -35,4 +36,14 @@ test('admin and media limits fail closed', () => {
  assert.throws(()=>validateMedia({type:'image/svg+xml',size:100}));
  assert.throws(()=>validateMedia({type:'video/mp4',size:25*1024*1024}));
  assert.throws(()=>validateDocument({text:'x'.repeat(800001)}));
+});
+test('receipt created from quotation totals and validates printable amount', () => {
+ const quote=demoQuote(),totals=calculateQuote(quote),receipt=newReceipt({quote,totals});
+ receipt.number='RC-001';
+ const result=validateReceipt(receipt);
+ assert.equal(result.total,totals.total);
+ assert.equal(receipt.quoteNumber,quote.number);
+ receipt.items.push({id:'extra',description:'ชำระเพิ่ม',amount:'0.01'});
+ assert.equal(calculateReceipt(receipt).total,totals.total+1);
+ receipt.items[0].amount='1.001';assert.throws(()=>calculateReceipt(receipt));
 });

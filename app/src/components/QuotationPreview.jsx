@@ -4,7 +4,7 @@ export default function QuotationPreview({ quote, status = 'draft', revision = 0
   try { totals = calculateQuote(quote); } catch (error) { return <p role="alert">{error.message}</p>; }
   const date = new Date(`${quote.date}T12:00:00`);
   return <article className="quote-paper">
-    <header className="quote-heading"><div><h2>{quote.seller || 'ผู้เสนอราคา'}</h2><p>{quote.sellerPhone}</p></div><div><h1>ใบเสนอราคา</h1><p>{quote.number || 'ยังไม่กำหนดเลข'} / ฉบับที่ {revision}</p><p>{Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('th-TH', { dateStyle: 'long' })}</p></div></header>
+    <header className="quote-heading"><div><h2>{quote.seller || 'ผู้เสนอราคา'}</h2><p>{quote.sellerPhone}</p></div><div><h1>ใบเสนอราคา</h1><p>{quote.number || 'ยังไม่กำหนดเลข'} / REV. {String(revision).padStart(2, '0')}</p><p>{Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('th-TH', { dateStyle: 'long' })}</p></div></header>
     {status !== 'issued' && <p className="quote-watermark">{status === 'void' ? 'ยกเลิกเอกสาร' : 'ฉบับร่าง — ยังไม่ได้ออกเอกสาร'}</p>}
     <div className="quote-customer"><p><b>ลูกค้า:</b> {quote.customer} · {quote.phone}</p><p><b>โครงการ:</b> {quote.project}</p></div>
     <table className="quote-table"><thead><tr><th>รายการ</th><th>จำนวน</th><th>ราคา/หน่วย</th><th>จำนวนเงิน (บาท)</th></tr></thead>
