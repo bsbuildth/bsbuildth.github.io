@@ -14,7 +14,23 @@
 .quotation-workspace input:not([type=checkbox]),.quotation-workspace textarea,.quotation-workspace select{display:block;width:100%;padding:9px;border:1px solid #b6c1d1;border-radius:4px;font:inherit;background:#fff;color:#18253c}
 .quotation-workspace fieldset{border:1px solid #c8d2df;padding:18px;min-width:0}
 .quote-edit-section{margin:16px 0;padding:12px;background:#edf2f9}
-.quote-item{padding:10px;border-bottom:1px solid #c8d2df}
+.quote-item{position:relative;padding:14px;margin:10px 0;border:1px solid #c8d2df;border-radius:10px;background:#fff}
+.quote-item-number{position:absolute;top:12px;right:12px;color:#62708a;font-weight:700}
+.quote-description{padding-right:48px}
+.quote-item-grid{display:grid;grid-template-columns:minmax(90px,.6fr) minmax(90px,.6fr) minmax(150px,1fr) minmax(170px,1fr);gap:12px;align-items:end}
+.quote-line-total,.quote-installment output{display:flex;min-height:44px;flex-direction:column;justify-content:center;padding:8px 12px;border-radius:7px;background:#eef3ff;color:#213c77}
+.quote-line-total span,.quote-installment output span{font-size:12px;color:#60708c}
+.quote-line-total strong,.quote-installment output strong{font-size:17px}
+.quote-line-total small{color:#26724c}
+.quote-installment{display:grid;grid-template-columns:1fr 180px auto;gap:12px;align-items:end;margin:10px 0;padding:12px;border:1px solid #d7dfeb;border-radius:9px}
+.quote-live-summary{margin-top:22px;padding:16px;border:1px solid #9fb4dd;border-radius:12px;background:linear-gradient(135deg,#f5f8ff,#e8efff)}
+.quote-live-summary>div{display:flex;justify-content:space-between;gap:16px;padding:5px 0}
+.quote-live-grand{margin-top:7px;padding-top:12px!important;border-top:1px solid #aebfe0;font-size:19px;color:#17387a}
+.quote-live-summary p{margin:8px 0 0;color:#26724c}
+.quote-live-summary.has-error{border-color:#dba7a7;background:#fff5f5}
+.quote-live-summary.has-error p{color:#9a2d2d}
+.quote-sticky-controls{position:sticky;bottom:10px;z-index:5;padding:12px;border:1px solid #cbd6e7;border-radius:10px;background:rgba(255,255,255,.96);box-shadow:0 8px 24px rgba(28,48,88,.14)}
+.quotation-workspace .quote-save{background:#244795;color:#fff;border-color:#244795;font-weight:700}
 .quote-message{padding:16px;background:#edf2ff;color:#213c77}
 .quote-controls{margin:16px 0}
 .quote-preview{overflow:auto;padding:24px 0}
@@ -47,6 +63,7 @@
   .quotation-workspace{padding:12px}
   .quote-layout{grid-template-columns:1fr}
   .quote-sidebar{max-height:240px;overflow:auto}
+  .quote-item-grid,.quote-installment{grid-template-columns:1fr}
   .quote-paper{padding:12px;font-size:12px}
   .quote-heading{gap:8px}
   .quote-heading h1{font-size:21px}

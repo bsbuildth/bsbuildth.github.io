@@ -1,7 +1,7 @@
 import { collection, doc, getDocs, query, orderBy, limit, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from './config';
 import { validateDocument } from '../lib/media';
-import { validateIssue } from '../lib/quotation';
+import { calculateQuote, validateIssue } from '../lib/quotation';
 
 export const listQuotes = async () => (await getDocs(query(collection(db, 'quotations'), orderBy('updatedAt', 'desc'), limit(200)))).docs.map(d => ({ id: d.id, ...d.data() }));
 export const listRevisions = async id => (await getDocs(query(collection(db, 'quotations', id, 'revisions'), orderBy('revision', 'desc')))).docs.map(d => ({ id: d.id, ...d.data() }));
@@ -10,13 +10,14 @@ function checkVersion(snapshot, expected) {
   if (!snapshot.exists() && expected !== 0) throw new Error('ไม่พบเอกสารเดิม กรุณาโหลดใหม่');
 }
 export async function saveQuote(id, quote, expected = 0) {
-  validateDocument(quote);
+  const totals = calculateQuote(quote);
+  validateDocument({ quote, totals });
   const ref = id ? doc(db, 'quotations', id) : doc(collection(db, 'quotations'));
   await runTransaction(db, async tx => {
     const current = await tx.get(ref);
     checkVersion(current, expected);
     if (current.exists() && current.data().status !== 'draft') throw new Error('เอกสารออกแล้ว กรุณาสร้างฉบับแก้ไข');
-    tx.set(ref, { quote, reason: current.data()?.reason || '', createdAt: current.data()?.createdAt || serverTimestamp(), createdBy: current.data()?.createdBy || auth.currentUser.uid, status: 'draft', version: expected + 1, revision: current.data()?.revision || 0, updatedAt: serverTimestamp(), updatedBy: auth.currentUser.uid });
+    tx.set(ref, { quote, totals, reason: current.data()?.reason || '', createdAt: current.data()?.createdAt || serverTimestamp(), createdBy: current.data()?.createdBy || auth.currentUser.uid, status: 'draft', version: expected + 1, revision: current.data()?.revision || 0, updatedAt: serverTimestamp(), updatedBy: auth.currentUser.uid });
   });
   return ref.id;
 }
