@@ -24,9 +24,13 @@ test('VAT is included in the total and never changes line-item values', () => {
  const q=demoQuote(),withVat=calculateQuote(q);
  assert.equal(withVat.beforeVat+withVat.vat,withVat.total);
  assert.equal(withVat.total,9951000);
+ q.billDiscount='510.00';const discounted=calculateQuote(q);
+ assert.equal(discounted.subtotal,9951000);assert.equal(discounted.discount,51000);assert.equal(discounted.total,9900000);
+ assert.equal(discounted.beforeVat+discounted.vat,discounted.total);assert.equal(discounted.base,5450000);
  q.vatRate='0';const withoutVat=calculateQuote(q);
- assert.equal(withoutVat.vat,0);assert.equal(withoutVat.beforeVat,withoutVat.total);assert.equal(withoutVat.total,9951000);
+ assert.equal(withoutVat.vat,0);assert.equal(withoutVat.beforeVat,withoutVat.total);assert.equal(withoutVat.total,9900000);
  q.vatRate='100.01';assert.throws(()=>calculateQuote(q));
+ q.vatRate='7';q.billDiscount='99510.01';assert.throws(()=>calculateQuote(q));
 });
 test('failed contact save does not notify and can retry; concurrent click is ignored', async () => {
  const data={name:'ทดสอบ',contactInfo:'test',serviceType:'ครัว'};let notify=0,save=0,release;

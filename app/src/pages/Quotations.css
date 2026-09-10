@@ -181,6 +181,7 @@
 .document-logo span{color:#147fd1;font-size:25pt;font-weight:900}.document-logo b{color:#152c4f;font-size:25pt;font-weight:900}.document-logo em{color:var(--document-blue);font-size:25pt;font-style:normal;font-weight:900}
 .document-logo small{position:absolute;left:16mm;top:9mm;display:block;color:#111;font-size:5.5pt;font-weight:700;letter-spacing:.14em;white-space:nowrap}
 .document-company{margin-top:9mm;max-width:82mm}.document-company>b{font-weight:700}.document-company p{margin:1.2mm 0;white-space:pre-line}
+.document-brand.logo-hidden .document-company{margin-top:0}
 .document-meta{grid-column:2;grid-row:1;align-self:start;margin:9mm 9mm 0 5mm}
 .document-meta h1{margin:0;padding-bottom:2.5mm;border-bottom:1pt solid var(--document-line);color:var(--document-blue);font:400 21pt/1.1 Tahoma,'Noto Sans Thai',sans-serif;text-align:center}
 .document-meta dl{display:grid;grid-template-columns:32mm 1fr;margin:3mm 0 0;padding-bottom:3mm;border-bottom:1pt solid var(--document-line)}
@@ -199,7 +200,7 @@
 .reference-summary>div:last-child p{display:grid;grid-template-columns:1fr auto;gap:7mm;margin:2mm 0}.reference-summary span{color:var(--document-blue);text-align:right;font-weight:400}.reference-summary b{font-weight:400;white-space:nowrap}
 .reference-grand{padding-top:2mm;border-top:1pt solid var(--document-line)}
 .reference-notes{margin-top:7mm;break-inside:avoid}.reference-notes>b,.reference-notes h3{display:block;margin:0 0 1.5mm;color:var(--document-blue);font-size:inherit;font-weight:400}.reference-notes p{margin:1mm 0;white-space:pre-wrap}
-.reference-signatures{display:grid;grid-template-columns:1fr 1fr;column-gap:36mm;margin-top:auto;padding-top:12mm;break-inside:avoid}.reference-signatures>p{margin:0 0 28mm}.reference-signatures>p:nth-child(2){text-align:right}.reference-signatures>div{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4mm}.reference-signatures span{padding-top:2mm;border-top:1pt solid var(--document-line);text-align:center}
+.reference-signatures{display:grid;grid-template-columns:1fr 1fr;column-gap:36mm;margin-top:auto;padding-top:12mm;break-inside:avoid}.reference-signatures>p{margin:0 0 28mm;text-align:center}.reference-signatures>div{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4mm}.reference-signatures span{padding-top:2mm;border-top:1pt solid var(--document-line);text-align:center}
 .receipt-reference-table th:nth-child(1){width:6%}.receipt-reference-table th:nth-child(2){width:74%}.receipt-reference-table th:nth-child(3){width:20%;text-align:right}.receipt-reference-table td:nth-child(3){text-align:right}
 
 .quote-a4-form{font-family:Tahoma,'Noto Sans Thai',sans-serif;font-size:11.25pt;color:#111}
@@ -208,6 +209,7 @@
 .quote-form-heading h1{margin:0 0 2mm;color:#05aae9;font-size:21pt;font-weight:400;text-align:center}
 .quote-form-heading .quote-revision-badge{float:right;margin:0;background:transparent;color:#05aae9;font-size:9pt}
 .quote-brand-fields{min-width:0}.quote-brand-fields input:first-of-type{color:#111;font-size:15px!important}
+.quote-brand-fields .quote-logo-toggle{display:flex;align-items:center;gap:2mm;margin-bottom:2mm;color:#05aae9}.quote-brand-fields .quote-logo-toggle input{width:auto!important;margin:0}
 .quote-a4-form input:not([type=checkbox]),.quote-a4-form textarea,.quote-a4-form select{border:0;border-bottom:1px solid #d5d5d5;border-radius:0;background:rgba(5,170,233,.025)}
 .quote-a4-form input:focus,.quote-a4-form textarea:focus,.quote-a4-form select:focus{background:#eefaff;border-bottom-color:#05aae9}
 .quote-form-customer{margin:0;padding:4mm 0;border-bottom:1pt solid #d5d5d5;background:transparent}

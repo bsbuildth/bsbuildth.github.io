@@ -7,6 +7,7 @@ export default function QuotationA4Form({ quote, revision = 0, calculation, lock
     <fieldset className="quote-a4-fields" disabled={locked}>
       <header className="quote-heading quote-form-heading">
         <div className="quote-brand-fields">
+          <label className="quote-logo-toggle"><input type="checkbox" checked={quote.showLogo !== false} onChange={e => edit('showLogo', e.target.checked)} /> แสดงโลโก้บนเอกสาร</label>
           <label>ผู้เสนอราคา<input value={quote.seller} maxLength="300" onChange={e => edit('seller', e.target.value)} /></label>
           <label>ที่อยู่<textarea rows="2" value={quote.sellerAddress || ''} maxLength="1000" onChange={e => edit('sellerAddress', e.target.value)} /></label>
           <label>เลขประจำตัวผู้เสียภาษี<input value={quote.sellerTaxId || ''} maxLength="50" onChange={e => edit('sellerTaxId', e.target.value)} /></label>
@@ -34,7 +35,7 @@ export default function QuotationA4Form({ quote, revision = 0, calculation, lock
       </table>
       <button type="button" className="quote-edit-only quote-add-section" onClick={addSection}>+ เพิ่มหมวดงาน</button>
 
-      <div className="quote-totals quote-form-totals"><label className="quote-edit-only">ภาษีมูลค่าเพิ่มรวมในราคา (%)<input inputMode="decimal" value={quote.vatRate ?? '0'} onChange={e => edit('vatRate', e.target.value)} /></label><p>รวมงานหลัก <b>{totals ? money(totals.main) : '—'}</b></p><p>รวมอุปกรณ์เพิ่มเติม <b>{totals ? money(totals.optional) : '—'}</b></p><p>ภาษีมูลค่าเพิ่ม <b>{totals ? money(totals.vat) : '—'}</b></p><p>ราคาก่อนภาษี <b>{totals ? money(totals.beforeVat) : '—'}</b></p><p className="quote-grand">ยอดรวมทั้งสิ้น <b>{totals ? `${money(totals.total)} บาท` : 'คำนวณไม่สำเร็จ'}</b></p></div>
+      <div className="quote-totals quote-form-totals"><label className="quote-edit-only">ส่วนลดท้ายบิล (บาท)<input inputMode="decimal" value={quote.billDiscount ?? '0.00'} onChange={e => edit('billDiscount', e.target.value)} /></label><label className="quote-edit-only">ภาษีมูลค่าเพิ่มรวมในราคา (%)<input inputMode="decimal" value={quote.vatRate ?? '0'} onChange={e => edit('vatRate', e.target.value)} /></label><p>รวมเป็นเงิน <b>{totals ? money(totals.subtotal) : '—'}</b></p><p>ส่วนลดท้ายบิล <b>{totals ? money(totals.discount) : '—'}</b></p><p>ภาษีมูลค่าเพิ่ม <b>{totals ? money(totals.vat) : '—'}</b></p><p>ราคาก่อนภาษี <b>{totals ? money(totals.beforeVat) : '—'}</b></p><p className="quote-grand">ยอดรวมทั้งสิ้น <b>{totals ? `${money(totals.total)} บาท` : 'คำนวณไม่สำเร็จ'}</b></p></div>
       {calculation.error ? <p className="quote-calc-error" role="alert">{calculation.error}</p> : <p className="quote-calc-ready quote-edit-only">✓ คำนวณอัตโนมัติแล้ว พร้อมบันทึก</p>}
 
       <section className="quote-terms quote-form-terms"><h3>รายละเอียดและเงื่อนไข</h3><textarea rows="4" value={quote.terms} maxLength="10000" placeholder="ระบุขอบเขตงาน เงื่อนไข และหมายเหตุ" onChange={e => edit('terms', e.target.value)} /><label>การรับประกัน<input value={quote.warranty} maxLength="1000" onChange={e => edit('warranty', e.target.value)} /></label></section>

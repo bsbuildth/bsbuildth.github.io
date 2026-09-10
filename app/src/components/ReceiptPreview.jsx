@@ -5,8 +5,8 @@ function ReceiptCopy({ receipt, totals, copy }) {
   const date = new Date(`${receipt.date}T12:00:00`);
   return <article className="quote-paper reference-document receipt-paper">
     <header className="reference-header">
-      <div className="document-brand">
-        <div className="document-logo"><span>BS</span><b>BUILD</b><em>TH</em><small>RENOVATION &amp; CONSTRUCTION</small></div>
+      <div className={`document-brand${receipt.showLogo === false ? ' logo-hidden' : ''}`}>
+        {receipt.showLogo !== false && <div className="document-logo"><span>BS</span><b>BUILD</b><em>TH</em><small>RENOVATION &amp; CONSTRUCTION</small></div>}
         <div className="document-company"><b>{receipt.seller || 'BSBuildTh'}</b>{receipt.sellerAddress && <p>{receipt.sellerAddress}</p>}{receipt.sellerTaxId && <p>เลขประจำตัวผู้เสียภาษี {receipt.sellerTaxId}</p>}{receipt.sellerPhone && <p>โทร. {receipt.sellerPhone}</p>}{receipt.sellerWebsite && <p>{receipt.sellerWebsite}</p>}</div>
       </div>
       <div className="document-meta"><h1>ใบเสร็จรับเงิน</h1><dl><dt>เลขที่</dt><dd>{receipt.number || 'ยังไม่กำหนดเลข'}</dd><dt>วันที่</dt><dd>{Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('th-TH')}</dd><dt>ชำระโดย</dt><dd>{receipt.paymentMethod}</dd><dt>สถานะ</dt><dd>{copy}</dd></dl></div>

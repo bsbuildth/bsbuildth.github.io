@@ -24,6 +24,7 @@ export function newReceipt(source) {
     sellerTaxId: quote?.sellerTaxId || '',
     sellerWebsite: quote?.sellerWebsite || '',
     salesperson: quote?.salesperson || '',
+    showLogo: quote?.showLogo !== false,
     paymentMethod: 'โอนเงิน',
     paymentReference: '',
     note: '',
