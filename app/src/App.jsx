@@ -20,7 +20,7 @@ const Admin = lazy(() => import('./pages/Admin'));
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const Blog = lazy(() => import('./pages/Blog'));
 const Article = lazy(() => import('./pages/Article'));
-import { hasAdminClaim } from './lib/admin-access';
+import { hasAdminAccess } from './lib/admin-access';
 import { getSettings } from './firebase/api';
 
 const Quotations = lazy(() => import('./pages/Quotations'));
@@ -88,7 +88,7 @@ function App() {
       setIsAuthenticated(false);
       try {
         const token = user ? await user.getIdTokenResult() : null;
-        if (current === generation) setIsAuthenticated(hasAdminClaim(token?.claims));
+        if (current === generation) setIsAuthenticated(hasAdminAccess(token?.claims, user?.email));
       } catch { if (current === generation) setIsAuthenticated(false); }
       finally { if (current === generation) setLoading(false); }
     });

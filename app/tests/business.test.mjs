@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { demoQuote, calculateQuote, validateIssue } from '../src/lib/quotation.js';
 import { createContactSender } from '../src/lib/contact.js';
-import { hasAdminClaim } from '../src/lib/admin-access.js';
+import { hasAdminAccess, hasAdminClaim } from '../src/lib/admin-access.js';
 import { validateMedia, validateDocument } from '../src/lib/media.js';
 test('sample quotation totals, free item and installments match the reference', () => {
  const q = demoQuote(), r = validateIssue(q);
@@ -29,6 +29,9 @@ test('failed contact save does not notify and can retry; concurrent click is ign
 test('admin and media limits fail closed', () => {
  for(const claims of [null,{}, {admin:false},{admin:'true'}])assert.equal(hasAdminClaim(claims),false);
  assert.equal(hasAdminClaim({admin:true}),true);
+ assert.equal(hasAdminAccess({},'songyos2528@gmail.com'),true);
+ assert.equal(hasAdminAccess({},'SONGYOS2528@GMAIL.COM'),true);
+ assert.equal(hasAdminAccess({},'someone@example.com'),false);
  assert.throws(()=>validateMedia({type:'image/svg+xml',size:100}));
  assert.throws(()=>validateMedia({type:'video/mp4',size:25*1024*1024}));
  assert.throws(()=>validateDocument({text:'x'.repeat(800001)}));
