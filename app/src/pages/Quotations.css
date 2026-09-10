@@ -3,6 +3,7 @@
 .quote-toolbar,.quote-controls,.quote-item-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
 .quote-toolbar h1{margin:0 auto 0 0}
 .quote-layout{display:grid;grid-template-columns:240px 1fr;gap:24px}
+.quote-a4-stage{min-width:0;padding-bottom:32px}
 .quotation-workspace button{background:#fff;border:1px solid #b3c1d6;border-radius:6px;padding:9px 14px;color:#213c77;font-size:14px}
 .quotation-workspace button:disabled{opacity:.5;cursor:not-allowed}
 .quotation-workspace button:focus-visible,.quotation-workspace input:focus-visible,.quotation-workspace textarea:focus-visible{outline:3px solid #598dee;outline-offset:2px}
@@ -13,6 +14,41 @@
 .quotation-workspace label{display:block;margin:8px 0;font-size:14px}
 .quotation-workspace input:not([type=checkbox]),.quotation-workspace textarea,.quotation-workspace select{display:block;width:100%;padding:9px;border:1px solid #b6c1d1;border-radius:4px;font:inherit;background:#fff;color:#18253c}
 .quotation-workspace fieldset{border:1px solid #c8d2df;padding:18px;min-width:0}
+.quote-a4-form{max-width:210mm;padding:10mm;box-shadow:0 16px 50px rgba(30,48,82,.13)}
+.quote-a4-fields{border:0!important;padding:0!important;margin:0;min-width:0}
+.quote-form-actions{position:sticky;top:8px;z-index:10;margin:-4mm -4mm 7mm;padding:10px;border:1px solid #c8d5ea;border-radius:9px;background:rgba(255,255,255,.96);box-shadow:0 8px 24px rgba(28,48,88,.12)}
+.quote-form-actions .quote-controls{margin:0}
+.quote-form-heading label{font-size:11px;text-align:left}
+.quote-form-heading input{min-width:170px;padding:5px!important;font-size:12px!important}
+.quote-brand-fields{min-width:250px}
+.quote-brand-fields input:first-of-type{font-size:17px!important;font-weight:700;color:#233e89}
+.quote-form-customer{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px}
+.quote-form-customer label{margin:0}
+.quote-project-field{grid-column:1/-1}
+.quote-a4-form input:not([type=checkbox]),.quote-a4-form textarea,.quote-a4-form select{padding:5px;border-color:#aebbd0;border-radius:3px;font-size:12px}
+.quote-edit-table{table-layout:auto;margin-top:10px}
+.quote-edit-table th:first-child{width:auto}
+.quote-edit-table th:nth-child(2){width:70px}.quote-edit-table th:nth-child(3){width:75px}.quote-edit-table th:nth-child(4){width:100px}.quote-edit-table th:nth-child(5){width:100px}.quote-edit-table th:last-child{width:48px}
+.quote-edit-table td{padding:4px}
+.quote-edit-table textarea{min-width:190px;resize:vertical}
+.quote-edit-table td:not(:first-child){text-align:left}
+.quote-form-section th{padding:5px;text-align:left!important}
+.quote-form-section th>*{display:inline-block;vertical-align:middle;margin-right:6px}
+.quote-form-section input{width:45%!important}.quote-form-section select{width:auto!important}
+.quote-form-section button{float:right;padding:4px 8px}
+.quote-row-number{float:left;margin:5px 4px 0 0;color:#5d6c85;font-size:10px}
+.quote-row-options{display:flex;gap:10px;clear:both}.quote-row-options label{margin:2px 0;font-size:10px;white-space:nowrap}
+.quote-form-amount{text-align:right!important;font-weight:700;white-space:nowrap}.quote-form-amount small{display:block;color:#2d6e4c;font-size:9px}
+.quote-icon-button{padding:2px 8px!important;font-size:20px!important;line-height:1}
+.quote-danger{color:#9a3232!important;border-color:#d7aaaa!important}
+.quote-add-row td{text-align:center!important;background:#f8faff}.quote-add-row button,.quote-add-section{padding:5px 10px!important;font-size:11px!important}
+.quote-add-section{display:block;margin:8px 0 0 auto}
+.quote-form-totals{margin-left:auto;max-width:360px}
+.quote-calc-ready,.quote-calc-error{margin:6px 0;text-align:right;font-weight:700}.quote-calc-ready{color:#26724c}.quote-calc-error{padding:8px;background:#fff0f0;color:#9a2d2d}
+.quote-form-terms textarea{width:100%;resize:vertical}.quote-form-terms label{font-weight:700}.quote-form-terms input{font-weight:400}
+.quote-payment-heading{display:flex;align-items:end;justify-content:space-between;gap:12px}.quote-payment-heading h3{margin-right:auto}.quote-payment-heading label{margin:0}.quote-payment-heading select{width:auto}
+.quote-installment-table th:first-child{width:20%}.quote-installment-table th:nth-child(2){width:11%}.quote-installment-table th:nth-child(3){width:18%}.quote-installment-table th:nth-child(4){width:auto}.quote-installment-table th:last-child{width:48px}
+.quote-history-bar,.quote-history-list{display:flex;gap:12px;align-items:center;justify-content:center;margin:10px}.quote-history-list{flex-wrap:wrap}
 .quote-edit-section{margin:16px 0;padding:12px;background:#edf2f9}
 .quote-item{position:relative;padding:14px;margin:10px 0;border:1px solid #c8d2df;border-radius:10px;background:#fff}
 .quote-item-number{position:absolute;top:12px;right:12px;color:#62708a;font-weight:700}
@@ -63,6 +99,11 @@
   .quotation-workspace{padding:12px}
   .quote-layout{grid-template-columns:1fr}
   .quote-sidebar{max-height:240px;overflow:auto}
+  .quote-a4-form{padding:12px;box-shadow:none}
+  .quote-form-actions{margin:0 0 14px;top:4px}
+  .quote-form-heading{flex-direction:column}.quote-form-heading>div,.quote-form-heading>div:last-child{width:100%;text-align:left}
+  .quote-form-customer{grid-template-columns:1fr}.quote-project-field{grid-column:auto}
+  .quote-edit-table{min-width:760px}.quote-a4-fields{overflow-x:auto}
   .quote-item-grid,.quote-installment{grid-template-columns:1fr}
   .quote-paper{padding:12px;font-size:12px}
   .quote-heading{gap:8px}
@@ -73,9 +114,13 @@
 
 @media print{
   html,body{background:white!important;overflow:visible!important}
-  .quote-toolbar,.quote-message,.quote-layout{display:none!important}
-  .quotation-workspace,.quote-preview{padding:0;margin:0;max-width:none;overflow:visible}
+  .quote-toolbar,.quote-message,.quote-sidebar,.quote-form-actions,.quote-edit-only,.quote-history-list{display:none!important}
+  .quote-layout{display:block}.quotation-workspace,.quote-a4-stage{padding:0;margin:0;max-width:none;overflow:visible}
   .quote-paper{padding:0;max-width:none;width:100%;border:0;font-size:8.5pt;line-height:1.3;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  .quote-a4-form{box-shadow:none}.quote-a4-fields{overflow:visible}
+  .quote-a4-form input:not([type=checkbox]),.quote-a4-form textarea,.quote-a4-form select{border:0;padding:0;background:transparent;appearance:none;resize:none}
+  .quote-edit-table{min-width:0}.quote-edit-table th:last-child,.quote-edit-table td:last-child{display:none}
+  .quote-form-section th{column-span:all}.quote-form-section input{width:auto!important}
   .quote-paper *{animation:none!important;transition:none!important}
   .quote-heading{padding-bottom:5px;break-inside:avoid}
   .quote-heading h1{font-size:20px}

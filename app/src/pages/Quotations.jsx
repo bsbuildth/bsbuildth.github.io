@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { newQuote, newItem, demoQuote, validateIssue, calculateQuote, money } from '../lib/quotation';
-import { listQuotes, listRevisions, saveQuote, issueQuote, changeQuoteStatus } from '../firebase/quotations';
+import { calculateQuote, demoQuote, newItem, newQuote, validateIssue } from '../lib/quotation';
+import { changeQuoteStatus, issueQuote, listQuotes, listRevisions, saveQuote } from '../firebase/quotations';
+import QuotationA4Form from '../components/QuotationA4Form';
 import QuotationPreview from '../components/QuotationPreview';
 import './Quotations.css';
 
@@ -21,6 +22,7 @@ export default function Quotations() {
     try { return { totals: calculateQuote(quote), error: '' }; }
     catch (error) { return { totals: null, error: error.message || 'ยังคำนวณยอดไม่ได้' }; }
   }, [quote]);
+
   useEffect(() => { listQuotes().then(setRows).catch(() => setMessage('โหลดเอกสารไม่ได้ กรุณาตรวจการเชื่อมต่อและสิทธิ์ผู้ดูแล')); }, []);
   useEffect(() => {
     if (!dirty) return;
@@ -28,32 +30,35 @@ export default function Quotations() {
     window.addEventListener('beforeunload', leave);
     return () => window.removeEventListener('beforeunload', leave);
   }, [dirty]);
+
   const confirmLeave = () => !dirty || window.confirm('มีข้อมูลที่ยังไม่บันทึก ต้องการละทิ้งหรือไม่?');
   const open = row => {
     if (!confirmLeave()) return;
     setSelected(row); setQuote(row ? structuredClone(row.quote) : newQuote()); setDirty(false); setHistory([]); setHistoric(null); setMessage('');
   };
-  const edit = (key, value) => { setQuote(q => ({ ...q, [key]: value })); setDirty(true); setHistoric(null); };
-  const sectionEdit = (index, updater) => edit('sections', quote.sections.map((s,i) => i === index ? updater(s) : s));
-  const itemEdit = (si, ii, key, value) => sectionEdit(si, s => ({ ...s, items: s.items.map((item,i) => i === ii ? { ...item, [key]: value } : item) }));
+  const edit = (key, value) => { setQuote(current => ({ ...current, [key]: value })); setDirty(true); setHistoric(null); };
+  const updateSections = updater => { setQuote(current => ({ ...current, sections: updater(current.sections) })); setDirty(true); setHistoric(null); };
+  const editSection = (index, updater) => updateSections(sections => sections.map((section, i) => i === index ? updater(section) : section));
+  const itemEdit = (sectionIndex, itemIndex, key, value) => {
+    updateSections(sections => sections.map((section, i) => i === sectionIndex ? { ...section, items: section.items.map((item, j) => j === itemIndex ? { ...item, [key]: value } : item) } : section));
+  };
   const run = async action => {
     if (operation.current) return;
     operation.current = true; setBusy(true); setMessage('กำลังดำเนินการ...');
-    try { await action(); } catch(error) { setMessage(error.message || 'ดำเนินการไม่สำเร็จ ข้อมูลยังอยู่'); }
+    try { await action(); } catch (error) { setMessage(error.message || 'ดำเนินการไม่สำเร็จ ข้อมูลยังอยู่'); }
     finally { operation.current = false; setBusy(false); }
   };
   const reload = async id => {
     const data = await listQuotes(); setRows(data);
-    const row = data.find(r => r.id === id);
+    const row = data.find(item => item.id === id);
     if (row) { setSelected(row); setQuote(structuredClone(row.quote)); }
     setHistoric(null);
   };
   const save = () => run(async () => {
     calculateQuote(quote);
     const id = await saveQuote(selected?.id, quote, selected?.version || 0);
-    // Preserve the saved version even if refreshing the list fails.
-    setSelected({ ...selected, id, quote: structuredClone(quote), status: 'draft', version: (selected?.version || 0)+1 });
-    setDirty(false); await reload(id); setMessage('บันทึกร่างแล้ว');
+    setSelected({ ...selected, id, quote: structuredClone(quote), status: 'draft', version: (selected?.version || 0) + 1 });
+    setDirty(false); await reload(id); setMessage('คำนวณและบันทึกร่างแล้ว');
   });
   const issue = () => run(async () => {
     if (!selected || dirty) throw new Error('กรุณาบันทึกร่างล่าสุดก่อนออกเอกสาร');
@@ -74,26 +79,17 @@ export default function Quotations() {
     if (dirty) throw new Error('กรุณาบันทึกก่อนพิมพ์ เพื่อให้เอกสารตรงกับข้อมูลที่บันทึก');
     await document.fonts.ready; window.print(); setMessage('เลือก Save as PDF ในหน้าต่างพิมพ์เพื่อบันทึกไฟล์');
   });
+
+  const actions = <div className="quote-controls"><button className="quote-save" disabled={locked || !dirty || !!calculation.error} onClick={save}>คำนวณและบันทึก{dirty ? ' *' : ''}</button><button disabled={locked || dirty || !selected} onClick={issue}>ออกเอกสาร</button><button disabled={busy} onClick={copy}>ทำสำเนา</button><button disabled={busy || dirty || !selected} onClick={print}>พิมพ์ / PDF</button>{selected?.status === 'issued' && <><button disabled={busy} onClick={() => transition('draft')}>สร้างฉบับแก้ไข</button><button disabled={busy} onClick={() => transition('void')}>ยกเลิกเอกสาร</button></>}{selected && <button disabled={busy} onClick={() => run(async () => { setHistory(await listRevisions(selected.id)); setMessage('โหลดประวัติแล้ว'); })}>ประวัติ</button>}</div>;
+  const filteredRows = rows.filter(row => `${row.quote.number} ${row.quote.customer} ${row.quote.project} ${row.status}`.toLowerCase().includes(search.toLowerCase()));
+
   return <div className="quotation-workspace">
-    <header className="quote-toolbar"><Link to="/admin" onClick={e => { if (!confirmLeave()) e.preventDefault(); }}>← ระบบจัดการ</Link><h1>ใบเสนอราคา</h1><button disabled={busy} onClick={() => open(null)}>สร้างใหม่</button><button disabled={busy} onClick={() => { if (confirmLeave()) { setSelected(null); setQuote(demoQuote()); setDirty(true); setHistoric(null); setHistory([]); } }}>โหลดตัวอย่าง</button></header>
-    <p className="quote-message" role="status" aria-live="polite">{message || 'กรอกข้อมูล บันทึกร่าง แล้วตรวจตัวอย่างก่อนออกเอกสาร'}</p>
-    <div className="quote-layout"><aside className="quote-sidebar"><label>ค้นหาเอกสาร<input value={search} onChange={e => setSearch(e.target.value)} placeholder="เลข / ลูกค้า / โครงการ / สถานะ" /></label><button disabled={busy} onClick={() => run(async () => { if (confirmLeave()) { const data = await listQuotes(); setRows(data); setMessage('โหลดรายการล่าสุดแล้ว'); } })}>รีเฟรชรายการ</button><p>แสดงล่าสุดไม่เกิน 200 เอกสาร</p>{rows.filter(r => `${r.quote.number} ${r.quote.customer} ${r.quote.project} ${r.status}`.toLowerCase().includes(search.toLowerCase())).map(r => <button disabled={busy} className={selected?.id === r.id ? 'selected' : ''} key={r.id} onClick={() => open(r)}><b>{r.quote.number || 'ร่างไม่มีเลข'}</b><span>{r.quote.customer || 'ยังไม่มีชื่อลูกค้า'}</span><small>{({ draft: 'ร่าง', issued: 'ออกแล้ว', void: 'ยกเลิก' })[r.status]}</small></button>)}</aside>
-    <div className="quote-editor"><fieldset disabled={locked}>
-      <legend>ข้อมูลใบเสนอราคา</legend><div className="quote-fields">{[['number','เลขเอกสาร'],['date','วันที่'],['customer','ชื่อลูกค้า'],['phone','เบอร์ลูกค้า'],['project','โครงการ'],['seller','ผู้เสนอราคา'],['sellerPhone','เบอร์ผู้เสนอราคา']].map(([key,label]) => <label key={key}>{label}<input type={key === 'date' ? 'date' : 'text'} maxLength={key === 'number' ? 50 : 300} value={quote[key]} onChange={e => edit(key,e.target.value)} /></label>)}</div>
-      {quote.sections.map((s,si) => <section className="quote-edit-section" key={s.id}><div className="quote-fields"><label>ชื่อหมวด<input value={s.title} maxLength={150} onChange={e => sectionEdit(si,s => ({ ...s,title:e.target.value }))} /></label><label>ประเภท<select value={s.kind} onChange={e => sectionEdit(si,s => ({ ...s,kind:e.target.value }))}><option value="main">งานหลัก</option><option value="optional">อุปกรณ์เพิ่มเติม</option></select></label></div>
-      {s.items.map((item,ii) => {
-        const calculatedItem = calculation.totals?.sections[si]?.items[ii];
-        return <div className="quote-item" key={item.id}><div className="quote-item-number">{si + 1}.{ii + 1}</div><label className="quote-description">รายละเอียด<textarea rows="2" value={item.description} maxLength={2000} onChange={e => itemEdit(si,ii,'description',e.target.value)} /></label><div className="quote-item-grid">{[['quantity','จำนวน'],['unit','หน่วย'],['price','ราคาต่อหน่วย (บาท)']].map(([key,label]) => <label key={key}>{label}<input inputMode={key === 'unit' ? 'text' : 'decimal'} value={item[key]} onChange={e => itemEdit(si,ii,key,e.target.value)} /></label>)}<output className="quote-line-total"><span>รวมรายการ</span><strong>{calculatedItem ? `${money(calculatedItem.amount)} บาท` : '—'}</strong>{item.free && <small>แถมฟรี</small>}{!item.included && !item.free && <small>ไม่รวมยอดเรียกเก็บ</small>}</output></div><div className="quote-item-actions"><label><input type="checkbox" checked={item.free} onChange={e => itemEdit(si,ii,'free',e.target.checked)} /> แถมฟรี</label><label><input type="checkbox" checked={item.included} onChange={e => itemEdit(si,ii,'included',e.target.checked)} /> รวมในยอดเรียกเก็บ</label><button type="button" onClick={() => sectionEdit(si,s => ({ ...s,items:s.items.filter((_,i) => i!==ii) }))}>ลบรายการ</button><button type="button" disabled={locked || ii===0} onClick={() => sectionEdit(si,s => { const items=[...s.items]; [items[ii-1],items[ii]]=[items[ii],items[ii-1]]; return { ...s,items }; })}>เลื่อนขึ้น</button></div></div>;
-      })}
-      <button onClick={() => sectionEdit(si,s => ({ ...s, items:[...s.items,newItem()] }))}>+ รายการ</button><button disabled={locked || si === 0} onClick={() => { const sections=[...quote.sections]; [sections[si-1],sections[si]]=[sections[si],sections[si-1]]; edit('sections',sections); }}>เลื่อนหมวดขึ้น</button><button onClick={() => edit('sections',quote.sections.filter((_,i) => i!==si))}>ลบหมวด</button></section>)}
-      <button onClick={() => edit('sections',[...quote.sections,{ id:crypto.randomUUID(), title:'หมวดใหม่',kind:'main',items:[newItem()] }])}>+ หมวดงาน</button>
-      <label>รายละเอียดและเงื่อนไข<textarea rows="4" maxLength={10000} value={quote.terms} onChange={e => edit('terms',e.target.value)} /></label><label>การรับประกัน<input value={quote.warranty} maxLength={1000} onChange={e => edit('warranty',e.target.value)} /></label>
-      <label>ฐานคำนวณงวด<select value={quote.paymentBase} onChange={e => edit('paymentBase',e.target.value)}><option value="main">ยอดงานหลัก</option><option value="total">ยอดรวมที่เรียกเก็บ</option></select></label>
-      <h3>งวดชำระ</h3>{quote.installments.map((item,i) => <div className="quote-installment" key={i}><div className="quote-fields">{[['label','ชื่องวด'],['percent','เปอร์เซ็นต์'],['condition','เงื่อนไข']].map(([key,label]) => <label key={key}>{label}<input inputMode={key === 'percent' ? 'decimal' : 'text'} value={item[key]} onChange={e => edit('installments',quote.installments.map((x,j) => j===i ? { ...x,[key]:e.target.value } : x))} /></label>)}</div><output><span>ยอดงวดนี้</span><strong>{calculation.totals?.installments[i] ? `${money(calculation.totals.installments[i].amount)} บาท` : '—'}</strong></output><button type="button" onClick={() => edit('installments',quote.installments.filter((_,j) => j!==i))}>ลบงวด</button></div>)}<button type="button" onClick={() => edit('installments',[...quote.installments,{ label:'งวดใหม่',percent:'0',condition:'' }])}>+ งวดชำระ</button>
-      <section className={`quote-live-summary ${calculation.error ? 'has-error' : ''}`} aria-live="polite"><div><span>รวมงานหลัก</span><strong>{calculation.totals ? money(calculation.totals.main) : '—'}</strong></div><div><span>อุปกรณ์เพิ่มเติม</span><strong>{calculation.totals ? money(calculation.totals.optional) : '—'}</strong></div><div className="quote-live-grand"><span>ยอดรวมก่อนบันทึก</span><strong>{calculation.totals ? `${money(calculation.totals.total)} บาท` : 'คำนวณไม่สำเร็จ'}</strong></div>{calculation.error ? <p role="alert">{calculation.error}</p> : <p>คำนวณอัตโนมัติแล้ว พร้อมบันทึก</p>}</section>
-    </fieldset><div className="quote-controls quote-sticky-controls"><button className="quote-save" disabled={locked || !dirty || !!calculation.error} onClick={save}>คำนวณและบันทึกร่าง{dirty ? ' *' : ''}</button><button disabled={locked || dirty || !selected} onClick={issue}>ออกเอกสาร</button><button disabled={busy} onClick={copy}>ทำสำเนา</button><button disabled={busy || dirty || !selected} onClick={print}>พิมพ์ / PDF</button>{selected?.status === 'issued' && <><button disabled={busy} onClick={() => transition('draft')}>สร้างฉบับแก้ไข</button><button disabled={busy} onClick={() => transition('void')}>ยกเลิกเอกสาร</button></>}{selected && <button disabled={busy} onClick={() => run(async () => { setHistory(await listRevisions(selected.id)); setMessage('โหลดประวัติแล้ว'); })}>ประวัติฉบับที่ออก</button>}</div>
-      {history.map(r => <button key={r.id} onClick={() => setHistoric(r)}>ดูฉบับที่ {r.revision}</button>)}{historic && <button onClick={() => setHistoric(null)}>กลับฉบับปัจจุบัน</button>}
-    </div></div>
-    <div className="quote-preview"><QuotationPreview quote={historic?.quote || quote} status={historic ? 'issued' : selected?.status || 'draft'} revision={historic?.revision || selected?.revision || 0} /></div>
+    <header className="quote-toolbar"><Link to="/admin" onClick={event => { if (!confirmLeave()) event.preventDefault(); }}>← ระบบจัดการ</Link><h1>ใบเสนอราคา A4</h1><button disabled={busy} onClick={() => open(null)}>สร้างใหม่</button><button disabled={busy} onClick={() => { if (confirmLeave()) { setSelected(null); setQuote(demoQuote()); setDirty(true); setHistoric(null); setHistory([]); } }}>โหลดตัวอย่าง</button></header>
+    <p className="quote-message" role="status" aria-live="polite">{message || 'กรอก แก้ไข เพิ่มรายการ คำนวณ และบันทึกบนแบบฟอร์ม A4 นี้ได้ทันที'}</p>
+    <div className="quote-layout"><aside className="quote-sidebar"><label>ค้นหาเอกสาร<input value={search} onChange={event => setSearch(event.target.value)} placeholder="เลข / ลูกค้า / โครงการ / สถานะ" /></label><button disabled={busy} onClick={() => run(async () => { if (confirmLeave()) { const data = await listQuotes(); setRows(data); setMessage('โหลดรายการล่าสุดแล้ว'); } })}>รีเฟรชรายการ</button><p>แสดงล่าสุดไม่เกิน 200 เอกสาร</p>{filteredRows.map(row => <button disabled={busy} className={selected?.id === row.id ? 'selected' : ''} key={row.id} onClick={() => open(row)}><b>{row.quote.number || 'ร่างไม่มีเลข'}</b><span>{row.quote.customer || 'ยังไม่มีชื่อลูกค้า'}</span><small>{({ draft: 'ร่าง', issued: 'ออกแล้ว', void: 'ยกเลิก' })[row.status]}</small></button>)}</aside>
+      <main className="quote-a4-stage">{historic ? <><div className="quote-history-bar"><button onClick={() => setHistoric(null)}>← กลับมาแก้ฉบับปัจจุบัน</button><b>กำลังดูฉบับที่ {historic.revision}</b></div><QuotationPreview quote={historic.quote} status="issued" revision={historic.revision} /></> : <QuotationA4Form quote={quote} calculation={calculation} locked={locked} actions={actions} edit={edit} sectionEdit={editSection} itemEdit={itemEdit} addItem={sectionIndex => editSection(sectionIndex, section => ({ ...section, items: [...section.items, newItem()] }))} removeItem={(sectionIndex, itemIndex) => editSection(sectionIndex, section => ({ ...section, items: section.items.filter((_, i) => i !== itemIndex) }))} addSection={() => updateSections(sections => [...sections, { id: crypto.randomUUID(), title: 'หมวดใหม่', kind: 'main', items: [newItem()] }])} removeSection={sectionIndex => updateSections(sections => sections.filter((_, i) => i !== sectionIndex))} />}
+        {history.length > 0 && <div className="quote-history-list">{history.map(revision => <button key={revision.id} onClick={() => setHistoric(revision)}>ดูฉบับที่ {revision.revision}</button>)}</div>}
+      </main>
+    </div>
   </div>;
 }
