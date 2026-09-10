@@ -153,3 +153,78 @@
   .receipt-paper:last-child{break-after:auto}
   .receipt-draft{display:none!important}
 }
+
+/* A4 document system matched to the supplied quotation reference. */
+.reference-document{
+  --document-blue:#05aae9;
+  --document-line:#d5d5d5;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  box-sizing:border-box;
+  width:210mm;
+  min-height:297mm;
+  padding:10mm 12.7mm 12mm;
+  overflow:hidden;
+  border:0;
+  color:#111;
+  font-family:Tahoma,'Noto Sans Thai',sans-serif;
+  font-size:9pt;
+  font-weight:400;
+  line-height:1.35;
+}
+.reference-document::before{content:"";position:absolute;z-index:0;top:0;right:0;width:22mm;height:25mm;background:var(--document-blue);clip-path:polygon(0 0,100% 0,100% 100%)}
+.reference-document>*{position:relative;z-index:1}
+.reference-header{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;min-height:62mm;border-bottom:1pt solid var(--document-line)}
+.document-brand{grid-column:1;grid-row:1;align-self:start;padding-top:4mm}
+.document-logo{position:relative;display:block;width:max-content;line-height:.8;letter-spacing:-.05em;text-transform:uppercase;white-space:nowrap}
+.document-logo span{color:#147fd1;font-size:25pt;font-weight:900}.document-logo b{color:#152c4f;font-size:25pt;font-weight:900}.document-logo em{color:var(--document-blue);font-size:25pt;font-style:normal;font-weight:900}
+.document-logo small{position:absolute;left:16mm;top:9mm;display:block;color:#111;font-size:5.5pt;font-weight:700;letter-spacing:.14em;white-space:nowrap}
+.document-company{margin-top:9mm;max-width:82mm}.document-company>b{font-weight:700}.document-company p{margin:1.2mm 0;white-space:pre-line}
+.document-brand.logo-hidden .document-company{margin-top:0}
+.document-meta{grid-column:2;grid-row:1;align-self:start;margin:9mm 9mm 0 5mm}
+.document-meta h1{margin:0;padding-bottom:2.5mm;border-bottom:1pt solid var(--document-line);color:var(--document-blue);font:400 21pt/1.1 Tahoma,'Noto Sans Thai',sans-serif;text-align:center}
+.document-meta dl{display:grid;grid-template-columns:32mm 1fr;margin:3mm 0 0;padding-bottom:3mm;border-bottom:1pt solid var(--document-line)}
+.document-meta dt{color:var(--document-blue)}.document-meta dd{margin:0;overflow-wrap:anywhere}
+.document-customer{grid-column:1;grid-row:2;align-self:end;padding:4mm 0 5mm}.document-customer b{color:var(--document-blue);font-weight:400}.document-customer p{margin:1mm 0}
+.reference-document .quote-watermark{margin:2mm 0 0;padding:1.5mm;background:#fff4cc;text-align:center}
+.reference-table{margin-top:0;table-layout:fixed;border-collapse:collapse}
+.reference-table thead{display:table-header-group;background:transparent;color:#111}
+.reference-table th,.reference-table td{box-sizing:border-box;padding:2.2mm 1mm;border:0;border-bottom:1pt solid var(--document-line);vertical-align:top}
+.reference-table thead th{border-top:1pt solid var(--document-line);font-weight:400;text-align:center}
+.reference-table th:nth-child(1){width:6%;text-align:center}.reference-table th:nth-child(2){width:46%;text-align:center}.reference-table th:nth-child(3){width:9%;text-align:right}.reference-table th:nth-child(4){width:8%;text-align:left}.reference-table th:nth-child(5){width:15%;text-align:right}.reference-table th:nth-child(6){width:16%;text-align:right}
+.reference-table td:first-child{text-align:center;white-space:nowrap}.reference-table td:nth-child(2){text-align:left}.reference-table td:nth-child(n+3){text-align:right}.reference-table td:nth-child(4){text-align:left}
+.reference-table td:nth-child(2) b{display:block;font-weight:400}.reference-table td:nth-child(2) small{display:block;margin-top:1mm;color:#111;font-size:inherit;line-height:1.3}
+.reference-summary{display:grid;grid-template-columns:58% 42%;gap:4mm;margin-top:5mm;break-inside:avoid}
+.amount-in-words{align-self:end;padding-bottom:2mm}
+.reference-summary>div:last-child p{display:grid;grid-template-columns:1fr auto;gap:7mm;margin:2mm 0}.reference-summary span{color:var(--document-blue);text-align:right;font-weight:400}.reference-summary b{font-weight:400;white-space:nowrap}
+.reference-grand{padding-top:2mm;border-top:1pt solid var(--document-line)}
+.reference-notes{margin-top:7mm;break-inside:avoid}.reference-notes>b,.reference-notes h3{display:block;margin:0 0 1.5mm;color:var(--document-blue);font-size:inherit;font-weight:400}.reference-notes p{margin:1mm 0;white-space:pre-wrap}
+.reference-signatures{display:grid;grid-template-columns:1fr 1fr;column-gap:36mm;margin-top:auto;padding-top:12mm;break-inside:avoid}.reference-signatures>p{margin:0 0 28mm;text-align:center}.reference-signatures>div{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4mm}.reference-signatures span{padding-top:2mm;border-top:1pt solid var(--document-line);text-align:center}
+.receipt-reference-table th:nth-child(1){width:6%}.receipt-reference-table th:nth-child(2){width:74%}.receipt-reference-table th:nth-child(3){width:20%;text-align:right}.receipt-reference-table td:nth-child(3){text-align:right}
+
+.quote-a4-form{font-family:Tahoma,'Noto Sans Thai',sans-serif;font-size:11.25pt;color:#111}
+.quote-a4-form .quote-form-heading{display:grid;grid-template-columns:1fr 1fr;gap:14mm;min-height:56mm;padding:6mm 0 5mm;border-bottom:1pt solid #d5d5d5}
+.quote-form-heading>div:last-child{align-self:start;padding:3mm 5mm 3mm 2mm;border-block:1pt solid #d5d5d5}
+.quote-form-heading h1{margin:0 0 2mm;color:#05aae9;font-size:21pt;font-weight:400;text-align:center}
+.quote-form-heading .quote-revision-badge{float:right;margin:0;background:transparent;color:#05aae9;font-size:9pt}
+.quote-brand-fields{min-width:0}.quote-brand-fields input:first-of-type{color:#111;font-size:15px!important}
+.quote-brand-fields .quote-logo-toggle{display:flex;align-items:center;gap:2mm;margin-bottom:2mm;color:#05aae9}.quote-brand-fields .quote-logo-toggle input{width:auto!important;margin:0}
+.quote-a4-form input:not([type=checkbox]),.quote-a4-form textarea,.quote-a4-form select{border:0;border-bottom:1px solid #d5d5d5;border-radius:0;background:rgba(5,170,233,.025)}
+.quote-a4-form input:focus,.quote-a4-form textarea:focus,.quote-a4-form select:focus{background:#eefaff;border-bottom-color:#05aae9}
+.quote-form-customer{margin:0;padding:4mm 0;border-bottom:1pt solid #d5d5d5;background:transparent}
+.quote-edit-table{margin-top:0;table-layout:fixed}
+.quote-edit-table thead{background:transparent;color:#111}
+.quote-edit-table th,.quote-edit-table td{border:0;border-bottom:1pt solid #d5d5d5;background:transparent}
+.quote-edit-table th:first-child{width:42%;text-align:center}.quote-edit-table th:nth-child(2){width:9%}.quote-edit-table th:nth-child(3){width:9%}.quote-edit-table th:nth-child(4){width:15%}.quote-edit-table th:nth-child(5){width:17%}.quote-edit-table th:last-child{width:8%}
+.quote-form-section{background:#f7fcff;color:#111}.quote-form-section th{border-bottom:1pt solid #d5d5d5}
+.quote-form-totals .quote-grand{border-color:#d5d5d5;background:transparent;color:#111}.quote-form-totals .quote-grand b,.quote-form-totals p>span{color:#05aae9}
+.quote-a4-form .quote-payment h3,.quote-a4-form .quote-terms h3{color:#05aae9;font-weight:400}
+
+@page{size:A4;margin:0}
+@media print{
+  html,body,#root{box-sizing:border-box!important;width:210mm!important;min-height:297mm!important;margin:0!important;padding:0!important}
+  .reference-document{width:210mm;min-height:297mm;max-width:none;margin:0;padding:10mm 12.7mm 12mm;font-size:9pt;line-height:1.35;box-shadow:none}
+  .reference-document .quote-watermark{display:none}
+  .receipt-paper{min-height:297mm}
+}

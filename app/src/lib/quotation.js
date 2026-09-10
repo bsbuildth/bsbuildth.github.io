@@ -3,7 +3,7 @@ export const newItem = () => ({ id: crypto.randomUUID(), description: '', quanti
 export function newQuote() {
   const now = new Date();
   const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  return { schemaVersion: 1, number: '', date, customer: '', phone: '', project: '', seller: 'BSBuildTh', sellerPhone: '',
+  return { schemaVersion: 4, number: '', date, customer: '', phone: '', project: '', seller: 'BSBuildTh', sellerPhone: '', sellerAddress: '', sellerTaxId: '', sellerWebsite: '', salesperson: '', showLogo: true, billDiscount: '0.00', vatRate: '7',
     sections: [{ id: crypto.randomUUID(), title: 'งานหลัก', kind: 'main', items: [newItem()] }],
     terms: '', warranty: '', paymentBase: 'main', installments: [
       { label: 'งวดที่ 1', percent: '40', condition: 'ก่อนเริ่มงาน' },
@@ -33,9 +33,16 @@ export function calculateQuote(q) {
     });
     return { ...section, items };
   });
-  const total = main + optional;
+  const subtotal = main + optional;
+  const discount = decimal(q.billDiscount ?? '0', 2);
+  if (discount > subtotal) throw new Error('ส่วนลดท้ายบิลต้องไม่เกินยอดรวม');
+  const total = subtotal - discount;
   bounded(total);
-  const base = q.paymentBase === 'main' ? main : total;
+  const vatPercent = decimal(q.vatRate ?? '0', 2);
+  if (vatPercent > 10000n) throw new Error('ภาษีมูลค่าเพิ่มต้องอยู่ระหว่าง 0–100%');
+  const vat = vatPercent === 0n ? 0n : (total * vatPercent + (10000n + vatPercent) / 2n) / (10000n + vatPercent);
+  const beforeVat = total - vat;
+  const base = q.paymentBase === 'main' ? (discount >= main ? 0n : main - discount) : total;
   const percentages = q.installments.map(i => decimal(i.percent, 2));
   if (!percentages.length || percentages.some(p => p <= 0n) || percentages.reduce((a,b) => a+b, 0n) !== 10000n) throw new Error('งวดชำระต้องรวม 100% และทุกงวดต้องมากกว่า 0');
   let used = 0n;
@@ -45,7 +52,7 @@ export function calculateQuote(q) {
     used += amount;
     return { ...item, amount: bounded(amount) };
   });
-  return { sections, main: bounded(main), optional: bounded(optional), total: bounded(total), base: bounded(base), installments };
+  return { sections, main: bounded(main), optional: bounded(optional), subtotal: bounded(subtotal), discount: bounded(discount), vatRate: bounded(vatPercent), vat: bounded(vat), beforeVat: bounded(beforeVat), total: bounded(total), base: bounded(base), installments };
 }
 export const money = satang => (satang / 100).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 export function validateIssue(q) {

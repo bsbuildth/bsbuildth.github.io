@@ -7,10 +7,14 @@ export default function QuotationA4Form({ quote, revision = 0, calculation, lock
     <fieldset className="quote-a4-fields" disabled={locked}>
       <header className="quote-heading quote-form-heading">
         <div className="quote-brand-fields">
+          <label className="quote-logo-toggle"><input type="checkbox" checked={quote.showLogo !== false} onChange={e => edit('showLogo', e.target.checked)} /> แสดงโลโก้บนเอกสาร</label>
           <label>ผู้เสนอราคา<input value={quote.seller} maxLength="300" onChange={e => edit('seller', e.target.value)} /></label>
+          <label>ที่อยู่<textarea rows="2" value={quote.sellerAddress || ''} maxLength="1000" onChange={e => edit('sellerAddress', e.target.value)} /></label>
+          <label>เลขประจำตัวผู้เสียภาษี<input value={quote.sellerTaxId || ''} maxLength="50" onChange={e => edit('sellerTaxId', e.target.value)} /></label>
           <label>เบอร์ผู้เสนอราคา<input value={quote.sellerPhone} maxLength="300" onChange={e => edit('sellerPhone', e.target.value)} /></label>
+          <label>เว็บไซต์<input value={quote.sellerWebsite || ''} maxLength="300" onChange={e => edit('sellerWebsite', e.target.value)} /></label>
         </div>
-        <div><h1>ใบเสนอราคา</h1><p className="quote-revision-badge">REV. {String(revision).padStart(2, '0')}</p><label>เลขเอกสาร<input value={quote.number} maxLength="50" placeholder="QT-001" onChange={e => edit('number', e.target.value)} /></label><label>วันที่<input type="date" value={quote.date} onChange={e => edit('date', e.target.value)} /></label></div>
+        <div><h1>ใบเสนอราคา</h1><p className="quote-revision-badge">REV. {String(revision).padStart(2, '0')}</p><label>เลขเอกสาร<input value={quote.number} maxLength="50" placeholder="QT-001" onChange={e => edit('number', e.target.value)} /></label><label>วันที่<input type="date" value={quote.date} onChange={e => edit('date', e.target.value)} /></label><label>ผู้ขาย<input value={quote.salesperson || ''} maxLength="300" onChange={e => edit('salesperson', e.target.value)} /></label></div>
       </header>
 
       <section className="quote-customer quote-form-customer">
@@ -19,7 +23,7 @@ export default function QuotationA4Form({ quote, revision = 0, calculation, lock
         <label className="quote-project-field">โครงการ<input value={quote.project} maxLength="300" onChange={e => edit('project', e.target.value)} /></label>
       </section>
 
-      <table className="quote-table quote-edit-table"><thead><tr><th>รายการ</th><th>จำนวน</th><th>หน่วย</th><th>ราคา/หน่วย</th><th>จำนวนเงิน</th><th className="quote-edit-only">จัดการ</th></tr></thead>
+      <table className="quote-table quote-edit-table"><thead><tr><th>รายละเอียด</th><th>จำนวน</th><th>หน่วย</th><th>ราคา/หน่วย</th><th>มูลค่า</th><th className="quote-edit-only">จัดการ</th></tr></thead>
         {quote.sections.map((section, sectionIndex) => <tbody key={section.id}>
           <tr className="quote-section quote-form-section"><th colSpan="6"><span>{sectionIndex + 1}.</span><input aria-label={`ชื่อหมวด ${sectionIndex + 1}`} value={section.title} maxLength="150" onChange={e => sectionEdit(sectionIndex, current => ({ ...current, title: e.target.value }))} /><select aria-label={`ประเภทหมวด ${sectionIndex + 1}`} value={section.kind} onChange={e => sectionEdit(sectionIndex, current => ({ ...current, kind: e.target.value }))}><option value="main">งานหลัก</option><option value="optional">อุปกรณ์เพิ่มเติม</option></select><button type="button" className="quote-edit-only quote-danger" onClick={() => removeSection(sectionIndex)}>ลบหมวด</button></th></tr>
           {section.items.map((item, itemIndex) => {
@@ -31,7 +35,7 @@ export default function QuotationA4Form({ quote, revision = 0, calculation, lock
       </table>
       <button type="button" className="quote-edit-only quote-add-section" onClick={addSection}>+ เพิ่มหมวดงาน</button>
 
-      <div className="quote-totals quote-form-totals"><p>รวมงานหลัก <b>{totals ? money(totals.main) : '—'}</b></p><p>รวมอุปกรณ์เพิ่มเติม <b>{totals ? money(totals.optional) : '—'}</b></p><p className="quote-grand">ยอดรวมทั้งสิ้น <b>{totals ? `${money(totals.total)} บาท` : 'คำนวณไม่สำเร็จ'}</b></p></div>
+      <div className="quote-totals quote-form-totals"><label className="quote-edit-only">ส่วนลดท้ายบิล (บาท)<input inputMode="decimal" value={quote.billDiscount ?? '0.00'} onChange={e => edit('billDiscount', e.target.value)} /></label><label className="quote-edit-only">ภาษีมูลค่าเพิ่มรวมในราคา (%)<input inputMode="decimal" value={quote.vatRate ?? '0'} onChange={e => edit('vatRate', e.target.value)} /></label><p>รวมเป็นเงิน <b>{totals ? money(totals.subtotal) : '—'}</b></p><p>ส่วนลดท้ายบิล <b>{totals ? money(totals.discount) : '—'}</b></p><p>ภาษีมูลค่าเพิ่ม <b>{totals ? money(totals.vat) : '—'}</b></p><p>ราคาก่อนภาษี <b>{totals ? money(totals.beforeVat) : '—'}</b></p><p className="quote-grand">ยอดรวมทั้งสิ้น <b>{totals ? `${money(totals.total)} บาท` : 'คำนวณไม่สำเร็จ'}</b></p></div>
       {calculation.error ? <p className="quote-calc-error" role="alert">{calculation.error}</p> : <p className="quote-calc-ready quote-edit-only">✓ คำนวณอัตโนมัติแล้ว พร้อมบันทึก</p>}
 
       <section className="quote-terms quote-form-terms"><h3>รายละเอียดและเงื่อนไข</h3><textarea rows="4" value={quote.terms} maxLength="10000" placeholder="ระบุขอบเขตงาน เงื่อนไข และหมายเหตุ" onChange={e => edit('terms', e.target.value)} /><label>การรับประกัน<input value={quote.warranty} maxLength="1000" onChange={e => edit('warranty', e.target.value)} /></label></section>
