@@ -25,7 +25,7 @@
 
 ## สิ่งที่ต้องทำใน production
 
-1. ให้สิทธิ์ Firebase โปรเจกต์ `bs-build` แก่บัญชีที่ใช้บนเครื่องนี้ หรือเข้าสู่ระบบด้วยบัญชีเจ้าของโปรเจกต์
+1. เพิ่ม `bsbuildth@gmail.com` เป็นสมาชิกของ Firebase/Google Cloud โปรเจกต์ `bs-build` จากบัญชีเจ้าของโปรเจกต์ บัญชีนี้เข้าสู่ Firebase CLI สำเร็จแล้วแต่ยังไม่มีสิทธิ์โปรเจกต์
 2. สำรอง Firestore แล้วรันคำสั่ง dry run สำหรับ visibility/media; ตรวจจำนวนก่อน `--apply`
 3. ตั้ง custom claim `admin` ให้บัญชี `bsbuildth@gmail.com` และให้ผู้ใช้ล็อกอินใหม่เพื่อรับ token ใหม่
 4. deploy Firestore/Storage Rules และตัวแปร GitHub Actions โดยเฉพาะ Firebase config, `VITE_USE_STORAGE` และ Apps Script URL ถ้ายังใช้การแจ้งเตือน
@@ -45,4 +45,4 @@
 
 ## ข้อจำกัดปัจจุบัน
 
-บัญชี Firebase CLI บนเครื่องเข้าถึงเพียง `bs-reseller` และ `no5cafepos`; การเข้าถึง `bs-build` ตอบ 403 จึงยังตั้ง admin claim, deploy Rules, สำรองหรือ migration production ไม่ได้ GitHub connector มีสิทธิ์อ่านแต่ไม่มีสิทธิ์ push จึงยังไม่เผยแพร่ชุดนี้
+Firebase CLI ใช้บัญชีหลัก `bsbuildth@gmail.com` แล้ว แต่ `projects:list` ของบัญชีนี้ว่าง และการเข้าถึง `bs-build` ตอบ 403 `PERMISSION_DENIED` จึงยังตั้ง admin claim, deploy Rules, สำรองหรือ migration production ไม่ได้ GitHub connector มีสิทธิ์อ่านแต่ไม่มีสิทธิ์ push จึงยังไม่เผยแพร่ชุดนี้

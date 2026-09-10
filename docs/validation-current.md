@@ -18,7 +18,7 @@ Baseline เดิมคือ 60 errors และ 1 warning; ดู [ผลเ�
 
 ## สิ่งที่การตรวจนี้ยังไม่ยืนยัน
 
-- ยังไม่ได้ทดสอบกับ Firebase production เพราะบัญชี CLI ปัจจุบันไม่มีสิทธิ์โปรเจกต์ `bs-build` (403)
+- เข้าสู่ Firebase CLI ด้วย `bsbuildth@gmail.com` สำเร็จแล้ว แต่บัญชีไม่มีโปรเจกต์ในรายการและไม่มีสิทธิ์ `bs-build` (403 `PERMISSION_DENIED`)
 - ยังไม่ได้ตั้ง custom claim ให้ `bsbuildth@gmail.com`, deploy Rules, สำรอง หรือ migration production
 - ยังไม่ได้ push/เปิด PR/deploy เพราะ GitHub connector ไม่มีสิทธิ์เขียน
 - ยังไม่ได้ส่ง Apps Script/อีเมล/LINE จริง; ฟอร์มถือว่า Firestore บันทึกสำเร็จเป็นหลัก
