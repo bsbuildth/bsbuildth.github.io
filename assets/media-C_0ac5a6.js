@@ -1,0 +1,1 @@
+function e(e){if(![`image/jpeg`,`image/png`,`image/webp`,`video/mp4`].includes(e.type))throw Error(`รองรับ JPG, PNG, WebP และ MP4 เท่านั้น`);if(e.size>24*1024*1024)throw Error(`ไฟล์ต้องไม่เกิน 24 MB`)}function t(e){if(new TextEncoder().encode(JSON.stringify(e)).length>8e5)throw Error(`ข้อมูลรวมรูปมีขนาดใหญ่เกินไป กรุณาลดขนาดหรือใช้ที่เก็บสื่อ`);return e}export{e as n,t};
