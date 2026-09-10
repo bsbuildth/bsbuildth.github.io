@@ -1,7 +1,7 @@
 ﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { hasAdminClaim } from '../lib/admin-access';
+import { hasAdminAccess } from '../lib/admin-access';
 import { auth } from '../firebase/config';
 import '../components/Header.css';
 
@@ -20,7 +20,7 @@ const AdminLogin = ({ setIsAuthenticated }) => {
     try {
       const { user } = await signInWithEmailAndPassword(auth, username.trim(), password);
       const token = await user.getIdTokenResult(true);
-      if (!hasAdminClaim(token.claims)) {
+      if (!hasAdminAccess(token.claims, user.email)) {
         await signOut(auth);
         setError('บัญชีนี้ยังไม่ได้รับสิทธิ์ผู้ดูแล กรุณาติดต่อเจ้าของระบบ');
         return;
