@@ -20,6 +20,14 @@ test('decimal rounding, bad quantities and incomplete percentages', () => {
  for (const value of ['-1','NaN','','1e3','1.1234']) {q.sections[0].items[0].quantity=value;assert.throws(()=>calculateQuote(q));}
  q.sections[0].items[0].quantity='1';q.installments[0].percent='39';assert.throws(()=>calculateQuote(q));
 });
+test('VAT is included in the total and never changes line-item values', () => {
+ const q=demoQuote(),withVat=calculateQuote(q);
+ assert.equal(withVat.beforeVat+withVat.vat,withVat.total);
+ assert.equal(withVat.total,9951000);
+ q.vatRate='0';const withoutVat=calculateQuote(q);
+ assert.equal(withoutVat.vat,0);assert.equal(withoutVat.beforeVat,withoutVat.total);assert.equal(withoutVat.total,9951000);
+ q.vatRate='100.01';assert.throws(()=>calculateQuote(q));
+});
 test('failed contact save does not notify and can retry; concurrent click is ignored', async () => {
  const data={name:'ทดสอบ',contactInfo:'test',serviceType:'ครัว'};let notify=0,save=0,release;
  const sender=createContactSender(async()=>{save++;if(save===1)throw Error('offline');await new Promise(r=>{release=r;});},()=>{notify++;});

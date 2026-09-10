@@ -11,7 +11,7 @@ export function newReceipt(source) {
   const quote = source?.quote;
   const total = source?.totals?.total;
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     number: '',
     date: today(),
     quoteNumber: quote?.number || '',
@@ -20,6 +20,10 @@ export function newReceipt(source) {
     project: quote?.project || '',
     seller: quote?.seller || 'BSBuildTh',
     sellerPhone: quote?.sellerPhone || '',
+    sellerAddress: quote?.sellerAddress || '',
+    sellerTaxId: quote?.sellerTaxId || '',
+    sellerWebsite: quote?.sellerWebsite || '',
+    salesperson: quote?.salesperson || '',
     paymentMethod: 'โอนเงิน',
     paymentReference: '',
     note: '',
