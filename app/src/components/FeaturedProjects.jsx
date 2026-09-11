@@ -11,6 +11,7 @@ const CATEGORY_LABELS = {
 const FeaturedProjects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [filter, setFilter] = useState('all');
   const [selectedProject, setSelectedProject] = useState(null);
   const [projectDetail, setProjectDetail] = useState(null);
@@ -27,7 +28,7 @@ const FeaturedProjects = () => {
   useEffect(() => {
     getProjects()
       .then(data => { setProjects(data); setLoading(false); })
-      .catch(err => { console.error('Failed to fetch projects:', err); setLoading(false); });
+      .catch(err => { console.error('Failed to fetch projects:', err); setLoadError(true); setLoading(false); });
   }, []);
 
   useEffect(() => {
@@ -139,7 +140,6 @@ const FeaturedProjects = () => {
     </article>
   );
 
-  if (!loading && projects.length === 0) return null;
 
   return (
     <section className="featured-projects" id="projects">
@@ -157,9 +157,11 @@ const FeaturedProjects = () => {
       </div>
 
       {loading ? (
-        <p style={{ textAlign: 'center' }}>Loading projects...</p>
+        <p role="status" style={{ textAlign: 'center' }}>กำลังโหลดผลงาน...</p>
+      ) : loadError ? (
+        <p role="alert" style={{ textAlign: 'center' }}>โหลดผลงานไม่สำเร็จ กรุณารีเฟรชหน้าเพื่อลองอีกครั้ง</p>
       ) : filteredProjects.length === 0 ? (
-        <p style={{ textAlign: 'center', color: 'var(--ink-soft)' }}>ยังไม่มีผลงานในหมวดนี้</p>
+        <p style={{ textAlign: 'center', color: 'var(--ink-soft)' }}>{projects.length ? 'ยังไม่มีผลงานในหมวดนี้' : 'กำลังจัดเตรียมผลงานสำหรับเผยแพร่'} <a href="#contact" style={{ textDecoration: 'underline' }}>สอบถามงานที่คุณสนใจ →</a></p>
       ) : (
         <div
           className="fp-scroller"

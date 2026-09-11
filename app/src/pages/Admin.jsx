@@ -328,7 +328,7 @@ const Admin = ({ setIsAuthenticated }) => {
   // shown unless explicitly turned off (matches the public-site default)
   const isShown = (it) => it.is_visible !== 0 && it.is_visible !== false;
   const handleToggleProjectVisible = async (p) => {
-    await updateItem('projects', p.id, { is_visible: isShown(p) ? 0 : 1 });
+    await updateItem('projects', p.id, { is_visible: p.is_visible === 1 || p.is_visible === true ? 0 : 1 });
     fetchProjects();
   };
   const handleToggleCalcVisible = async (c) => {
@@ -428,7 +428,7 @@ const Admin = ({ setIsAuthenticated }) => {
       if (editingProjectId) {
         await updateItem('projects', editingProjectId, payload);
       } else {
-        await addItem('projects', { ...payload, sort_order: projects.length, process_images: [] });
+        await addItem('projects', { ...payload, is_visible: 1, sort_order: projects.length, process_images: [] });
       }
       setTitle(''); setImageFile(null); setProjectCategory('renovation');
       setProjectDescription(''); setEditingProjectId(null);
@@ -907,6 +907,7 @@ const Admin = ({ setIsAuthenticated }) => {
 
       <section className="admin-section" style={{ display: activeTab === 'projects' ? 'block' : 'none' }}>
         <h2>Manage Featured Projects</h2>
+        <p>ผลงานจะแสดงบนเว็บไซต์เมื่อเปิดสวิตช์เผยแพร่ รายการเดิมที่ยังไม่มีสถานะต้องเปิดเผยแพร่อีกครั้ง</p>
 
         {/* Expanded Image Viewer (Lightbox) – use display:none to avoid unmount/remount cycles */}
         {(() => {
@@ -1154,7 +1155,7 @@ const Admin = ({ setIsAuthenticated }) => {
                   <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.85rem', color: '#666' }}>
                     {p.description || '-'}
                   </td>
-                  <td><ToggleSwitch checked={isShown(p)} onChange={() => handleToggleProjectVisible(p)} /></td>
+                  <td><ToggleSwitch checked={p.is_visible === 1 || p.is_visible === true} onChange={() => handleToggleProjectVisible(p)} /></td>
                   <td style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                     <button onClick={() => handleEditProject(p)} style={{ background: '#4a6fa5', color: '#fff', border: 'none', borderRadius: 6, padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.8rem' }}>✏️ แก้ไข</button>
                     <button onClick={() => handleManageImages(p)} style={{ background: '#2d8a4e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.8rem' }}>📸 รูป</button>
@@ -1954,7 +1955,6 @@ const Admin = ({ setIsAuthenticated }) => {
             <div className="ws-toggle-grid">
               {[
                 { key: 'show_hero', label: 'Hero (แบนเนอร์บนสุด)' },
-                { key: 'show_beforeafter', label: 'Before / After (ก่อน-หลัง)' },
                 { key: 'show_projects', label: 'ผลงานที่ผ่านมา' },
                 { key: 'show_reference', label: 'รูปอ้างอิง (Reference)' },
                 { key: 'show_calculator', label: 'ประเมินงบเบื้องต้น' },
