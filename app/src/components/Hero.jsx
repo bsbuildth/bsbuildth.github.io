@@ -53,20 +53,9 @@ const Hero = () => {
           {content.description && <p className="hero-description">{content.description}</p>}
           <div className="hero-actions">
             <a href="#contact" className="btn btn-solid hero-cta">นัดสำรวจหน้างาน <span>→</span></a>
-            <a href="#reference" className="hero-link">ดูแนวทางงาน <span>↗</span></a>
-          </div>
-          <div className="hero-proof" aria-label="จุดเด่นบริการ">
-            <span>คุมงานเป็นขั้นตอน</span><span>แบ่งจ่ายตามความคืบหน้า</span><span>รับประกันผลงาน</span>
+            <a href="#reference" className="hero-link">ชมผลงานและไอเดีย</a>
           </div>
         </div>
-
-        <aside className="hero-architecture" aria-hidden="true">
-          <div className="hero-orbit"><span></span><span></span><span></span></div>
-          <div className="hero-model">
-            <i className="model-slab model-slab-1"></i><i className="model-slab model-slab-2"></i><i className="model-wall model-wall-1"></i><i className="model-wall model-wall-2"></i>
-          </div>
-          <p><small>FROM PLAN TO PLACE</small>คิดครบ ตั้งแต่พื้นที่จนถึงรายละเอียด</p>
-        </aside>
       </div>
 
       <div className="hero-trust-strip">
