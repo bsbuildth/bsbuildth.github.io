@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { demoQuote, calculateQuote, validateIssue } from '../src/lib/quotation.js';
+import { bahtText, demoQuote, calculateQuote, validateIssue } from '../src/lib/quotation.js';
 import { createContactSender } from '../src/lib/contact.js';
 import { hasAdminAccess, hasAdminClaim } from '../src/lib/admin-access.js';
 import { validateMedia, validateDocument } from '../src/lib/media.js';
@@ -31,6 +31,16 @@ test('VAT is included in the total and never changes line-item values', () => {
  assert.equal(withoutVat.vat,0);assert.equal(withoutVat.beforeVat,withoutVat.total);assert.equal(withoutVat.total,9900000);
  q.vatRate='100.01';assert.throws(()=>calculateQuote(q));
  q.vatRate='7';q.billDiscount='99510.01';assert.throws(()=>calculateQuote(q));
+});
+test('percentage discount and Thai amount text are exact', () => {
+ const q=demoQuote();q.discountType='percent';q.billDiscount='10';
+ const result=calculateQuote(q);
+ assert.equal(result.discount,995100);assert.equal(result.total,8955900);assert.equal(result.base,4950900);
+ assert.equal(bahtText(result.total),'แปดหมื่นเก้าพันห้าร้อยห้าสิบเก้าบาทถ้วน');
+ assert.equal(bahtText(100000101),'หนึ่งล้านเอ็ดบาทหนึ่งสตางค์');
+ assert.equal(bahtText(25),'ศูนย์บาทยี่สิบห้าสตางค์');
+ assert.equal(bahtText(0),'ศูนย์บาทถ้วน');
+ q.billDiscount='100.01';assert.throws(()=>calculateQuote(q));
 });
 test('failed contact save does not notify and can retry; concurrent click is ignored', async () => {
  const data={name:'ทดสอบ',contactInfo:'test',serviceType:'ครัว'};let notify=0,save=0,release;

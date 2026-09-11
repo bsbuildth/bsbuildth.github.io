@@ -27,6 +27,18 @@ test('receipt number is unique and issued receipt is immutable',async()=>{
  await assertFails(deleteDoc(ref));
  await assertFails(setDoc(doc(admin,'receiptNumbers','RC-TEST'),{receiptId:'other'}));
 });
+test('document defaults and sequential counters are admin-only',async()=>{
+ for(const db of [guest,user]){
+  await assertFails(getDoc(doc(db,'documentSettings','company')));
+  await assertFails(setDoc(doc(db,'documentCounters','QT-202609'),{kind:'QT',period:'202609',sequence:1}));
+ }
+ await assertSucceeds(setDoc(doc(admin,'documentSettings','company'),{seller:'BSBuildTh'}));
+ const counter=doc(admin,'documentCounters','QT-202609');
+ await assertSucceeds(setDoc(counter,{kind:'QT',period:'202609',sequence:1}));
+ await assertSucceeds(updateDoc(counter,{kind:'QT',period:'202609',sequence:2}));
+ await assertFails(updateDoc(counter,{kind:'RC',period:'202609',sequence:4}));
+ await assertFails(deleteDoc(counter));
+});
 test('contact schema rejects oversize and additional fields',async()=>{
  const valid={name:'Example',contact_info:'000',email:'',service_type:'test',message:'',created_at:serverTimestamp()};
  await assertSucceeds(setDoc(doc(guest,'contacts','valid'),valid));await assertFails(setDoc(doc(guest,'contacts','bad'),{...valid,name:'x'.repeat(121)}));

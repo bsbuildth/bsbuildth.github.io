@@ -3,7 +3,7 @@ export const newItem = () => ({ id: crypto.randomUUID(), description: '', quanti
 export function newQuote() {
   const now = new Date();
   const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  return { schemaVersion: 4, number: '', date, customer: '', phone: '', project: '', seller: 'BSBuildTh', sellerPhone: '', sellerAddress: '', sellerTaxId: '', sellerWebsite: '', salesperson: '', showLogo: true, billDiscount: '0.00', vatRate: '7',
+  return { schemaVersion: 5, number: '', date, customer: '', phone: '', project: '', seller: 'BSBuildTh', sellerPhone: '', sellerAddress: '', sellerTaxId: '', sellerWebsite: '', salesperson: '', showLogo: true, discountType: 'amount', billDiscount: '0.00', vatRate: '7',
     sections: [{ id: crypto.randomUUID(), title: 'งานหลัก', kind: 'main', items: [newItem()] }],
     terms: '', warranty: '', paymentBase: 'main', installments: [
       { label: 'งวดที่ 1', percent: '40', condition: 'ก่อนเริ่มงาน' },
@@ -34,7 +34,10 @@ export function calculateQuote(q) {
     return { ...section, items };
   });
   const subtotal = main + optional;
-  const discount = decimal(q.billDiscount ?? '0', 2);
+  const discountType = q.discountType === 'percent' ? 'percent' : 'amount';
+  const discountInput = decimal(q.billDiscount ?? '0', 2);
+  if (discountType === 'percent' && discountInput > 10000n) throw new Error('ส่วนลดเปอร์เซ็นต์ต้องอยู่ระหว่าง 0–100%');
+  const discount = discountType === 'percent' ? (subtotal * discountInput + 5000n) / 10000n : discountInput;
   if (discount > subtotal) throw new Error('ส่วนลดท้ายบิลต้องไม่เกินยอดรวม');
   const total = subtotal - discount;
   bounded(total);
@@ -42,7 +45,8 @@ export function calculateQuote(q) {
   if (vatPercent > 10000n) throw new Error('ภาษีมูลค่าเพิ่มต้องอยู่ระหว่าง 0–100%');
   const vat = vatPercent === 0n ? 0n : (total * vatPercent + (10000n + vatPercent) / 2n) / (10000n + vatPercent);
   const beforeVat = total - vat;
-  const base = q.paymentBase === 'main' ? (discount >= main ? 0n : main - discount) : total;
+  const mainDiscount = discountType === 'percent' ? (main * discountInput + 5000n) / 10000n : discount;
+  const base = q.paymentBase === 'main' ? (mainDiscount >= main ? 0n : main - mainDiscount) : total;
   const percentages = q.installments.map(i => decimal(i.percent, 2));
   if (!percentages.length || percentages.some(p => p <= 0n) || percentages.reduce((a,b) => a+b, 0n) !== 10000n) throw new Error('งวดชำระต้องรวม 100% และทุกงวดต้องมากกว่า 0');
   let used = 0n;
@@ -52,9 +56,40 @@ export function calculateQuote(q) {
     used += amount;
     return { ...item, amount: bounded(amount) };
   });
-  return { sections, main: bounded(main), optional: bounded(optional), subtotal: bounded(subtotal), discount: bounded(discount), vatRate: bounded(vatPercent), vat: bounded(vat), beforeVat: bounded(beforeVat), total: bounded(total), base: bounded(base), installments };
+  return { sections, main: bounded(main), optional: bounded(optional), subtotal: bounded(subtotal), discount: bounded(discount), discountType, discountInput: bounded(discountInput), vatRate: bounded(vatPercent), vat: bounded(vat), beforeVat: bounded(beforeVat), total: bounded(total), base: bounded(base), installments };
 }
 export const money = satang => (satang / 100).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const THAI_DIGITS = ['', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า'];
+const THAI_PLACES = ['', 'สิบ', 'ร้อย', 'พัน', 'หมื่น', 'แสน'];
+function readThaiGroup(value, hasHigher = false) {
+  const text = String(Number(value));
+  if (text === '0') return '';
+  let result = '';
+  for (let index = 0; index < text.length; index += 1) {
+    const digit = Number(text[index]);
+    if (!digit) continue;
+    const place = text.length - index - 1;
+    if (place === 1 && digit === 1) result += 'สิบ';
+    else if (place === 1 && digit === 2) result += 'ยี่สิบ';
+    else if (place === 0 && digit === 1 && (text.length > 1 || hasHigher)) result += 'เอ็ด';
+    else result += `${THAI_DIGITS[digit]}${THAI_PLACES[place]}`;
+  }
+  return result;
+}
+function readThaiInteger(value) {
+  const text = String(value).replace(/^0+(?=\d)/, '');
+  if (text.length <= 6) return readThaiGroup(text);
+  const higher = text.slice(0, -6);
+  const lower = text.slice(-6);
+  return `${readThaiInteger(higher)}ล้าน${readThaiGroup(lower, true)}`;
+}
+export function bahtText(satang) {
+  if (!Number.isSafeInteger(satang) || satang < 0) throw new Error('ยอดเงินสำหรับข้อความภาษาไทยไม่ถูกต้อง');
+  const baht = Math.floor(satang / 100);
+  const fraction = satang % 100;
+  const bahtWords = baht === 0 ? 'ศูนย์' : readThaiInteger(baht);
+  return `${bahtWords}บาท${fraction === 0 ? 'ถ้วน' : `${readThaiInteger(fraction)}สตางค์`}`;
+}
 export function validateIssue(q) {
   for (const key of ['number', 'date', 'customer', 'phone', 'project', 'seller', 'sellerPhone']) {
     if (!String(q[key] || '').trim()) throw new Error('กรุณากรอกข้อมูลเอกสาร ลูกค้า โครงการ และผู้เสนอราคาให้ครบ');

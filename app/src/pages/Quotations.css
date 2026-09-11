@@ -44,6 +44,8 @@
 .quote-add-row td{text-align:center!important;background:#f8faff}.quote-add-row button,.quote-add-section{padding:5px 10px!important;font-size:11px!important}
 .quote-add-section{display:block;margin:8px 0 0 auto}
 .quote-form-totals{margin-left:auto;max-width:360px}
+.quote-discount-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.quote-baht-text{justify-content:flex-end!important;text-align:right;font-size:11px}
 .quote-calc-ready,.quote-calc-error{margin:6px 0;text-align:right;font-weight:700}.quote-calc-ready{color:#26724c}.quote-calc-error{padding:8px;background:#fff0f0;color:#9a2d2d}
 .quote-form-terms textarea{width:100%;resize:vertical}.quote-form-terms label{font-weight:700}.quote-form-terms input{font-weight:400}
 .quote-payment-heading{display:flex;align-items:end;justify-content:space-between;gap:12px}.quote-payment-heading h3{margin-right:auto}.quote-payment-heading label{margin:0}.quote-payment-heading select{width:auto}
@@ -222,7 +224,9 @@
 @page{size:A4 portrait;margin:0}
 @media print{
   html,body,#root{box-sizing:border-box!important;width:210mm!important;min-height:297mm!important;margin:0!important;padding:0!important}
-  .reference-document{box-sizing:border-box;width:210mm!important;max-width:210mm!important;min-height:297mm!important;margin:0!important;padding:10mm 12.7mm 12mm!important;font-size:9pt;line-height:1.35;box-shadow:none}
+  .reference-document{box-sizing:border-box;width:210mm!important;max-width:210mm!important;min-height:297mm!important;margin:0!important;padding:10mm 12.7mm 12mm!important;overflow:visible!important;font-size:9pt;line-height:1.35;box-shadow:none}
+  .reference-document.document-long{display:block!important}
+  .reference-document.document-long .reference-signatures{margin-top:12mm}
   .reference-document .quote-watermark{display:none}
   .receipt-paper{min-height:297mm}
 }

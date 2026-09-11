@@ -71,5 +71,19 @@ service cloud.firestore {
       allow update: if admin() && request.resource.data == resource.data;
       allow delete: if false;
     }
+    match /documentSettings/{id} {
+      allow read, write: if admin();
+    }
+    match /documentCounters/{id} {
+      allow read: if admin();
+      allow create: if admin()
+        && request.resource.data.sequence >= 1
+        && request.resource.data.kind in ['QT', 'RC'];
+      allow update: if admin()
+        && request.resource.data.kind == resource.data.kind
+        && request.resource.data.period == resource.data.period
+        && request.resource.data.sequence > resource.data.sequence;
+      allow delete: if false;
+    }
   }
 }

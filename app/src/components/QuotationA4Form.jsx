@@ -1,4 +1,4 @@
-import { money } from '../lib/quotation';
+import { bahtText, money } from '../lib/quotation';
 
 export default function QuotationA4Form({ quote, revision = 0, calculation, locked, actions, edit, sectionEdit, itemEdit, addItem, removeItem, addSection, removeSection }) {
   const totals = calculation.totals;
@@ -14,7 +14,7 @@ export default function QuotationA4Form({ quote, revision = 0, calculation, lock
           <label>เบอร์ผู้เสนอราคา<input value={quote.sellerPhone} maxLength="300" onChange={e => edit('sellerPhone', e.target.value)} /></label>
           <label>เว็บไซต์<input value={quote.sellerWebsite || ''} maxLength="300" onChange={e => edit('sellerWebsite', e.target.value)} /></label>
         </div>
-        <div><h1>ใบเสนอราคา</h1><p className="quote-revision-badge">REV. {String(revision).padStart(2, '0')}</p><label>เลขเอกสาร<input value={quote.number} maxLength="50" placeholder="QT-001" onChange={e => edit('number', e.target.value)} /></label><label>วันที่<input type="date" value={quote.date} onChange={e => edit('date', e.target.value)} /></label><label>ผู้ขาย<input value={quote.salesperson || ''} maxLength="300" onChange={e => edit('salesperson', e.target.value)} /></label></div>
+        <div><h1>ใบเสนอราคา</h1><p className="quote-revision-badge">REV. {String(revision).padStart(2, '0')}</p><label>เลขเอกสาร<input value={quote.number} maxLength="50" placeholder="เว้นว่างเพื่อสร้างเลขอัตโนมัติ" onChange={e => edit('number', e.target.value)} /></label><label>วันที่<input type="date" value={quote.date} onChange={e => edit('date', e.target.value)} /></label><label>ผู้ขาย<input value={quote.salesperson || ''} maxLength="300" onChange={e => edit('salesperson', e.target.value)} /></label></div>
       </header>
 
       <section className="quote-customer quote-form-customer">
@@ -35,7 +35,7 @@ export default function QuotationA4Form({ quote, revision = 0, calculation, lock
       </table>
       <button type="button" className="quote-edit-only quote-add-section" onClick={addSection}>+ เพิ่มหมวดงาน</button>
 
-      <div className="quote-totals quote-form-totals"><label className="quote-edit-only">ส่วนลดท้ายบิล (บาท)<input inputMode="decimal" value={quote.billDiscount ?? '0.00'} onChange={e => edit('billDiscount', e.target.value)} /></label><label className="quote-edit-only">ภาษีมูลค่าเพิ่มรวมในราคา (%)<input inputMode="decimal" value={quote.vatRate ?? '0'} onChange={e => edit('vatRate', e.target.value)} /></label><p>รวมเป็นเงิน <b>{totals ? money(totals.subtotal) : '—'}</b></p><p>ส่วนลดท้ายบิล <b>{totals ? money(totals.discount) : '—'}</b></p><p>ภาษีมูลค่าเพิ่ม <b>{totals ? money(totals.vat) : '—'}</b></p><p>ราคาก่อนภาษี <b>{totals ? money(totals.beforeVat) : '—'}</b></p><p className="quote-grand">ยอดรวมทั้งสิ้น <b>{totals ? `${money(totals.total)} บาท` : 'คำนวณไม่สำเร็จ'}</b></p></div>
+      <div className="quote-totals quote-form-totals"><div className="quote-discount-fields quote-edit-only"><label>รูปแบบส่วนลด<select value={quote.discountType === 'percent' ? 'percent' : 'amount'} onChange={e => edit('discountType', e.target.value)}><option value="amount">จำนวนเงิน (บาท)</option><option value="percent">เปอร์เซ็นต์ (%)</option></select></label><label>ส่วนลดท้ายบิล<input inputMode="decimal" value={quote.billDiscount ?? '0.00'} onChange={e => edit('billDiscount', e.target.value)} /></label></div><label className="quote-edit-only">ภาษีมูลค่าเพิ่มรวมในราคา (%)<input inputMode="decimal" value={quote.vatRate ?? '0'} onChange={e => edit('vatRate', e.target.value)} /></label><p>รวมเป็นเงิน <b>{totals ? money(totals.subtotal) : '—'}</b></p><p>ส่วนลดท้ายบิล{totals?.discountType === 'percent' ? ` ${money(totals.discountInput)}%` : ''} <b>{totals ? money(totals.discount) : '—'}</b></p><p>ภาษีมูลค่าเพิ่ม <b>{totals ? money(totals.vat) : '—'}</b></p><p>ราคาก่อนภาษี <b>{totals ? money(totals.beforeVat) : '—'}</b></p><p className="quote-grand">ยอดรวมทั้งสิ้น <b>{totals ? `${money(totals.total)} บาท` : 'คำนวณไม่สำเร็จ'}</b></p>{totals && <p className="quote-baht-text">({bahtText(totals.total)})</p>}</div>
       {calculation.error ? <p className="quote-calc-error" role="alert">{calculation.error}</p> : <p className="quote-calc-ready quote-edit-only">✓ คำนวณอัตโนมัติแล้ว พร้อมบันทึก</p>}
 
       <section className="quote-terms quote-form-terms"><h3>รายละเอียดและเงื่อนไข</h3><textarea rows="4" value={quote.terms} maxLength="10000" placeholder="ระบุขอบเขตงาน เงื่อนไข และหมายเหตุ" onChange={e => edit('terms', e.target.value)} /><label>การรับประกัน<input value={quote.warranty} maxLength="1000" onChange={e => edit('warranty', e.target.value)} /></label></section>
