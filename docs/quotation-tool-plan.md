@@ -6,7 +6,7 @@
 
 ## สถานะการพัฒนา
 
-สร้าง editor, ตัวอย่าง A4, การคำนวณสตางค์, ส่วนลดท้ายบิล, VAT, โลโก้เปิด/ปิด, draft/issued/void, เลขเอกสารไม่ซ้ำ, revision snapshot, ใบเสร็จต้นฉบับ/สำเนา และ private Firestore Rules แล้ว ระบบใช้ `songyos2528@gmail.com` เป็นผู้ดูแล Firebase และเผยแพร่ผ่าน GitHub Pages ดูสถานะล่าสุดใน [แผนงานหลัก](project-plan.md) และ [ผลตรวจล่าสุด](validation-current.md)
+สร้าง editor, ตัวอย่าง A4, การคำนวณสตางค์, ส่วนลดท้ายบิลแบบบาท/เปอร์เซ็นต์, ยอดภาษาไทย, เลขเอกสารอัตโนมัติรายเดือน, ข้อมูลบริษัทเริ่มต้น, VAT, โลโก้เปิด/ปิด, draft/issued/void, เลขเอกสารไม่ซ้ำ, revision snapshot, ใบเสร็จต้นฉบับ/สำเนา และ private Firestore Rules แล้ว ระบบใช้ `songyos2528@gmail.com` เป็นผู้ดูแล Firebase และเผยแพร่ผ่าน GitHub Pages ดูสถานะล่าสุดใน [แผนงานหลัก](project-plan.md) และ [ผลตรวจล่าสุด](validation-current.md)
 
 ## เป้าหมายและตำแหน่งในโปรเจ็กต์
 
@@ -62,7 +62,8 @@
 - items: id, description, quantity, unit, unitPriceSatang, isFree, includedInQuote, referenceUnitPriceSatang, order
 - paymentPlan: base (main/total), installments [{label, percentage, condition}], calculatedAmountsSatang
 - quotations/{id}/revisions/{revisionId}: snapshot ที่ออกเอกสารแล้ว รวมผู้จัดทำ เวลาออกเอกสาร เวอร์ชันแม่แบบ และยอดที่คำนวณ ไม่อ้างชื่อ/ราคาแบบสดที่เปลี่ยนตามข้อมูลธุรกิจภายหลัง
-- quotationNumberReservations/{normalizedNumber}: จองเลขเอกสารใน transaction เดียวกับการออกเอกสาร ป้องกันสองแท็บออกเลขซ้ำ ใช้เลขร่างภายในแยกจากเลขเอกสาร; รุ่นแรกกรอกเลขเองได้แบบ QT-03 และตรวจซ้ำ ระบบเลขอัตโนมัติรายเดือน/ปีเป็นงานถัดไป
+- quotationNumbers/{normalizedNumber} และ receiptNumbers/{normalizedNumber}: จองเลขเอกสารใน transaction เดียวกับการออกเอกสาร ป้องกันสองแท็บออกเลขซ้ำ; ผู้ดูแลยังกรอกเลขเองได้ และเมื่อเว้นว่างระบบใช้ documentCounters สร้าง `QT-YYYYMM-ลำดับ` หรือ `RC-YYYYMM-ลำดับ` อัตโนมัติ
+- documentSettings/company: ข้อมูลบริษัทเริ่มต้นสำหรับเอกสารใหม่ อ่านและเขียนได้เฉพาะผู้ดูแล
 - privateQuotationTemplates/{id}: ข้อมูลผู้เสนอราคา เงื่อนไขและหมวดงานมาตรฐานที่ไม่มีข้อมูลลูกค้า
 
 ให้เฉพาะ admin อ่าน/เขียนใบเสนอราคาและข้อมูลลูกค้า ผู้ใช้ทั่วไป/ผู้ไม่ล็อกอินต้องเข้าถึงไม่ได้ ทดสอบ Rules ทั้ง parent และ subcollections ใช้ deny-by-default; ห้ามเพิ่ม collection ลงกลุ่ม public read เดิม และต้องแก้การตรวจ admin ก่อนใช้งานข้อมูลจริง
