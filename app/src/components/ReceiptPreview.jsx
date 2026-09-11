@@ -15,7 +15,7 @@ function ReceiptCopy({ receipt, totals, copy }) {
     <table className="quote-table reference-table receipt-reference-table"><thead><tr><th>#</th><th>รายละเอียด</th><th>มูลค่า</th></tr></thead><tbody>{totals.items.map((item, index) => <tr key={item.id}><td>{index + 1}</td><td><b>{item.description}</b></td><td>{money(item.amountSatang)}</td></tr>)}</tbody></table>
     <div className="reference-summary"><div className="amount-in-words">({bahtText(totals.total)})</div><div><p className="reference-grand"><span>จำนวนเงินรวมทั้งสิ้น</span><b>{money(totals.total)} บาท</b></p></div></div>
     <section className="reference-notes"><b>หมายเหตุ</b><p>{receipt.note || '—'}</p>{receipt.paymentReference && <p>เลขอ้างอิงการชำระเงิน {receipt.paymentReference}</p>}</section>
-    <div className="reference-signatures"><p>ในนาม {receipt.payer || 'ผู้ชำระเงิน'}</p><p>ในนาม {receipt.seller || 'BSBuildTh'}</p><div><span>ผู้ชำระเงิน</span><span>วันที่</span><span>ผู้รับเงิน</span><span>วันที่</span></div></div>
+    <div className="reference-signatures"><div className="signature-party"><p>ในนาม {receipt.payer || 'ผู้ชำระเงิน'}</p><div><span>ผู้ชำระเงิน</span><span>วันที่</span></div></div><div className="signature-party"><p>ในนาม {receipt.seller || 'BSBuildTh'}</p><div><span>ผู้รับเงิน</span><span>วันที่</span></div></div></div>
   </article>;
 }
 
