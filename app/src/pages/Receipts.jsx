@@ -67,6 +67,8 @@ export default function Receipts() {
   };
   const print = () => run(async () => {
     if (dirty) throw new Error('กรุณาบันทึกก่อนพิมพ์');
+    setPreviewMode(true);
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     await document.fonts.ready; window.print(); setMessage('หน้าพิมพ์ประกอบด้วยต้นฉบับและสำเนาอย่างละ 1 หน้า');
   });
 

@@ -80,6 +80,8 @@ export default function Quotations() {
   };
   const print = () => run(async () => {
     if (dirty) throw new Error('กรุณาบันทึกก่อนพิมพ์ เพื่อให้เอกสารตรงกับข้อมูลที่บันทึก');
+    setPreviewMode(true);
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     await document.fonts.ready; window.print(); setMessage('เลือก Save as PDF ในหน้าต่างพิมพ์เพื่อบันทึกไฟล์');
   });
 
