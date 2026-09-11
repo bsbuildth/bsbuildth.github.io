@@ -1,9 +1,9 @@
 import { calculateReceipt } from '../lib/receipt';
-import { money } from '../lib/quotation';
+import { bahtText, money } from '../lib/quotation';
 
 function ReceiptCopy({ receipt, totals, copy }) {
   const date = new Date(`${receipt.date}T12:00:00`);
-  return <article className="quote-paper reference-document receipt-paper">
+  return <article className={`quote-paper reference-document receipt-paper${totals.items.length > 15 ? ' document-long' : ''}`}>
     <header className="reference-header">
       <div className={`document-brand${receipt.showLogo === false ? ' logo-hidden' : ''}`}>
         {receipt.showLogo !== false && <div className="document-logo"><span>BS</span><b>BUILD</b><em>TH</em><small>RENOVATION &amp; CONSTRUCTION</small></div>}
@@ -13,7 +13,7 @@ function ReceiptCopy({ receipt, totals, copy }) {
       <div className="document-customer"><b>ลูกค้า</b><p>{receipt.payer || '—'}</p><p>{receipt.phone || '—'}</p>{receipt.project && <p>โครงการ {receipt.project}</p>}{receipt.quoteNumber && <p>อ้างอิง {receipt.quoteNumber}</p>}</div>
     </header>
     <table className="quote-table reference-table receipt-reference-table"><thead><tr><th>#</th><th>รายละเอียด</th><th>มูลค่า</th></tr></thead><tbody>{totals.items.map((item, index) => <tr key={item.id}><td>{index + 1}</td><td><b>{item.description}</b></td><td>{money(item.amountSatang)}</td></tr>)}</tbody></table>
-    <div className="reference-summary"><div className="amount-in-words">(จำนวนเงิน {money(totals.total)} บาทถ้วน)</div><div><p className="reference-grand"><span>จำนวนเงินรวมทั้งสิ้น</span><b>{money(totals.total)} บาท</b></p></div></div>
+    <div className="reference-summary"><div className="amount-in-words">({bahtText(totals.total)})</div><div><p className="reference-grand"><span>จำนวนเงินรวมทั้งสิ้น</span><b>{money(totals.total)} บาท</b></p></div></div>
     <section className="reference-notes"><b>หมายเหตุ</b><p>{receipt.note || '—'}</p>{receipt.paymentReference && <p>เลขอ้างอิงการชำระเงิน {receipt.paymentReference}</p>}</section>
     <div className="reference-signatures"><p>ในนาม {receipt.payer || 'ผู้ชำระเงิน'}</p><p>ในนาม {receipt.seller || 'BSBuildTh'}</p><div><span>ผู้ชำระเงิน</span><span>วันที่</span><span>ผู้รับเงิน</span><span>วันที่</span></div></div>
   </article>;
