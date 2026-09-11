@@ -6,7 +6,7 @@
   --surface:   #ffffff;   /* cards */
   --ink:       #1a1714;   /* primary text / headings */
   --ink-soft:  #6b6259;   /* muted body */
-  --line:      rgba(26, 23, 20, .05);  /* softened hairline */
+  --line:      rgba(26, 23, 20, .11);
   --gold:      #a87c32;   /* premium gold */
   --gold-hover:#8f6829;
   --gold-soft: #f3ead8;   /* gold tint backgrounds */
@@ -39,12 +39,8 @@
 
 html {
   scroll-behavior: smooth;
-  /* gentle section snapping — only nudges when you're near a section top,
-     never fights free scrolling */
-  scroll-snap-type: y proximity;
-  scroll-padding-top: 88px; /* clear the fixed header on snap + anchor jumps */
+  scroll-padding-top: 88px;
 }
-main > section { scroll-snap-align: start; }
 
 /* Failsafe: if AOS never fires for an element (stale offsets on async-loaded
    sections), reveal it anyway after a few seconds so content is never stuck. */
@@ -130,7 +126,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
   font-size: .95rem;
   font-weight: 600;
   letter-spacing: .02em;
-  border-radius: 12px;
+  border-radius: 2px;
   border: 1px solid transparent;
   min-height: 44px; /* comfortable tap target */
   transition: all .3s var(--ease);
@@ -168,7 +164,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .btn-ghost:hover { color: var(--gold-hover); }
 
 /* ───────────────────── Layout sections ───────────────────── */
-.section { padding: clamp(6rem, 11vw, 10rem) 0; }
+.section { padding: clamp(5rem, 9vw, 8rem) 0; }
 
 .bg-light { background-color: var(--bg); color: var(--ink); }
 .bg-alt   { background-color: var(--bg-alt); color: var(--ink); }

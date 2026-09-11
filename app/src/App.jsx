@@ -58,13 +58,13 @@ const MainSite = () => {
       <Header />
       <main>
         {on('show_hero') && <Hero />}
+        {on('show_services') && <Services />}
         {on('show_beforeafter') && <BeforeAfter />}
         {on('show_projects') && <FeaturedProjects />}
         {on('show_reference') && <Reference />}
         {on('show_calculator') && <Calculator />}
         {on('show_process') && <WorkProcess />}
         {on('show_about') && <AboutUs />}
-        {on('show_services') && <Services />}
         {on('show_reviews') && <Testimonials />}
         {on('show_blog') && <BlogTeaser />}
         <Footer />

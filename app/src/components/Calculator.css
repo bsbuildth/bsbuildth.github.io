@@ -42,8 +42,9 @@
 .calculator-form {
   background: var(--surface);
   padding: clamp(2rem, 4vw, 3.5rem);
-  border-radius: 12px;
-  box-shadow: 0 30px 70px rgba(26, 23, 20, 0.04);
+  border-radius: 0;
+  box-shadow: none;
+  border: 1px solid var(--line);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -87,7 +88,7 @@
   justify-content: center;
   background: var(--gold-soft);
   padding: 2.25rem;
-  border-radius: 12px;
+  border-radius: 0;
   text-align: center;
   transition: all 0.3s var(--ease);
   animation: slideDownIn 0.4s var(--ease);

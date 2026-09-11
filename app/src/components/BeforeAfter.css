@@ -10,8 +10,8 @@
   height: clamp(320px, 50vw, 560px);
   margin: 3rem auto 0;
   overflow: hidden;
-  border-radius: 10px;
-  box-shadow: 0 30px 70px rgba(26, 23, 20, 0.16);
+  border-radius: 0;
+  box-shadow: none;
   border: 1px solid var(--line);
 }
 
