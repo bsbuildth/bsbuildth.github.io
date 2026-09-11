@@ -1,29 +1,27 @@
 # ผลตรวจชุดอัปเดตปัจจุบัน
 
-วันที่ตรวจ: 9 กันยายน 2026
-
-ฐานก่อนแก้: `main` / `05a0d31b4cb89818d268f90413249fa86980bbdd`
+วันที่ตรวจ: 11 กันยายน 2026
+เวอร์ชัน production: `d9211304b7b96baa463d3bd71b2e1627f0327265`
 
 | การตรวจ | ผล |
 | --- | --- |
-| `npm run lint -- --max-warnings 0` | ผ่าน: 0 errors / 0 warnings |
-| `npm test` | ผ่าน 6/6: quotation, contact retry/concurrency, admin/media limits, motion cleanup และ sitemap/direct routes |
-| Firestore Emulator rules tests | ผ่าน 3/3: public draft isolation, admin isolation, contact validation และ quotation issue/revision/number guards |
-| `npm run build` | ผ่านด้วย Vite 8.0.14; ไม่มีคำเตือน chunk ใหญ่; มี `404.html`, sitemap และ direct article routes |
-| `git diff --check` | ผ่าน; มีเพียงคำเตือนรูปแบบขึ้นบรรทัดของ Windows |
-| PDF ตัวอย่าง | ผ่าน: A4 1 หน้า, ภาษาไทยอ่านได้, ยอด 55,010 + 44,500 = 99,510 และงวด 22,004 / 22,004 / 11,002 |
-| PDF หลายหน้า | ผ่าน: A4 3 หน้า, หัวตารางซ้ำ, แถวไม่ถูกตัดกลาง และยอดสรุป/ลายเซ็นไม่ซ้อนกัน |
+| ESLint | ผ่าน: 0 errors / 0 warnings |
+| Unit/integration tests | ผ่าน 8/8 |
+| Firestore Rules tests | ผ่านบน GitHub Actions ก่อน deploy |
+| Production build | ผ่านด้วย Vite 8.0.14 |
+| GitHub Pages deployment | ผ่าน: workflow `34569081924` |
+| ใบเสนอราคา A4 | ตรวจภาพแล้ว: ตาราง 6 คอลัมน์ ไม่มีส่วนลดรายบรรทัด และสรุปส่วนลดท้ายบิล/VAT |
+| ใบเสร็จ A4 | ตรวจภาพแล้ว: ต้นฉบับและสำเนา 2 หน้า |
+| Firebase production | เชื่อมต่อแล้ว; admin claim และ Rules เปิดใช้แล้ว |
 
-Baseline เดิมคือ 60 errors และ 1 warning; ดู [ผลเดิม](lint-baseline-2026-09-09.json) เทียบกับ [ผลล่าสุด](lint-current.json)
+Baseline เดิม 60 errors และ 1 warning ถูกแก้ครบแล้ว
 
-## สิ่งที่การตรวจนี้ยังไม่ยืนยัน
+## ขอบเขตของผลตรวจ
 
-- เข้าสู่ Firebase CLI ด้วย `bsbuildth@gmail.com` สำเร็จแล้ว แต่บัญชีไม่มีโปรเจกต์ในรายการและไม่มีสิทธิ์ `bs-build` (403 `PERMISSION_DENIED`)
-- หน้า production รุ่นเดิมยังให้ `songyos2528@gmail.com` เข้า Admin ได้ เพราะกฎเดิมตรวจเพียงการล็อกอิน; ก่อน deploy กฎใหม่ต้องให้ `admin` claim แก่บัญชีเดิมนี้ด้วย
-- ยังไม่ได้ตั้ง custom claim ให้ `bsbuildth@gmail.com`, deploy Rules, สำรอง หรือ migration production
-- ยังไม่ได้ push/เปิด PR/deploy เพราะ GitHub connector ไม่มีสิทธิ์เขียน
-- ยังไม่ได้ส่ง Apps Script/อีเมล/LINE จริง; ฟอร์มถือว่า Firestore บันทึกสำเร็จเป็นหลัก
+- เครื่องมือหลักพร้อมใช้งานจริงสำหรับผู้ดูแล: บันทึกร่าง คำนวณ ดูตัวอย่าง ออก REV. สร้างใบเสร็จ และพิมพ์
+- การทดสอบ Rules ในเครื่องล่าสุดเริ่มไม่ได้เพราะ Java ไม่อยู่ใน PATH แต่ Rules ชุดเดียวกันผ่าน GitHub Actions ก่อน deploy
+- งานพิมพ์ใช้ browser print จึงอาจต่างกันเล็กน้อยตามเบราว์เซอร์ เครื่องพิมพ์ และฟอนต์ในเครื่อง
+- ฟอนต์เอกสารใช้ Tahoma/Noto Sans Thai fallback; ยังไม่ได้ฝัง CSChatThai จากไฟล์อ้างอิง
+- ยังไม่มีเลขเอกสารอัตโนมัติ ข้อความจำนวนเงินภาษาไทย หรือปุ่มดาวน์โหลด PDF โดยตรง
 
-ไฟล์ PDF เป็นข้อมูลสมมติสำหรับ QA และอยู่ใน `output/pdf/`; ไม่มีข้อมูลลูกค้าจริงถูกเพิ่มเข้า Git
-
-สถานะและลำดับเปิดใช้จริงอยู่ใน [แผนหลัก](project-plan.md)
+ไม่มี PDF ต้นฉบับหรือข้อมูลลูกค้าจริงถูกเพิ่มเข้า repository สาธารณะ
