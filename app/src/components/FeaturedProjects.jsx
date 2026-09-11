@@ -139,6 +139,8 @@ const FeaturedProjects = () => {
     </article>
   );
 
+  if (!loading && projects.length === 0) return null;
+
   return (
     <section className="featured-projects" id="projects">
       <div className="container fp-head" data-aos="fade-up">
