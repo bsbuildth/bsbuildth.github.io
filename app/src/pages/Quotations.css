@@ -173,7 +173,6 @@
   font-weight:400;
   line-height:1.35;
 }
-.reference-document::before{content:"";position:absolute;z-index:0;top:0;right:0;width:22mm;height:25mm;background:var(--document-blue);clip-path:polygon(0 0,100% 0,100% 100%)}
 .reference-document>*{position:relative;z-index:1}
 .reference-header{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;min-height:62mm;border-bottom:1pt solid var(--document-line)}
 .document-brand{grid-column:1;grid-row:1;align-self:start;padding-top:4mm}
@@ -195,12 +194,12 @@
 .reference-table th:nth-child(1){width:6%;text-align:center}.reference-table th:nth-child(2){width:46%;text-align:center}.reference-table th:nth-child(3){width:9%;text-align:right}.reference-table th:nth-child(4){width:8%;text-align:left}.reference-table th:nth-child(5){width:15%;text-align:right}.reference-table th:nth-child(6){width:16%;text-align:right}
 .reference-table td:first-child{text-align:center;white-space:nowrap}.reference-table td:nth-child(2){text-align:left}.reference-table td:nth-child(n+3){text-align:right}.reference-table td:nth-child(4){text-align:left}
 .reference-table td:nth-child(2) b{display:block;font-weight:400}.reference-table td:nth-child(2) small{display:block;margin-top:1mm;color:#111;font-size:inherit;line-height:1.3}
-.reference-summary{display:grid;grid-template-columns:58% 42%;gap:4mm;margin-top:5mm;break-inside:avoid}
-.amount-in-words{align-self:end;padding-bottom:2mm}
+.reference-summary{display:grid;grid-template-columns:62% 38%;gap:3mm;margin-top:5mm;break-inside:avoid}
+.amount-in-words{align-self:end;padding:0 5mm 1mm 0;text-align:left}
 .reference-summary>div:last-child p{display:grid;grid-template-columns:1fr auto;gap:7mm;margin:2mm 0}.reference-summary span{color:var(--document-blue);text-align:right;font-weight:400}.reference-summary b{font-weight:400;white-space:nowrap}
-.reference-grand{padding-top:2mm;border-top:1pt solid var(--document-line)}
+.reference-grand{padding-top:2mm;border-top:1pt solid var(--document-line)}.reference-grand span,.reference-grand b{font-weight:700}
 .reference-notes{margin-top:7mm;break-inside:avoid}.reference-notes>b,.reference-notes h3{display:block;margin:0 0 1.5mm;color:var(--document-blue);font-size:inherit;font-weight:400}.reference-notes p{margin:1mm 0;white-space:pre-wrap}
-.reference-signatures{display:grid;grid-template-columns:1fr 1fr;column-gap:36mm;margin-top:auto;padding-top:12mm;break-inside:avoid}.reference-signatures>p{margin:0 0 28mm;text-align:center}.reference-signatures>div{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4mm}.reference-signatures span{padding-top:2mm;border-top:1pt solid var(--document-line);text-align:center}
+.reference-signatures{display:grid;grid-template-columns:1fr 1fr;column-gap:32mm;margin-top:auto;padding-top:15mm;break-inside:avoid}.signature-party>p{margin:0 0 24mm;text-align:center}.signature-party>div{display:grid;grid-template-columns:1.35fr .85fr;gap:7mm}.reference-signatures span{padding-top:3mm;border-top:1pt solid var(--document-line);text-align:center}
 .receipt-reference-table th:nth-child(1){width:6%}.receipt-reference-table th:nth-child(2){width:74%}.receipt-reference-table th:nth-child(3){width:20%;text-align:right}.receipt-reference-table td:nth-child(3){text-align:right}
 
 .quote-a4-form{font-family:Tahoma,'Noto Sans Thai',sans-serif;font-size:11.25pt;color:#111}
