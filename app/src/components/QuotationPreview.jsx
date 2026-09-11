@@ -30,6 +30,6 @@ export default function QuotationPreview({ quote, status = 'draft', revision = 0
     </table>
     <div className="reference-summary"><div className="amount-in-words">(จำนวนเงิน {money(totals.total)} บาทถ้วน)</div><div><p><span>รวมเป็นเงิน</span><b>{money(totals.subtotal)} บาท</b></p>{totals.discount > 0 && <p><span>ส่วนลดท้ายบิล</span><b>{money(totals.discount)} บาท</b></p>}<p><span>ภาษีมูลค่าเพิ่ม {Number(quote.vatRate ?? 0)}%</span><b>{money(totals.vat)} บาท</b></p><p><span>ราคาไม่รวมภาษีมูลค่าเพิ่ม</span><b>{money(totals.beforeVat)} บาท</b></p><p className="reference-grand"><span>จำนวนเงินรวมทั้งสิ้น</span><b>{money(totals.total)} บาท</b></p></div></div>
     <section className="reference-notes"><b>หมายเหตุ</b><p>{quote.terms || '—'}</p>{quote.warranty && <p>การรับประกัน: {quote.warranty}</p>}<h3>เงื่อนไขการชำระเงิน</h3>{totals.installments.map((item, index) => <p key={index}>{item.label} {item.percent}% - {money(item.amount)} บาท {item.condition}</p>)}</section>
-    <div className="reference-signatures"><p>ในนาม {quote.customer || 'ลูกค้า'}</p><p>ในนาม {quote.seller || 'BSBuildTh'}</p><div><span>ผู้สั่งซื้อสินค้า</span><span>วันที่</span><span>ผู้อนุมัติ</span><span>วันที่</span></div></div>
+    <div className="reference-signatures"><p>ผู้ว่าจ้าง / ผู้อนุมัติ</p><p>ผู้รับจ้าง / ผู้เสนอราคา</p><div><span>ผู้อนุมัติ</span><span>วันที่</span><span>ผู้เสนอราคา</span><span>วันที่</span></div></div>
   </article>;
 }
