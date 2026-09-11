@@ -22,9 +22,9 @@
   --text-dark: var(--ink);
   --text-muted: var(--ink-soft);
 
-  --font-display: 'Fraunces', 'IBM Plex Sans Thai', Georgia, serif;
+  --font-display: 'Prompt', 'Sarabun', sans-serif;
   --font-heading: var(--font-display);
-  --font-body: 'IBM Plex Sans Thai', system-ui, -apple-system, sans-serif;
+  --font-body: 'Sarabun', system-ui, -apple-system, sans-serif;
 
   --maxw: 1280px;
   --ease: cubic-bezier(.22, .61, .36, 1);
@@ -51,7 +51,7 @@ html, body {
   font-family: var(--font-body);
   background-color: var(--bg);
   color: var(--ink);
-  line-height: 1.65;
+  line-height: 1.8;
   overflow-x: clip; /* clip (not hidden) so position:sticky still works for the pinned showcase */
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -60,8 +60,8 @@ html, body {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   font-weight: 600;
-  line-height: 1.12;
-  letter-spacing: -0.01em;
+  line-height: 1.4;
+  letter-spacing: 0;
   color: var(--ink);
   margin-bottom: 1rem;
 }
@@ -71,6 +71,7 @@ p { color: var(--ink-soft); }
 a { text-decoration: none; color: inherit; transition: color .3s var(--ease); }
 ul { list-style: none; }
 button { cursor: pointer; font-family: var(--font-body); }
+input, select, textarea { font-family: var(--font-body); }
 img { max-width: 100%; display: block; }
 a, button { -webkit-tap-highlight-color: transparent; }
 .btn { -webkit-tap-highlight-color: transparent; }
@@ -105,8 +106,8 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .section-title {
   font-family: var(--font-display);
   font-size: clamp(2rem, 4vw, 3rem);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  line-height: 1.4;
+  letter-spacing: 0;
   color: var(--ink);
   margin-bottom: 1.5rem;
 }
