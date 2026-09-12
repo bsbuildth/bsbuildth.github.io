@@ -3,7 +3,7 @@ export const newItem = () => ({ id: crypto.randomUUID(), description: '', quanti
 export function newQuote() {
   const now = new Date();
   const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  return { schemaVersion: 5, number: '', date, customer: '', phone: '', project: '', seller: 'BSBuildTh', sellerPhone: '', sellerAddress: '', sellerTaxId: '', sellerWebsite: '', salesperson: '', showLogo: true, discountType: 'amount', billDiscount: '0.00', vatRate: '7',
+  return { schemaVersion: 6, number: '', date, customer: '', phone: '', project: '', seller: 'BSBuildTh', sellerPhone: '', sellerAddress: '', sellerTaxId: '', sellerWebsite: '', salesperson: '', bankName: '', bankAccountName: '', bankAccountNumber: '', showLogo: true, discountType: 'amount', billDiscount: '0.00', vatRate: '7',
     sections: [{ id: crypto.randomUUID(), title: 'งานหลัก', kind: 'main', items: [newItem()] }],
     terms: '', warranty: '', paymentBase: 'main', installments: [
       { label: 'งวดที่ 1', percent: '40', condition: 'ก่อนเริ่มงาน' },
