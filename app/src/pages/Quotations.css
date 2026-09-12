@@ -49,6 +49,7 @@
 .quote-calc-ready,.quote-calc-error{margin:6px 0;text-align:right;font-weight:700}.quote-calc-ready{color:#26724c}.quote-calc-error{padding:8px;background:#fff0f0;color:#9a2d2d}
 .quote-form-terms textarea{width:100%;resize:vertical}.quote-form-terms label{font-weight:700}.quote-form-terms input{font-weight:400}
 .quote-payment-heading{display:flex;align-items:end;justify-content:space-between;gap:12px}.quote-payment-heading h3{margin-right:auto}.quote-payment-heading label{margin:0}.quote-payment-heading select{width:auto}
+.quote-bank-details{margin:8px 0 12px;padding:9px;border:1px solid #ccd5e5;background:#f8faff}.quote-bank-details h4{margin:0 0 5px;color:#233e89}.quote-bank-fields{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:8px}.quote-bank-fields label{margin:0}.reference-bank{margin:5px 0 8px;padding:6px 8px;border-left:3px solid #243e87;background:#f2f5fa}
 .quote-installment-table th:first-child{width:20%}.quote-installment-table th:nth-child(2){width:11%}.quote-installment-table th:nth-child(3){width:18%}.quote-installment-table th:nth-child(4){width:auto}.quote-installment-table th:last-child{width:48px}
 .quote-history-bar,.quote-history-list{display:flex;gap:12px;align-items:center;justify-content:center;margin:10px}.quote-history-list{flex-wrap:wrap}
 .quote-edit-section{margin:16px 0;padding:12px;background:#edf2f9}
@@ -120,6 +121,7 @@
   .quote-form-customer{grid-template-columns:1fr}.quote-project-field{grid-column:auto}
   .quote-edit-table{min-width:760px}.quote-a4-fields{overflow-x:auto}
   .quote-item-grid,.quote-installment{grid-template-columns:1fr}
+  .quote-bank-fields{grid-template-columns:1fr}
   .quote-paper{padding:12px;font-size:12px}
   .quote-heading{gap:8px}
   .quote-heading h1{font-size:21px}

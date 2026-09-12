@@ -2,7 +2,7 @@ import { doc, getDoc, runTransaction, serverTimestamp, setDoc } from 'firebase/f
 import { auth, db } from './config';
 import { validateDocument } from '../lib/media';
 
-const COMPANY_KEYS = ['seller', 'sellerPhone', 'sellerAddress', 'sellerTaxId', 'sellerWebsite', 'salesperson', 'showLogo'];
+const COMPANY_KEYS = ['seller', 'sellerPhone', 'sellerAddress', 'sellerTaxId', 'sellerWebsite', 'salesperson', 'bankName', 'bankAccountName', 'bankAccountNumber', 'showLogo'];
 
 export function applyCompanyDefaults(document, defaults = {}) {
   return COMPANY_KEYS.reduce((result, key) => (
