@@ -15,6 +15,9 @@ export function newReceipt(source) {
     number: '',
     date: today(),
     quoteNumber: quote?.number || '',
+    paymentSchedule: structuredClone(source?.totals?.installments || []),
+    paymentTotal: Number.isSafeInteger(total) ? total : 0,
+    installmentIndex: '',
     payer: quote?.customer || '',
     phone: quote?.phone || '',
     project: quote?.project || '',
@@ -34,6 +37,16 @@ export function newReceipt(source) {
       amount: Number.isSafeInteger(total) ? (total / 100).toFixed(2) : '0.00',
     }],
   };
+}
+
+export function selectReceiptInstallment(receipt, value) {
+  const index = value === '' ? null : Number(value);
+  const installment = index === null ? null : receipt.paymentSchedule?.[index];
+  if (index !== null && (!Number.isInteger(index) || index < 0 || !installment)) throw new Error('ไม่พบงวดชำระที่เลือก');
+  const amount = installment ? installment.amount : receipt.paymentTotal;
+  if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('งวดนี้ไม่มียอดรับชำระ');
+  const description = [`รับชำระตามใบเสนอราคา ${receipt.quoteNumber}`, installment?.label, installment ? `${installment.percent}%` : '', installment?.condition].filter(Boolean).join(' · ');
+  return { ...receipt, installmentIndex: value, items: [{ id: crypto.randomUUID(), description, amount: (amount / 100).toFixed(2) }] };
 }
 
 function amountToSatang(value) {
