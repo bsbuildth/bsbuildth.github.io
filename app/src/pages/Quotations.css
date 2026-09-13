@@ -98,6 +98,7 @@
 .quote-signatures{display:flex;gap:20px;margin-top:22px;text-align:center}
 .quote-signatures>div{flex:1;border:1px dashed #cbd4e5;padding:15px}
 .quote-signatures span{display:block;margin-top:35px}
+.quote-signature-seller{position:relative}.quote-signature-image{display:block;width:130px;height:58px;margin:8px auto -18px;object-fit:contain}.quote-signature-controls{display:flex;align-items:end;justify-content:center;gap:8px;margin:8px 0}.quote-signature-controls label{max-width:220px;text-align:left}.quote-signature-controls input{font-size:11px!important}.quote-signature-controls button{white-space:nowrap}
 .quote-watermark{text-align:center;background:#fff4cc;padding:8px}
 .quote-revision-badge{display:inline-block;margin:3px 0;padding:3px 9px;border-radius:999px;background:#e8efff;color:#17387a;font-weight:800;letter-spacing:.08em}
 .receipt-copy-label{margin:-5px 0 7px;text-align:right;color:#233e89;font-size:14px;font-weight:800;letter-spacing:.06em}
@@ -201,7 +202,7 @@
 .reference-summary>div:last-child p{display:grid;grid-template-columns:1fr auto;gap:7mm;margin:2mm 0}.reference-summary span{color:var(--document-blue);text-align:right;font-weight:400}.reference-summary b{font-weight:400;white-space:nowrap}
 .reference-grand{padding-top:2mm;border-top:1pt solid var(--document-line)}.reference-grand span,.reference-grand b{font-weight:700}
 .reference-notes{margin-top:7mm;break-inside:avoid}.reference-notes>b,.reference-notes h3{display:block;margin:0 0 1.5mm;color:var(--document-blue);font-size:inherit;font-weight:400}.reference-notes p{margin:1mm 0;white-space:pre-wrap}
-.reference-signatures{display:grid;grid-template-columns:1fr 1fr;column-gap:32mm;margin-top:auto;padding-top:15mm;break-inside:avoid}.signature-party>p{margin:0 0 24mm;text-align:center}.signature-party>div{display:grid;grid-template-columns:1.35fr .85fr;gap:7mm}.reference-signatures span{padding-top:3mm;border-top:1pt solid var(--document-line);text-align:center}
+.reference-signatures{display:grid;grid-template-columns:1fr 1fr;column-gap:32mm;margin-top:auto;padding-top:15mm;break-inside:avoid}.signature-party{position:relative}.signature-party>p{margin:0 0 24mm;text-align:center}.signature-party>div{display:grid;grid-template-columns:1.35fr .85fr;gap:7mm}.reference-signatures span{padding-top:3mm;border-top:1pt solid var(--document-line);text-align:center}.signature-image{position:absolute;top:7mm;left:0;right:0;width:45mm;height:18mm;margin:auto;object-fit:contain}
 .receipt-reference-table th:nth-child(1){width:6%}.receipt-reference-table th:nth-child(2){width:74%}.receipt-reference-table th:nth-child(3){width:20%;text-align:right}.receipt-reference-table td:nth-child(3){text-align:right}
 
 .quote-a4-form{font-family:Tahoma,'Noto Sans Thai',sans-serif;font-size:11.25pt;color:#111}
