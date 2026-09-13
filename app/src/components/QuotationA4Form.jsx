@@ -1,7 +1,15 @@
 import { bahtText, money } from '../lib/quotation';
+import { fileToResizedDataURL } from '../firebase/api';
 
 export default function QuotationA4Form({ quote, revision = 0, calculation, locked, actions, edit, sectionEdit, itemEdit, addItem, removeItem, addSection, removeSection }) {
   const totals = calculation.totals;
+  const insertSignature = async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try { edit('sellerSignatureImage', await fileToResizedDataURL(file, 800, 0.82)); }
+    catch (error) { window.alert(error.message || 'เพิ่มรูปลายเซ็นไม่สำเร็จ'); }
+    finally { event.target.value = ''; }
+  };
   return <article className="quote-paper quote-a4-form">
     <div className="quote-form-actions">{actions}</div>
     <fieldset className="quote-a4-fields" disabled={locked}>
@@ -35,7 +43,7 @@ export default function QuotationA4Form({ quote, revision = 0, calculation, lock
       </table>
       <button type="button" className="quote-edit-only quote-add-section" onClick={addSection}>+ เพิ่มหมวดงาน</button>
 
-      <div className="quote-totals quote-form-totals"><div className="quote-discount-fields quote-edit-only"><label>รูปแบบส่วนลด<select value={quote.discountType === 'percent' ? 'percent' : 'amount'} onChange={e => edit('discountType', e.target.value)}><option value="amount">จำนวนเงิน (บาท)</option><option value="percent">เปอร์เซ็นต์ (%)</option></select></label><label>ส่วนลดท้ายบิล<input inputMode="decimal" value={quote.billDiscount ?? '0.00'} onChange={e => edit('billDiscount', e.target.value)} /></label></div><label className="quote-edit-only">ภาษีมูลค่าเพิ่มรวมในราคา (%)<input inputMode="decimal" value={quote.vatRate ?? '0'} onChange={e => edit('vatRate', e.target.value)} /></label><p>รวมเป็นเงิน <b>{totals ? money(totals.subtotal) : '—'}</b></p><p>ส่วนลดท้ายบิล{totals?.discountType === 'percent' ? ` ${money(totals.discountInput)}%` : ''} <b>{totals ? money(totals.discount) : '—'}</b></p><p>ภาษีมูลค่าเพิ่ม <b>{totals ? money(totals.vat) : '—'}</b></p><p>ราคาก่อนภาษี <b>{totals ? money(totals.beforeVat) : '—'}</b></p><p className="quote-grand">ยอดรวมทั้งสิ้น <b>{totals ? `${money(totals.total)} บาท` : 'คำนวณไม่สำเร็จ'}</b></p>{totals && <p className="quote-baht-text">({bahtText(totals.total)})</p>}</div>
+      <div className="quote-totals quote-form-totals"><div className="quote-discount-fields quote-edit-only"><label>รูปแบบส่วนลด<select value={quote.discountType === 'percent' ? 'percent' : 'amount'} onChange={e => edit('discountType', e.target.value)}><option value="amount">จำนวนเงิน (บาท)</option><option value="percent">เปอร์เซ็นต์ (%)</option></select></label><label>ส่วนลดท้ายบิล<input inputMode="decimal" value={quote.billDiscount ?? '0.00'} onChange={e => edit('billDiscount', e.target.value)} /></label></div><label className="quote-edit-only">ภาษีมูลค่าเพิ่มรวมในราคา (%)<input inputMode="decimal" value={quote.vatRate ?? '0'} onChange={e => edit('vatRate', e.target.value)} /></label><p>รวมเป็นเงิน <b>{totals ? money(totals.subtotal) : '—'}</b></p>{totals?.discount > 0 && <p>ส่วนลดท้ายบิล{totals.discountType === 'percent' ? ` ${money(totals.discountInput)}%` : ''} <b>{money(totals.discount)}</b></p>}{totals?.vat > 0 && <><p>ภาษีมูลค่าเพิ่ม <b>{money(totals.vat)}</b></p><p>ราคาก่อนภาษี <b>{money(totals.beforeVat)}</b></p></>}<p className="quote-grand">ยอดรวมทั้งสิ้น <b>{totals ? `${money(totals.total)} บาท` : 'คำนวณไม่สำเร็จ'}</b></p>{totals && <p className="quote-baht-text">({bahtText(totals.total)})</p>}</div>
       {calculation.error ? <p className="quote-calc-error" role="alert">{calculation.error}</p> : <p className="quote-calc-ready quote-edit-only">✓ คำนวณอัตโนมัติแล้ว พร้อมบันทึก</p>}
 
       <section className="quote-terms quote-form-terms"><h3>รายละเอียดและเงื่อนไข</h3><textarea rows="4" value={quote.terms} maxLength="10000" placeholder="ระบุขอบเขตงาน เงื่อนไข และหมายเหตุ" onChange={e => edit('terms', e.target.value)} /><label>การรับประกัน<input value={quote.warranty} maxLength="1000" onChange={e => edit('warranty', e.target.value)} /></label></section>
@@ -45,7 +53,7 @@ export default function QuotationA4Form({ quote, revision = 0, calculation, lock
         <table className="quote-table quote-installment-table"><thead><tr><th>งวด</th><th>เปอร์เซ็นต์</th><th>จำนวนเงิน</th><th>เงื่อนไข</th><th className="quote-edit-only">จัดการ</th></tr></thead><tbody>{quote.installments.map((item, index) => <tr key={index}><td><input aria-label={`ชื่องวด ${index + 1}`} value={item.label} onChange={e => edit('installments', quote.installments.map((current, i) => i === index ? { ...current, label: e.target.value } : current))} /></td><td><input inputMode="decimal" aria-label={`เปอร์เซ็นต์งวด ${index + 1}`} value={item.percent} onChange={e => edit('installments', quote.installments.map((current, i) => i === index ? { ...current, percent: e.target.value } : current))} /></td><td className="quote-form-amount">{totals?.installments[index] ? money(totals.installments[index].amount) : '—'}</td><td><input aria-label={`เงื่อนไขงวด ${index + 1}`} value={item.condition} onChange={e => edit('installments', quote.installments.map((current, i) => i === index ? { ...current, condition: e.target.value } : current))} /></td><td className="quote-edit-only"><button type="button" className="quote-icon-button quote-danger" aria-label={`ลบงวด ${index + 1}`} onClick={() => edit('installments', quote.installments.filter((_, i) => i !== index))}>×</button></td></tr>)}</tbody></table>
         <button type="button" className="quote-edit-only" onClick={() => edit('installments', [...quote.installments, { label: 'งวดใหม่', percent: '0', condition: '' }])}>+ เพิ่มงวดชำระ</button>
       </section>
-      <div className="quote-signatures"><div>ผู้อนุมัติ / ลูกค้า<br/><span>ลงชื่อ ____________________</span><p>วันที่ ____________________</p></div><div>ผู้เสนอราคา<br/><span>ลงชื่อ ____________________</span><p>วันที่ ____________________</p></div></div>
+      <div className="quote-signatures"><div>ผู้อนุมัติ / ลูกค้า<br/><span>ลงชื่อ ____________________</span><p>วันที่ ____________________</p></div><div className="quote-signature-seller">ผู้เสนอราคา{quote.sellerSignatureImage && <img className="quote-signature-image" src={quote.sellerSignatureImage} alt="ลายเซ็นผู้เสนอราคา" />}<div className="quote-signature-controls quote-edit-only"><label>แทรกรูปลายเซ็น<input type="file" accept="image/jpeg,image/png,image/webp" onChange={insertSignature} /></label>{quote.sellerSignatureImage && <button type="button" className="quote-danger" onClick={() => edit('sellerSignatureImage', '')}>ลบลายเซ็น</button>}</div><span>ลงชื่อ ____________________</span><p>วันที่ ____________________</p></div></div>
     </fieldset>
   </article>;
 }
