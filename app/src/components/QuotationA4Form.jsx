@@ -1,12 +1,34 @@
+import { useState } from 'react';
 import { bahtText, money } from '../lib/quotation';
 import { fileToResizedDataURL } from '../firebase/api';
+import SignaturePad from './SignaturePad';
 
-export default function QuotationA4Form({ quote, revision = 0, calculation, locked, actions, edit, sectionEdit, itemEdit, addItem, removeItem, addSection, removeSection }) {
+export default function QuotationA4Form({ quote, revision = 0, calculation, locked, actions, edit, sectionEdit, itemEdit, presets = { bankAccounts: [], signatures: [] }, onSaveBankPreset, onDeleteBankPreset, onSaveSignaturePreset, onDeleteSignaturePreset, addItem, removeItem, addSection, removeSection }) {
   const totals = calculation.totals;
+  const [signingParty, setSigningParty] = useState('');
+  const [selectedBankPreset, setSelectedBankPreset] = useState('');
+  const [selectedSignaturePreset, setSelectedSignaturePreset] = useState('');
+  const today = () => new Date().toISOString().slice(0, 10);
+  const saveDrawnSignature = image => {
+    if (signingParty === 'customer') {
+      edit('customerSignatureImage', image);
+      edit('customerSignerName', quote.customerSignerName || quote.customer || '');
+      edit('customerSignedAt', today());
+    } else {
+      edit('sellerSignatureImage', image);
+      edit('sellerSignerName', quote.sellerSignerName || quote.salesperson || quote.seller || '');
+      edit('sellerSignedAt', today());
+    }
+    setSigningParty('');
+  };
   const insertSignature = async event => {
     const file = event.target.files?.[0];
     if (!file) return;
-    try { edit('sellerSignatureImage', await fileToResizedDataURL(file, 800, 0.82)); }
+    try {
+      edit('sellerSignatureImage', await fileToResizedDataURL(file, 800, 0.82));
+      edit('sellerSignerName', quote.sellerSignerName || quote.salesperson || quote.seller || '');
+      edit('sellerSignedAt', today());
+    }
     catch (error) { window.alert(error.message || 'เพิ่มรูปลายเซ็นไม่สำเร็จ'); }
     finally { event.target.value = ''; }
   };
@@ -49,11 +71,15 @@ export default function QuotationA4Form({ quote, revision = 0, calculation, lock
       <section className="quote-terms quote-form-terms"><h3>รายละเอียดและเงื่อนไข</h3><textarea rows="4" value={quote.terms} maxLength="10000" placeholder="ระบุขอบเขตงาน เงื่อนไข และหมายเหตุ" onChange={e => edit('terms', e.target.value)} /><label>การรับประกัน<input value={quote.warranty} maxLength="1000" onChange={e => edit('warranty', e.target.value)} /></label></section>
 
       <section className="quote-payment quote-form-payment"><div className="quote-payment-heading"><h3>เงื่อนไขการชำระเงิน</h3><label className="quote-edit-only">ฐานคำนวณ<select value={quote.paymentBase} onChange={e => edit('paymentBase', e.target.value)}><option value="main">ยอดงานหลัก</option><option value="total">ยอดรวมที่เรียกเก็บ</option></select></label></div><p>คิดจาก{quote.paymentBase === 'main' ? 'ยอดงานหลัก' : 'ยอดรวม'} {totals ? money(totals.base) : '—'} บาท</p>
-        <div className="quote-bank-details"><h4>บัญชีสำหรับชำระเงิน</h4><div className="quote-bank-fields"><label>ธนาคาร<input value={quote.bankName || ''} maxLength="150" placeholder="เช่น ธนาคารกสิกรไทย" onChange={e => edit('bankName', e.target.value)} /></label><label>ชื่อบัญชี<input value={quote.bankAccountName || ''} maxLength="200" placeholder="ชื่อเจ้าของบัญชี" onChange={e => edit('bankAccountName', e.target.value)} /></label><label>เลขบัญชี<input value={quote.bankAccountNumber || ''} maxLength="50" inputMode="numeric" placeholder="เลขบัญชีธนาคาร" onChange={e => edit('bankAccountNumber', e.target.value)} /></label></div></div>
+        <div className="quote-bank-details"><div className="quote-preset-heading"><h4>บัญชีสำหรับชำระเงิน</h4><div className="quote-preset-picker quote-edit-only"><select aria-label="เลือกบัญชีที่บันทึกไว้" value={selectedBankPreset} onChange={event => { const id = event.target.value; setSelectedBankPreset(id); const preset = presets.bankAccounts.find(item => item.id === id); if (preset) { edit('bankName', preset.bankName); edit('bankAccountName', preset.accountName); edit('bankAccountNumber', preset.accountNumber); } }}><option value="">เลือกบัญชีที่บันทึกไว้…</option>{presets.bankAccounts.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select><button type="button" onClick={onSaveBankPreset}>บันทึกบัญชีนี้</button>{selectedBankPreset && <button type="button" className="quote-danger" onClick={() => { onDeleteBankPreset(selectedBankPreset); setSelectedBankPreset(''); }}>ลบจากคลัง</button>}</div></div><div className="quote-bank-fields"><label>ธนาคาร<input value={quote.bankName || ''} maxLength="150" placeholder="เช่น ธนาคารกสิกรไทย" onChange={e => edit('bankName', e.target.value)} /></label><label>ชื่อบัญชี<input value={quote.bankAccountName || ''} maxLength="200" placeholder="ชื่อเจ้าของบัญชี" onChange={e => edit('bankAccountName', e.target.value)} /></label><label>เลขบัญชี<input value={quote.bankAccountNumber || ''} maxLength="50" inputMode="numeric" placeholder="เลขบัญชีธนาคาร" onChange={e => edit('bankAccountNumber', e.target.value)} /></label></div></div>
         <table className="quote-table quote-installment-table"><thead><tr><th>งวด</th><th>เปอร์เซ็นต์</th><th>จำนวนเงิน</th><th>เงื่อนไข</th><th className="quote-edit-only">จัดการ</th></tr></thead><tbody>{quote.installments.map((item, index) => <tr key={index}><td><input aria-label={`ชื่องวด ${index + 1}`} value={item.label} onChange={e => edit('installments', quote.installments.map((current, i) => i === index ? { ...current, label: e.target.value } : current))} /></td><td><input inputMode="decimal" aria-label={`เปอร์เซ็นต์งวด ${index + 1}`} value={item.percent} onChange={e => edit('installments', quote.installments.map((current, i) => i === index ? { ...current, percent: e.target.value } : current))} /></td><td className="quote-form-amount">{totals?.installments[index] ? money(totals.installments[index].amount) : '—'}</td><td><input aria-label={`เงื่อนไขงวด ${index + 1}`} value={item.condition} onChange={e => edit('installments', quote.installments.map((current, i) => i === index ? { ...current, condition: e.target.value } : current))} /></td><td className="quote-edit-only"><button type="button" className="quote-icon-button quote-danger" aria-label={`ลบงวด ${index + 1}`} onClick={() => edit('installments', quote.installments.filter((_, i) => i !== index))}>×</button></td></tr>)}</tbody></table>
         <button type="button" className="quote-edit-only" onClick={() => edit('installments', [...quote.installments, { label: 'งวดใหม่', percent: '0', condition: '' }])}>+ เพิ่มงวดชำระ</button>
       </section>
-      <div className="quote-signatures"><div>ผู้อนุมัติ / ลูกค้า<br/><span>ลงชื่อ ____________________</span><p>วันที่ ____________________</p></div><div className="quote-signature-seller">ผู้เสนอราคา{quote.sellerSignatureImage && <img className="quote-signature-image" src={quote.sellerSignatureImage} alt="ลายเซ็นผู้เสนอราคา" />}<div className="quote-signature-controls quote-edit-only"><label>แทรกรูปลายเซ็น<input type="file" accept="image/jpeg,image/png,image/webp" onChange={insertSignature} /></label>{quote.sellerSignatureImage && <button type="button" className="quote-danger" onClick={() => edit('sellerSignatureImage', '')}>ลบลายเซ็น</button>}</div><span>ลงชื่อ ____________________</span><p>วันที่ ____________________</p></div></div>
+      <div className="quote-signatures">
+        <div className="quote-signature-box"><b>ผู้ว่าจ้าง / ผู้อนุมัติ</b>{quote.customerSignatureImage && <img className="quote-signature-image" src={quote.customerSignatureImage} alt="ลายเซ็นผู้อนุมัติ" />}<div className="quote-signature-controls quote-edit-only"><button type="button" onClick={() => setSigningParty('customer')}>✍ เซ็นด้วยปากกา</button>{quote.customerSignatureImage && <button type="button" className="quote-danger" onClick={() => { edit('customerSignatureImage', ''); edit('customerSignedAt', ''); }}>ลบลายเซ็น</button>}</div><label className="quote-edit-only">ชื่อผู้ลงนาม<input value={quote.customerSignerName || ''} maxLength="200" onChange={event => edit('customerSignerName', event.target.value)} /></label><span>ลงชื่อ ____________________</span><p>วันที่ {quote.customerSignedAt || '____________________'}</p></div>
+        <div className="quote-signature-box quote-signature-seller"><b>ผู้รับจ้าง / ผู้เสนอราคา</b>{quote.sellerSignatureImage && <img className="quote-signature-image" src={quote.sellerSignatureImage} alt="ลายเซ็นผู้เสนอราคา" />}<div className="quote-signature-library quote-edit-only"><select aria-label="เลือกลายเซ็นที่บันทึกไว้" value={selectedSignaturePreset} onChange={event => { const id = event.target.value; setSelectedSignaturePreset(id); const preset = presets.signatures.find(item => item.id === id); if (preset) { edit('sellerSignatureImage', preset.image); edit('sellerSignerName', preset.name); edit('sellerSignedAt', today()); } }}><option value="">เลือกลายเซ็นที่บันทึกไว้…</option>{presets.signatures.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select>{selectedSignaturePreset && <button type="button" className="quote-danger" onClick={() => { onDeleteSignaturePreset(selectedSignaturePreset); setSelectedSignaturePreset(''); }}>ลบจากคลัง</button>}</div><div className="quote-signature-controls quote-edit-only"><button type="button" onClick={() => setSigningParty('seller')}>✍ เซ็นด้วยปากกา</button><label className="signature-upload-button">อัปโหลดรูป<input type="file" accept="image/jpeg,image/png,image/webp" onChange={insertSignature} /></label>{quote.sellerSignatureImage && <><button type="button" onClick={onSaveSignaturePreset}>บันทึกเข้าคลัง</button><button type="button" className="quote-danger" onClick={() => { edit('sellerSignatureImage', ''); edit('sellerSignedAt', ''); }}>ลบลายเซ็น</button></>}</div><label className="quote-edit-only">ชื่อผู้ลงนาม<input value={quote.sellerSignerName || ''} maxLength="200" onChange={event => edit('sellerSignerName', event.target.value)} /></label><span>ลงชื่อ ____________________</span><p>วันที่ {quote.sellerSignedAt || '____________________'}</p></div>
+      </div>
     </fieldset>
+    {signingParty && <SignaturePad title={signingParty === 'customer' ? 'ผู้ว่าจ้าง / ผู้อนุมัติ' : 'ผู้รับจ้าง / ผู้เสนอราคา'} onCancel={() => setSigningParty('')} onSave={saveDrawnSignature} />}
   </article>;
 }

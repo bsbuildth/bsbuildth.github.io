@@ -2,7 +2,7 @@ import { doc, getDoc, runTransaction, serverTimestamp, setDoc } from 'firebase/f
 import { auth, db } from './config';
 import { validateDocument } from '../lib/media';
 
-const COMPANY_KEYS = ['seller', 'sellerPhone', 'sellerAddress', 'sellerTaxId', 'sellerWebsite', 'salesperson', 'bankName', 'bankAccountName', 'bankAccountNumber', 'sellerSignatureImage', 'showLogo'];
+const COMPANY_KEYS = ['seller', 'sellerPhone', 'sellerAddress', 'sellerTaxId', 'sellerWebsite', 'salesperson', 'bankName', 'bankAccountName', 'bankAccountNumber', 'sellerSignatureImage', 'sellerSignerName', 'showLogo'];
 
 export function applyCompanyDefaults(document, defaults = {}) {
   return COMPANY_KEYS.reduce((result, key) => (
@@ -23,6 +23,32 @@ export async function saveCompanyDefaults(document) {
     updatedAt: serverTimestamp(),
     updatedBy: auth.currentUser.uid,
   }, { merge: true });
+  return data;
+}
+
+const emptyPresets = () => ({ bankAccounts: [], signatures: [] });
+
+export async function getDocumentPresets() {
+  const snapshot = await getDoc(doc(db, 'documentSettings', 'presets'));
+  if (!snapshot.exists()) return emptyPresets();
+  const data = snapshot.data();
+  return {
+    bankAccounts: Array.isArray(data.bankAccounts) ? data.bankAccounts.slice(0, 20) : [],
+    signatures: Array.isArray(data.signatures) ? data.signatures.slice(0, 5) : [],
+  };
+}
+
+export async function saveDocumentPresets(presets) {
+  const data = {
+    bankAccounts: (presets.bankAccounts || []).slice(0, 20),
+    signatures: (presets.signatures || []).slice(0, 5),
+  };
+  validateDocument(data);
+  await setDoc(doc(db, 'documentSettings', 'presets'), {
+    ...data,
+    updatedAt: serverTimestamp(),
+    updatedBy: auth.currentUser.uid,
+  });
   return data;
 }
 

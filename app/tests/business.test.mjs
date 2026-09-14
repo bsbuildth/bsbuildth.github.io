@@ -5,6 +5,7 @@ import { createContactSender } from '../src/lib/contact.js';
 import { hasAdminAccess, hasAdminClaim } from '../src/lib/admin-access.js';
 import { validateMedia, validateDocument } from '../src/lib/media.js';
 import { newReceipt, calculateReceipt, validateReceipt } from '../src/lib/receipt.js';
+import { quotationReviewPrompt, redactQuotationForAi } from '../src/lib/quotationPdf.js';
 test('sample quotation totals, free item and installments match the reference', () => {
  const q = demoQuote(), r = validateIssue(q);
  assert.equal(r.main,5501000); assert.equal(r.optional,4450000); assert.equal(r.total,9951000);
@@ -68,4 +69,13 @@ test('receipt created from quotation totals and validates printable amount', () 
  receipt.items.push({id:'extra',description:'ชำระเพิ่ม',amount:'0.01'});
  assert.equal(calculateReceipt(receipt).total,totals.total+1);
  receipt.items[0].amount='1.001';assert.throws(()=>calculateReceipt(receipt));
+});
+test('AI review copy removes private fields without changing quotation amounts', () => {
+ const quote=demoQuote();
+ Object.assign(quote,{sellerPhone:'0812345678',sellerTaxId:'1234567890123',bankName:'ธนาคาร',bankAccountName:'ผู้รับเงิน',bankAccountNumber:'123-4-56789-0',customerSignatureImage:'data:image/png;base64,a',sellerSignatureImage:'data:image/png;base64,b'});
+ const originalTotal=calculateQuote(quote).total,redacted=redactQuotationForAi(quote);
+ assert.equal(calculateQuote(redacted).total,originalTotal);
+ for(const key of ['sellerPhone','sellerTaxId','bankName','bankAccountName','bankAccountNumber','customerSignatureImage','sellerSignatureImage'])assert.equal(redacted[key],'');
+ assert.equal(quote.bankAccountNumber,'123-4-56789-0');
+ assert.match(quotationReviewPrompt(quote.number),/ส่วนลด ภาษีมูลค่าเพิ่ม/);
 });

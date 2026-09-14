@@ -2,6 +2,9 @@
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase/config';
+import { listQuotes } from '../firebase/quotations';
+import { listReceipts } from '../firebase/receipts';
+import { money } from '../lib/quotation';
 import ToggleSwitch from '../components/ToggleSwitch';
 import './Admin.css';
 import {
@@ -14,6 +17,11 @@ import {
 // Old image paths are absolute (/website/uploads/..) or data URLs — both render
 // as-is, so the base prefix used throughout the JSX is empty now.
 const API = '';
+
+const documentDate = value => {
+  const date = value?.toDate?.() || (value ? new Date(value) : null);
+  return date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—';
+};
 
 const Admin = ({ setIsAuthenticated }) => {
   const [projects, setProjects] = useState([]);
@@ -115,7 +123,11 @@ const Admin = ({ setIsAuthenticated }) => {
   const [refColorTone, setRefColorTone] = useState('');
   const [refDetail, setRefDetail] = useState('');
   const [editingRefId, setEditingRefId] = useState(null);
-  const [activeTab, setActiveTab] = useState('inbox');
+  const [activeTab, setActiveTab] = useState('overview');
+  const [quotationRows, setQuotationRows] = useState([]);
+  const [receiptRows, setReceiptRows] = useState([]);
+  const [documentLoading, setDocumentLoading] = useState(true);
+  const [documentError, setDocumentError] = useState('');
   const navigate = useNavigate();
 
   const fetchHeroText = useCallback(() => {
@@ -397,6 +409,13 @@ const Admin = ({ setIsAuthenticated }) => {
       .catch(err => console.error(err));
   }, []);
 
+  const fetchDocuments = useCallback(() => {
+    Promise.all([listQuotes(), listReceipts()])
+      .then(([quotes, receipts]) => { setQuotationRows(quotes); setReceiptRows(receipts); setDocumentError(''); })
+      .catch(() => setDocumentError('โหลดสรุปเอกสารไม่ได้ กรุณาลองรีเฟรช'))
+      .finally(() => setDocumentLoading(false));
+  }, []);
+
   useEffect(() => {
     fetchProjects();
     fetchContacts();
@@ -410,7 +429,8 @@ const Admin = ({ setIsAuthenticated }) => {
     fetchHeroBg();
     fetchArticles();
     fetchHeroText();
-  }, [fetchProjects, fetchContacts, fetchCalculatorTypes, fetchReviews, fetchBusinessInfo, fetchWebsiteContent, fetchDatabaseServices, fetchWebsiteSettings, fetchReferences, fetchHeroBg, fetchArticles, fetchHeroText]);
+    fetchDocuments();
+  }, [fetchProjects, fetchContacts, fetchCalculatorTypes, fetchReviews, fetchBusinessInfo, fetchWebsiteContent, fetchDatabaseServices, fetchWebsiteSettings, fetchReferences, fetchHeroBg, fetchArticles, fetchHeroText, fetchDocuments]);
 
   const handleAddProject = async (e) => {
     e.preventDefault();
@@ -797,14 +817,23 @@ const Admin = ({ setIsAuthenticated }) => {
     }
   };
 
+  const issuedQuotations = quotationRows.filter(row => row.status === 'issued');
+  const draftQuotations = quotationRows.filter(row => row.status === 'draft');
+  const issuedReceipts = receiptRows.filter(row => row.status === 'issued');
+  const quotationValue = issuedQuotations.reduce((sum, row) => sum + (Number(row.totals?.total) || 0), 0);
+  const recentDocuments = [
+    ...quotationRows.map(row => ({ ...row, kind: 'quotation', number: row.quote?.number, party: row.quote?.customer, total: row.totals?.total })),
+    ...receiptRows.map(row => ({ ...row, kind: 'receipt', number: row.receipt?.number, party: row.receipt?.payer, total: row.totals?.total })),
+  ].sort((a, b) => (b.updatedAt?.toMillis?.() || 0) - (a.updatedAt?.toMillis?.() || 0)).slice(0, 8);
+
   return (
     <div className="admin-dashboard container">
       <header className="admin-header">
         <div className="admin-brand">
           <span className="admin-brand-logo">BS</span>
           <div>
-            <h1>Admin Dashboard</h1>
-            <p className="admin-brand-sub">BS Build — ระบบจัดการเว็บไซต์</p>
+            <h1>ศูนย์งาน BS Build</h1>
+            <p className="admin-brand-sub">เสนอราคา · รับชำระ · จัดการเว็บไซต์</p>
           </div>
         </div>
         <div className="admin-header-actions">
@@ -821,6 +850,7 @@ const Admin = ({ setIsAuthenticated }) => {
 
       <nav className="admin-tabs">
         {[
+          { key: 'overview', label: '🏠 หน้าทำงาน' },
           { key: 'inbox', label: '📥 กล่องข้อความ' },
           { key: 'projects', label: '🏗️ ผลงาน' },
           { key: 'references', label: '🖼️ รูปอ้างอิง' },
@@ -843,6 +873,25 @@ const Admin = ({ setIsAuthenticated }) => {
           </button>
         ))}
       </nav>
+
+      <section className="admin-workspace" style={{ display: activeTab === 'overview' ? 'block' : 'none' }}>
+        <div className="admin-workspace-hero">
+          <div><span className="admin-eyebrow">ภาพรวมวันนี้ · {new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}</span><h2>เริ่มงานเอกสารได้จากที่เดียว</h2><p>ดูสถานะใบเสนอราคา ออกใบเสร็จ และกลับไปจัดการข้อมูลเว็บไซต์ได้อย่างรวดเร็ว</p></div>
+          <div className="admin-primary-actions"><button onClick={() => navigate('/admin/quotations')}>＋ สร้างใบเสนอราคา</button><button onClick={() => navigate('/admin/receipts')}>＋ ออกใบเสร็จรับเงิน</button></div>
+        </div>
+
+        <div className="admin-stat-grid">
+          <button onClick={() => navigate('/admin/quotations')}><span className="admin-stat-icon blue">QT</span><small>ใบเสนอราคาที่ออกแล้ว</small><strong>{issuedQuotations.length}</strong><em>มูลค่า {money(quotationValue)} บาท</em></button>
+          <button onClick={() => navigate('/admin/quotations')}><span className="admin-stat-icon amber">ร่าง</span><small>ใบเสนอราคารอดำเนินการ</small><strong>{draftQuotations.length}</strong><em>แตะเพื่อทำงานต่อ</em></button>
+          <button onClick={() => navigate('/admin/receipts')}><span className="admin-stat-icon green">RC</span><small>ใบเสร็จที่ออกแล้ว</small><strong>{issuedReceipts.length}</strong><em>จากทั้งหมด {receiptRows.length} ฉบับ</em></button>
+          <button onClick={() => setActiveTab('inbox')}><span className="admin-stat-icon violet">IN</span><small>ข้อความจากลูกค้า</small><strong>{contacts.length}</strong><em>เปิดกล่องข้อความ</em></button>
+        </div>
+
+        <div className="admin-work-grid">
+          <div className="admin-recent-card"><header><div><span className="admin-eyebrow">เอกสารล่าสุด</span><h3>รายการที่กำลังทำงาน</h3></div><button onClick={() => { setDocumentLoading(true); setDocumentError(''); fetchDocuments(); }} disabled={documentLoading}>{documentLoading ? 'กำลังโหลด…' : 'รีเฟรช'}</button></header>{documentError && <p className="admin-document-error">{documentError}</p>}{!documentLoading && !documentError && recentDocuments.length === 0 && <div className="admin-empty-state"><b>ยังไม่มีเอกสาร</b><span>เริ่มสร้างใบเสนอราคาแรกได้จากปุ่มด้านบน</span></div>}<div className="admin-document-list">{recentDocuments.map(row => <button key={`${row.kind}-${row.id}`} onClick={() => navigate(row.kind === 'quotation' ? '/admin/quotations' : '/admin/receipts')}><span className={`admin-doc-kind ${row.kind}`}>{row.kind === 'quotation' ? 'QT' : 'RC'}</span><span className="admin-doc-main"><b>{row.number || (row.kind === 'quotation' ? 'ร่างใบเสนอราคา' : 'ร่างใบเสร็จ')}</b><small>{row.party || 'ยังไม่ระบุชื่อ'} · {documentDate(row.updatedAt)}</small></span><span className="admin-doc-value"><b>{Number.isSafeInteger(row.total) ? `${money(row.total)} บาท` : '—'}</b><small className={`status-${row.status}`}>{({ draft: 'ฉบับร่าง', issued: 'ออกแล้ว', void: 'ยกเลิก' })[row.status] || row.status}</small></span></button>)}</div></div>
+          <aside className="admin-quick-card"><span className="admin-eyebrow">ทางลัดงานประจำ</span><h3>จัดการได้ทันที</h3><button onClick={() => navigate('/admin/quotations')}><b>ใบเสนอราคา</b><span>สร้าง แก้ไข REV. เซ็น และแชร์ PDF</span><i>→</i></button><button onClick={() => navigate('/admin/receipts')}><b>ใบเสร็จรับเงิน</b><span>เลือกงวดจากใบเสนอราคาแล้วออกเอกสาร</span><i>→</i></button><button onClick={() => setActiveTab('inbox')}><b>กล่องข้อความ</b><span>ดูข้อมูลลูกค้าที่ติดต่อเข้ามา</span><i>→</i></button><button onClick={() => setActiveTab('projects')}><b>ผลงานเว็บไซต์</b><span>เพิ่มรูปและอัปเดตโครงการ</span><i>→</i></button></aside>
+        </div>
+      </section>
 
       <section className="admin-section" style={{ display: activeTab === 'business' ? 'block' : 'none' }}>
         <h2>Business Contact Information</h2>
