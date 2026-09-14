@@ -13,6 +13,12 @@ function Brand({ quote }) {
   </div>;
 }
 
+function signedDate(value) {
+  if (!value) return 'วันที่';
+  const date = new Date(`${value}T12:00:00`);
+  return Number.isNaN(date.getTime()) ? 'วันที่' : `วันที่ ${date.toLocaleDateString('th-TH')}`;
+}
+
 export default function QuotationPreview({ quote, status = 'draft', revision = 0 }) {
   let totals;
   try { totals = calculateQuote(quote); } catch (error) { return <p role="alert">{error.message}</p>; }
@@ -30,6 +36,6 @@ export default function QuotationPreview({ quote, status = 'draft', revision = 0
     </table>
     <div className="reference-summary"><div className="amount-in-words">({bahtText(totals.total)})</div><div><p><span>รวมเป็นเงิน</span><b>{money(totals.subtotal)} บาท</b></p>{totals.discount > 0 && <p><span>ส่วนลดท้ายบิล{totals.discountType === 'percent' ? ` ${money(totals.discountInput)}%` : ''}</span><b>{money(totals.discount)} บาท</b></p>}{totals.vat > 0 && <><p><span>ภาษีมูลค่าเพิ่ม {Number(quote.vatRate ?? 0)}%</span><b>{money(totals.vat)} บาท</b></p><p><span>ราคาไม่รวมภาษีมูลค่าเพิ่ม</span><b>{money(totals.beforeVat)} บาท</b></p></>}<p className="reference-grand"><span>จำนวนเงินรวมทั้งสิ้น</span><b>{money(totals.total)} บาท</b></p></div></div>
     <section className="reference-notes"><b>หมายเหตุ</b><p>{quote.terms || '—'}</p>{quote.warranty && <p>การรับประกัน: {quote.warranty}</p>}<h3>เงื่อนไขการชำระเงิน</h3>{(quote.bankName || quote.bankAccountName || quote.bankAccountNumber) && <p className="reference-bank"><b>ชำระผ่านบัญชี:</b> {[quote.bankName, quote.bankAccountName && `ชื่อบัญชี ${quote.bankAccountName}`, quote.bankAccountNumber && `เลขที่ ${quote.bankAccountNumber}`].filter(Boolean).join(' · ')}</p>}{totals.installments.map((item, index) => <p key={index}>{item.label} {item.percent}% - {money(item.amount)} บาท {item.condition}</p>)}</section>
-    <div className="reference-signatures"><div className="signature-party"><p>ผู้ว่าจ้าง / ผู้อนุมัติ</p><div><span>ผู้อนุมัติ</span><span>วันที่</span></div></div><div className="signature-party"><p>ผู้รับจ้าง / ผู้เสนอราคา</p>{quote.sellerSignatureImage && <img className="signature-image" src={quote.sellerSignatureImage} alt="ลายเซ็นผู้เสนอราคา" />}<div><span>ผู้เสนอราคา</span><span>วันที่</span></div></div></div>
+    <div className="reference-signatures"><div className="signature-party"><p>ผู้ว่าจ้าง / ผู้อนุมัติ</p>{quote.customerSignatureImage && <img className="signature-image" src={quote.customerSignatureImage} alt="ลายเซ็นผู้อนุมัติ" />}<div><span>{quote.customerSignerName || 'ผู้อนุมัติ'}</span><span>{signedDate(quote.customerSignedAt)}</span></div></div><div className="signature-party"><p>ผู้รับจ้าง / ผู้เสนอราคา</p>{quote.sellerSignatureImage && <img className="signature-image" src={quote.sellerSignatureImage} alt="ลายเซ็นผู้เสนอราคา" />}<div><span>{quote.sellerSignerName || 'ผู้เสนอราคา'}</span><span>{signedDate(quote.sellerSignedAt)}</span></div></div></div>
   </article>;
 }
