@@ -5,7 +5,7 @@ import { createContactSender } from '../src/lib/contact.js';
 import { hasAdminAccess, hasAdminClaim } from '../src/lib/admin-access.js';
 import { validateMedia, validateDocument } from '../src/lib/media.js';
 import { newReceipt, calculateReceipt, validateReceipt } from '../src/lib/receipt.js';
-import { quotationReviewPrompt, redactQuotationForAi } from '../src/lib/quotationPdf.js';
+import { quotationFilename, quotationReviewPrompt, redactQuotationForAi } from '../src/lib/quotationPdf.js';
 test('sample quotation totals, free item and installments match the reference', () => {
  const q = demoQuote(), r = validateIssue(q);
  assert.equal(r.main,5501000); assert.equal(r.optional,4450000); assert.equal(r.total,9951000);
@@ -78,4 +78,7 @@ test('AI review copy removes private fields without changing quotation amounts',
  for(const key of ['sellerPhone','sellerTaxId','bankName','bankAccountName','bankAccountNumber','customerSignatureImage','sellerSignatureImage'])assert.equal(redacted[key],'');
  assert.equal(quote.bankAccountNumber,'123-4-56789-0');
  assert.match(quotationReviewPrompt(quote.number),/ส่วนลด ภาษีมูลค่าเพิ่ม/);
+});
+test('quotation filenames include the document number, customer, and local timestamp', () => {
+ assert.equal(quotationFilename({number:'QT-02',customer:'คุณสุภาพร กำภู ณ อยุธยา'},new Date(2026,8,16,9,5,7)),'QT-02_คุณสุภาพร กำภู ณ อยุธยา_20260916-090507');
 });
