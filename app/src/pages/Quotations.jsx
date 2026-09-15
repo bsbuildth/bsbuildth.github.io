@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { calculateQuote, demoQuote, newItem, newQuote, validateIssue } from '../lib/quotation';
-import { changeQuoteStatus, issueQuote, listQuotes, listRevisions, saveQuote } from '../firebase/quotations';
+import { changeQuoteStatus, deleteDraftQuote, issueQuote, listQuotes, listRevisions, saveQuote } from '../firebase/quotations';
 import { applyCompanyDefaults, getCompanyDefaults, getDocumentPresets, nextDocumentNumber, saveCompanyDefaults, saveDocumentPresets } from '../firebase/documents';
 import QuotationA4Form from '../components/QuotationA4Form';
 import QuotationPreview from '../components/QuotationPreview';
@@ -96,6 +96,13 @@ export default function Quotations() {
     if (!confirmLeave()) return;
     setSelected(null); setQuote({ ...structuredClone(quote), number: '', status: 'draft' }); setDirty(true); setHistoric(null); setPreviewMode(false); setHistory([]);
   };
+  const removeDraft = () => run(async () => {
+    if (!selected || selected.status !== 'draft' || selected.revision !== 0) throw new Error('ลบได้เฉพาะใบเสนอราคาฉบับร่างที่ยังไม่เคยออกเอกสาร');
+    if (!window.confirm(`ลบใบเสนอราคาร่าง ${quote.number || 'ที่ยังไม่มีเลข'} ถาวร? การลบนี้ย้อนกลับไม่ได้`)) { setMessage('ยังไม่ได้ลบใบเสนอราคา'); return; }
+    await deleteDraftQuote(selected.id, selected.version);
+    const data = await listQuotes();
+    setRows(data); setSelected(null); setQuote(applyCompanyDefaults(newQuote(), companyDefaults)); setDirty(false); setHistory([]); setHistoric(null); setPreviewMode(false); setMessage('ลบใบเสนอราคาฉบับร่างแล้ว');
+  });
   const print = () => run(async () => {
     if (dirty) throw new Error('กรุณาบันทึกก่อนพิมพ์ เพื่อให้เอกสารตรงกับข้อมูลที่บันทึก');
     setPreviewMode(true);
@@ -171,7 +178,7 @@ export default function Quotations() {
     setDocumentPresets(await saveDocumentPresets(next)); setMessage('ลบลายเซ็นออกจากคลังแล้ว');
   });
 
-  const actions = <div className="quote-controls"><button className="quote-save" disabled={locked || !dirty || !!calculation.error} onClick={save}>คำนวณและบันทึก{dirty ? ' *' : ''}</button><button className="quote-preview-button" disabled={!!calculation.error} onClick={() => setPreviewMode(current => !current)}>{previewMode ? '← กลับมาแก้ไข' : 'ดูตัวอย่าง'}</button><button disabled={locked || dirty || !selected} onClick={issue}>ออกเอกสาร REV. {String(displayRevision || 1).padStart(2, '0')}</button><button disabled={busy} onClick={copy}>ทำสำเนา</button><button disabled={busy || dirty || !selected} onClick={print}>พิมพ์ / PDF</button><button className="quote-ai-share" disabled={busy || dirty || !selected || !!calculation.error} onClick={() => setAiShareOpen(true)}>แชร์ PDF ให้ AI ตรวจ</button>{selected?.status === 'issued' && <><button disabled={busy} onClick={() => transition('draft')}>สร้าง REV. ราคาใหม่</button><button disabled={busy} onClick={() => navigate('/admin/receipts', { state: { quote: structuredClone(quote), totals: calculation.totals } })}>สร้างใบเสร็จ</button><button disabled={busy} onClick={() => transition('void')}>ยกเลิกเอกสาร</button></>}{selected && <button disabled={busy} onClick={() => run(async () => { setHistory(await listRevisions(selected.id)); setMessage('โหลดประวัติ REV. แล้ว'); })}>ประวัติ REV.</button>}</div>;
+  const actions = <div className="quote-controls"><button className="quote-save" disabled={locked || !dirty || !!calculation.error} onClick={save}>คำนวณและบันทึก{dirty ? ' *' : ''}</button><button className="quote-preview-button" disabled={!!calculation.error} onClick={() => setPreviewMode(current => !current)}>{previewMode ? '← กลับมาแก้ไข' : 'ดูตัวอย่าง'}</button><button disabled={locked || dirty || !selected} onClick={issue}>ออกเอกสาร REV. {String(displayRevision || 1).padStart(2, '0')}</button><button disabled={busy} onClick={copy}>ทำสำเนา</button><button disabled={busy || dirty || !selected} onClick={print}>พิมพ์ / PDF</button><button className="quote-ai-share" disabled={busy || dirty || !selected || !!calculation.error} onClick={() => setAiShareOpen(true)}>แชร์ PDF ให้ AI ตรวจ</button>{selected?.status === 'draft' && selected.revision === 0 && <button className="quote-danger" disabled={busy || dirty} onClick={removeDraft}>ลบร่าง</button>}{selected?.status === 'issued' && <><button disabled={busy} onClick={() => transition('draft')}>สร้าง REV. ราคาใหม่</button><button disabled={busy} onClick={() => navigate('/admin/receipts', { state: { quote: structuredClone(quote), totals: calculation.totals } })}>สร้างใบเสร็จ</button><button disabled={busy} onClick={() => transition('void')}>ยกเลิกเอกสาร</button></>}{selected && <button disabled={busy} onClick={() => run(async () => { setHistory(await listRevisions(selected.id)); setMessage('โหลดประวัติ REV. แล้ว'); })}>ประวัติ REV.</button>}</div>;
   const filteredRows = rows.filter(row => `${row.quote.number} ${row.quote.customer} ${row.quote.project} ${row.status}`.toLowerCase().includes(search.toLowerCase()));
 
   return <div className="quotation-workspace">

@@ -45,6 +45,12 @@ test('contact schema rejects oversize and additional fields',async()=>{
  await assertFails(setDoc(doc(guest,'contacts','extra'),{...valid,admin:true}));
 });
 test('issuance locks revision and number, supports controlled revision flow',async()=>{
+ const freshDraft=doc(admin,'quotations','deletable'),revisedDraft=doc(admin,'quotations','revised-draft');
+ await assertSucceeds(setDoc(freshDraft,{quote:{number:'QT-DRAFT'},status:'draft',version:1,revision:0}));
+ await assertFails(deleteDoc(doc(user,'quotations','deletable')));
+ await assertSucceeds(deleteDoc(freshDraft));
+ await env.withSecurityRulesDisabled(async context=>setDoc(doc(context.firestore(),'quotations','revised-draft'),{quote:{number:'QT-OLD'},status:'draft',version:1,revision:1}));
+ await assertFails(deleteDoc(revisedDraft));
  const ref=doc(admin,'quotations','q1'), quote={number:'QT-TEST',customer:'Example'};
  await assertSucceeds(setDoc(ref,{quote,status:'draft',version:1,revision:0}));
  const batch=writeBatch(admin);batch.update(ref,{status:'issued',version:2,revision:1});batch.set(doc(admin,'quotations','q1','revisions','1'),{quote,revision:1});batch.set(doc(admin,'quotationNumbers','QT-TEST'),{quotationId:'q1'});await assertSucceeds(batch.commit());

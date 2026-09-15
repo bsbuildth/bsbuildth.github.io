@@ -21,6 +21,16 @@ export async function saveQuote(id, quote, expected = 0) {
   });
   return ref.id;
 }
+export async function deleteDraftQuote(id, expected) {
+  await runTransaction(db, async tx => {
+    const ref = doc(db, 'quotations', id);
+    const current = await tx.get(ref);
+    checkVersion(current, expected);
+    const data = current.data();
+    if (data.status !== 'draft' || data.revision !== 0) throw new Error('ลบได้เฉพาะใบเสนอราคาฉบับร่างที่ยังไม่เคยออกเอกสาร');
+    tx.delete(ref);
+  });
+}
 export async function issueQuote(id, expected) {
   await runTransaction(db, async tx => {
     const ref = doc(db, 'quotations', id);
