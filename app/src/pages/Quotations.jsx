@@ -6,7 +6,7 @@ import { applyCompanyDefaults, getCompanyDefaults, getDocumentPresets, nextDocum
 import QuotationA4Form from '../components/QuotationA4Form';
 import QuotationPreview from '../components/QuotationPreview';
 import AiShareDialog from '../components/AiShareDialog';
-import { downloadFile, quotationElementToPdfFile, quotationReviewPrompt, redactQuotationForAi } from '../lib/quotationPdf';
+import { downloadFile, quotationElementToPdfFile, quotationFilename, quotationReviewPrompt, redactQuotationForAi } from '../lib/quotationPdf';
 import './Quotations.css';
 
 export default function Quotations() {
@@ -107,7 +107,11 @@ export default function Quotations() {
     if (dirty) throw new Error('กรุณาบันทึกก่อนพิมพ์ เพื่อให้เอกสารตรงกับข้อมูลที่บันทึก');
     setPreviewMode(true);
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    await document.fonts.ready; window.print(); setMessage('เลือก Save as PDF ในหน้าต่างพิมพ์เพื่อบันทึกไฟล์');
+    await document.fonts.ready;
+    const originalTitle = document.title;
+    try { document.title = quotationFilename(quote); window.print(); }
+    finally { document.title = originalTitle; }
+    setMessage('เลือก Save as PDF ในหน้าต่างพิมพ์เพื่อบันทึกไฟล์');
   });
 
   const copyReviewPrompt = async () => {
@@ -129,7 +133,7 @@ export default function Quotations() {
     };
     setExportContext(context);
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    try { return await quotationElementToPdfFile(exportRef.current?.querySelector('.reference-document'), quote.number, redacted); }
+    try { return await quotationElementToPdfFile(exportRef.current?.querySelector('.reference-document'), quotationFilename(quote), redacted); }
     finally { setExportContext(null); }
   };
   const sharePdfWithAi = redacted => run(async () => {

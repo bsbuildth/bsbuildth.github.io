@@ -6,6 +6,13 @@ function safeFilename(value) {
   return `${cleaned || 'quotation'}.pdf`;
 }
 
+export function quotationFilename(quote = {}, timestamp = new Date()) {
+  const date = timestamp instanceof Date && !Number.isNaN(timestamp.getTime()) ? timestamp : new Date();
+  const pad = value => String(value).padStart(2, '0');
+  const dateTime = `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
+  return [quote.number || 'ใบเสนอราคา', quote.customer || 'ลูกค้า', dateTime].map(value => String(value).trim()).filter(Boolean).join('_');
+}
+
 async function waitForImages(element) {
   const images = [...element.querySelectorAll('img')];
   await Promise.all(images.map(image => image.complete ? Promise.resolve() : new Promise(resolve => {
@@ -38,7 +45,7 @@ export function redactQuotationForAi(quote) {
   };
 }
 
-export async function quotationElementToPdfFile(element, documentNumber, redacted = false) {
+export async function quotationElementToPdfFile(element, filename, redacted = false) {
   if (!element) throw new Error('ไม่พบตัวอย่างใบเสนอราคาสำหรับสร้าง PDF');
   await document.fonts.ready;
   await waitForImages(element);
@@ -78,7 +85,7 @@ export async function quotationElementToPdfFile(element, documentNumber, redacte
     offset += sliceHeight; page += 1;
   }
   const suffix = redacted ? '-AI-REVIEW' : '';
-  return new File([pdf.output('blob')], safeFilename(`${documentNumber || 'quotation'}${suffix}`), { type: 'application/pdf' });
+  return new File([pdf.output('blob')], safeFilename(`${filename || 'quotation'}${suffix}`), { type: 'application/pdf' });
 }
 
 export function downloadFile(file) {
