@@ -210,7 +210,7 @@
 .reference-summary>div:last-child p{display:grid;grid-template-columns:1fr auto;gap:7mm;margin:2mm 0}.reference-summary span{color:var(--document-blue);text-align:right;font-weight:400}.reference-summary b{font-weight:400;white-space:nowrap}
 .reference-grand{padding-top:2mm;border-top:1pt solid var(--document-line)}.reference-grand span,.reference-grand b{font-weight:700}
 .reference-notes{margin-top:7mm;break-inside:avoid}.reference-notes>b,.reference-notes h3{display:block;margin:0 0 1.5mm;color:var(--document-blue);font-size:inherit;font-weight:400}.reference-notes p{margin:1mm 0;white-space:pre-wrap}
-.reference-signatures{display:grid;grid-template-columns:1fr 1fr;column-gap:32mm;margin-top:auto;padding-top:15mm;break-inside:avoid}.signature-party{position:relative;overflow:hidden}.signature-party>p{margin:0 0 24mm;text-align:center}.signature-party>div{display:grid;grid-template-columns:1.35fr .85fr;gap:7mm}.reference-signatures span{position:relative;z-index:1;padding-top:3mm;border-top:1pt solid var(--document-line);background:#fff;text-align:center}.signature-image{position:absolute;top:7mm;left:0;width:calc((100% - 7mm)*.6136);height:17mm;object-fit:contain;object-position:center bottom}
+.reference-signatures{display:grid;grid-template-columns:1fr 1fr;column-gap:32mm;margin-top:0;padding-top:15mm;break-inside:avoid}.signature-party{position:relative;overflow:hidden}.signature-party>p{margin:0 0 24mm;text-align:center}.signature-party>div{display:grid;grid-template-columns:1.35fr .85fr;gap:7mm}.reference-signatures span{position:relative;z-index:1;padding-top:3mm;border-top:1pt solid var(--document-line);background:#fff;text-align:center}.signature-image{position:absolute;top:7mm;left:0;width:calc((100% - 7mm)*.6136);height:17mm;object-fit:contain;object-position:center bottom}
 .receipt-reference-table th:nth-child(1){width:6%}.receipt-reference-table th:nth-child(2){width:74%}.receipt-reference-table th:nth-child(3){width:20%;text-align:right}.receipt-reference-table td:nth-child(3){text-align:right}
 
 .quote-a4-form{font-family:Tahoma,'Noto Sans Thai',sans-serif;font-size:11.25pt;color:#111}
@@ -236,7 +236,7 @@
   html,body,#root{box-sizing:border-box!important;width:210mm!important;min-height:297mm!important;margin:0!important;padding:0!important}
   .reference-document{box-sizing:border-box;width:210mm!important;max-width:210mm!important;min-height:297mm!important;margin:0!important;padding:10mm 12.7mm 12mm!important;overflow:visible!important;font-size:9pt;line-height:1.35;box-shadow:none}
   .reference-document.document-long{display:block!important}
-  .reference-document.document-long .reference-signatures{margin-top:12mm}
+  .reference-document .reference-signatures{margin-top:0}
   .reference-document .quote-watermark{display:none}
   .receipt-paper{min-height:297mm}
 }
