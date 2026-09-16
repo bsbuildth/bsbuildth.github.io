@@ -6,6 +6,7 @@ import { hasAdminAccess, hasAdminClaim } from '../src/lib/admin-access.js';
 import { validateMedia, validateDocument } from '../src/lib/media.js';
 import { newReceipt, calculateReceipt, validateReceipt } from '../src/lib/receipt.js';
 import { quotationFilename, quotationReviewPrompt, redactQuotationForAi } from '../src/lib/quotationPdf.js';
+import { calculateCatalogPrice } from '../src/lib/priceCatalog.js';
 test('sample quotation totals, free item and installments match the reference', () => {
  const q = demoQuote(), r = validateIssue(q);
  assert.equal(r.main,5501000); assert.equal(r.optional,4450000); assert.equal(r.total,9951000);
@@ -81,4 +82,13 @@ test('AI review copy removes private fields without changing quotation amounts',
 });
 test('quotation filenames include the document number, customer, and local timestamp', () => {
  assert.equal(quotationFilename({number:'QT-02',customer:'คุณสุภาพร กำภู ณ อยุธยา'},new Date(2026,8,16,9,5,7)),'QT-02_คุณสุภาพร กำภู ณ อยุธยา_20260916-090507');
+});
+test('price catalog calculates material allowances, labor and company overrides', () => {
+ const result=calculateCatalogPrice({materialCost:857,laborCost:450,wastePercent:10,transportPercent:5,materialMarkupPercent:20,overheadPercent:0,companyMode:'percent',companyAdjustmentPercent:10});
+ assert.equal(result.landedMaterial,989.835);
+ assert.equal(result.materialSell,1187.802);
+ assert.equal(result.centralPrice,1637.802);
+ assert.equal(result.companyPrice,1801.5822);
+ const fixed=calculateCatalogPrice({...result,companyMode:'fixed',companyPrice:1999});
+ assert.equal(fixed.companyPrice,1999);
 });
