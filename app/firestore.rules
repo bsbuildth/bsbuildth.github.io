@@ -86,5 +86,14 @@ service cloud.firestore {
         && request.resource.data.sequence > resource.data.sequence;
       allow delete: if false;
     }
+    match /priceCatalog/{id} {
+      allow read, create, update: if admin();
+      allow delete: if false;
+      match /history/{version} {
+        allow read: if admin();
+        allow create: if admin();
+        allow update, delete: if false;
+      }
+    }
   }
 }

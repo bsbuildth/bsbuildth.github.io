@@ -39,6 +39,18 @@ test('document defaults and sequential counters are admin-only',async()=>{
  await assertFails(updateDoc(counter,{kind:'RC',period:'202609',sequence:4}));
  await assertFails(deleteDoc(counter));
 });
+test('price catalog is admin-only and its price history is immutable',async()=>{
+ const item={code:'FIN-001',name:'พื้นไม้เทียม WPC',unit:'ตร.ม.',version:1};
+ const reference=doc(admin,'priceCatalog','wpc');
+ for(const db of [guest,user]) {
+  await assertFails(getDoc(doc(db,'priceCatalog','wpc')));
+  await assertFails(setDoc(doc(db,'priceCatalog','wpc'),item));
+ }
+ await assertSucceeds(setDoc(reference,item));
+ await assertSucceeds(setDoc(doc(admin,'priceCatalog','wpc','history','1'),item));
+ await assertFails(updateDoc(doc(admin,'priceCatalog','wpc','history','1'),{version:2}));
+ await assertFails(deleteDoc(reference));
+});
 test('contact schema rejects oversize and additional fields',async()=>{
  const valid={name:'Example',contact_info:'000',email:'',service_type:'test',message:'',created_at:serverTimestamp()};
  await assertSucceeds(setDoc(doc(guest,'contacts','valid'),valid));await assertFails(setDoc(doc(guest,'contacts','bad'),{...valid,name:'x'.repeat(121)}));

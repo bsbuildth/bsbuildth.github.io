@@ -837,6 +837,7 @@ const Admin = ({ setIsAuthenticated }) => {
           </div>
         </div>
         <div className="admin-header-actions">
+          <button className="admin-btn" onClick={() => navigate('/admin/prices')}>คลังราคา</button>
           <button className="admin-btn" onClick={() => navigate('/admin/quotations')}>ใบเสนอราคา</button>
           <button className="admin-btn" onClick={() => navigate('/admin/receipts')}>ใบเสร็จรับเงิน</button>
           <button onClick={() => navigate('/')} className="admin-btn admin-btn-ghost">
@@ -877,7 +878,7 @@ const Admin = ({ setIsAuthenticated }) => {
       <section className="admin-workspace" style={{ display: activeTab === 'overview' ? 'block' : 'none' }}>
         <div className="admin-workspace-hero">
           <div><span className="admin-eyebrow">ภาพรวมวันนี้ · {new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}</span><h2>เริ่มงานเอกสารได้จากที่เดียว</h2><p>ดูสถานะใบเสนอราคา ออกใบเสร็จ และกลับไปจัดการข้อมูลเว็บไซต์ได้อย่างรวดเร็ว</p></div>
-          <div className="admin-primary-actions"><button onClick={() => navigate('/admin/quotations')}>＋ สร้างใบเสนอราคา</button><button onClick={() => navigate('/admin/receipts')}>＋ ออกใบเสร็จรับเงิน</button></div>
+          <div className="admin-primary-actions"><button onClick={() => navigate('/admin/quotations')}>＋ สร้างใบเสนอราคา</button><button onClick={() => navigate('/admin/prices')}>＋ จัดการคลังราคา</button></div>
         </div>
 
         <div className="admin-stat-grid">
@@ -889,7 +890,7 @@ const Admin = ({ setIsAuthenticated }) => {
 
         <div className="admin-work-grid">
           <div className="admin-recent-card"><header><div><span className="admin-eyebrow">เอกสารล่าสุด</span><h3>รายการที่กำลังทำงาน</h3></div><button onClick={() => { setDocumentLoading(true); setDocumentError(''); fetchDocuments(); }} disabled={documentLoading}>{documentLoading ? 'กำลังโหลด…' : 'รีเฟรช'}</button></header>{documentError && <p className="admin-document-error">{documentError}</p>}{!documentLoading && !documentError && recentDocuments.length === 0 && <div className="admin-empty-state"><b>ยังไม่มีเอกสาร</b><span>เริ่มสร้างใบเสนอราคาแรกได้จากปุ่มด้านบน</span></div>}<div className="admin-document-list">{recentDocuments.map(row => <button key={`${row.kind}-${row.id}`} onClick={() => navigate(row.kind === 'quotation' ? '/admin/quotations' : '/admin/receipts')}><span className={`admin-doc-kind ${row.kind}`}>{row.kind === 'quotation' ? 'QT' : 'RC'}</span><span className="admin-doc-main"><b>{row.number || (row.kind === 'quotation' ? 'ร่างใบเสนอราคา' : 'ร่างใบเสร็จ')}</b><small>{row.party || 'ยังไม่ระบุชื่อ'} · {documentDate(row.updatedAt)}</small></span><span className="admin-doc-value"><b>{Number.isSafeInteger(row.total) ? `${money(row.total)} บาท` : '—'}</b><small className={`status-${row.status}`}>{({ draft: 'ฉบับร่าง', issued: 'ออกแล้ว', void: 'ยกเลิก' })[row.status] || row.status}</small></span></button>)}</div></div>
-          <aside className="admin-quick-card"><span className="admin-eyebrow">ทางลัดงานประจำ</span><h3>จัดการได้ทันที</h3><button onClick={() => navigate('/admin/quotations')}><b>ใบเสนอราคา</b><span>สร้าง แก้ไข REV. เซ็น และแชร์ PDF</span><i>→</i></button><button onClick={() => navigate('/admin/receipts')}><b>ใบเสร็จรับเงิน</b><span>เลือกงวดจากใบเสนอราคาแล้วออกเอกสาร</span><i>→</i></button><button onClick={() => setActiveTab('inbox')}><b>กล่องข้อความ</b><span>ดูข้อมูลลูกค้าที่ติดต่อเข้ามา</span><i>→</i></button><button onClick={() => setActiveTab('projects')}><b>ผลงานเว็บไซต์</b><span>เพิ่มรูปและอัปเดตโครงการ</span><i>→</i></button></aside>
+          <aside className="admin-quick-card"><span className="admin-eyebrow">ทางลัดงานประจำ</span><h3>จัดการได้ทันที</h3><button onClick={() => navigate('/admin/quotations')}><b>ใบเสนอราคา</b><span>สร้าง แก้ไข REV. เซ็น และแชร์ PDF</span><i>→</i></button><button onClick={() => navigate('/admin/prices')}><b>คลังราคา 2569</b><span>ต้นทุน ค่าแรง และราคาบริษัท</span><i>→</i></button><button onClick={() => navigate('/admin/receipts')}><b>ใบเสร็จรับเงิน</b><span>เลือกงวดจากใบเสนอราคาแล้วออกเอกสาร</span><i>→</i></button><button onClick={() => setActiveTab('projects')}><b>ผลงานเว็บไซต์</b><span>เพิ่มรูปและอัปเดตโครงการ</span><i>→</i></button></aside>
         </div>
       </section>
 
