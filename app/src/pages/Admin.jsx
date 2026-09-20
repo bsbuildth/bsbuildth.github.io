@@ -832,14 +832,14 @@ const Admin = ({ setIsAuthenticated }) => {
         <div className="admin-brand">
           <span className="admin-brand-logo">BS</span>
           <div>
-            <h1>ศูนย์งาน BS Build</h1>
-            <p className="admin-brand-sub">เสนอราคา · รับชำระ · จัดการเว็บไซต์</p>
+            <h1>BS Build Workspace</h1>
+            <p className="admin-brand-sub">เอกสาร · ราคา · เว็บไซต์</p>
           </div>
         </div>
         <div className="admin-header-actions">
+          <button className="admin-btn admin-btn-primary" onClick={() => navigate('/admin/quotations')}>＋ สร้างใบเสนอราคา</button>
           <button className="admin-btn" onClick={() => navigate('/admin/prices')}>คลังราคา</button>
-          <button className="admin-btn" onClick={() => navigate('/admin/quotations')}>ใบเสนอราคา</button>
-          <button className="admin-btn" onClick={() => navigate('/admin/receipts')}>ใบเสร็จรับเงิน</button>
+          <button className="admin-btn" onClick={() => navigate('/admin/receipts')}>ใบเสร็จ</button>
           <button onClick={() => navigate('/')} className="admin-btn admin-btn-ghost">
             ← กลับหน้าเว็บ
           </button>
@@ -851,19 +851,19 @@ const Admin = ({ setIsAuthenticated }) => {
 
       <nav className="admin-tabs">
         {[
-          { key: 'overview', label: '🏠 หน้าทำงาน' },
-          { key: 'inbox', label: '📥 กล่องข้อความ' },
-          { key: 'projects', label: '🏗️ ผลงาน' },
-          { key: 'references', label: '🖼️ รูปอ้างอิง' },
-          { key: 'reviews', label: '⭐ รีวิว' },
-          { key: 'services', label: '🛠️ บริการ' },
-          { key: 'calculator', label: '🧮 คำนวณราคา' },
-          { key: 'content', label: '📝 เนื้อหา' },
-          { key: 'articles', label: '📰 บทความ' },
-          { key: 'hero', label: '🎬 Hero' },
-          { key: 'business', label: '🏢 ข้อมูลธุรกิจ' },
-          { key: 'notifications', label: '🔔 แจ้งเตือน' },
-          { key: 'settings', label: '⚙️ ตั้งค่า' },
+          { key: 'overview', label: 'หน้าทำงาน' },
+          { key: 'inbox', label: 'ข้อความ' },
+          { key: 'projects', label: 'ผลงาน' },
+          { key: 'references', label: 'รูปอ้างอิง' },
+          { key: 'reviews', label: 'รีวิว' },
+          { key: 'services', label: 'บริการ' },
+          { key: 'calculator', label: 'คำนวณราคา' },
+          { key: 'content', label: 'เนื้อหา' },
+          { key: 'articles', label: 'บทความ' },
+          { key: 'hero', label: 'Hero' },
+          { key: 'business', label: 'ข้อมูลธุรกิจ' },
+          { key: 'notifications', label: 'แจ้งเตือน' },
+          { key: 'settings', label: 'ตั้งค่า' },
         ].map(t => (
           <button
             key={t.key}
@@ -877,8 +877,8 @@ const Admin = ({ setIsAuthenticated }) => {
 
       <section className="admin-workspace" style={{ display: activeTab === 'overview' ? 'block' : 'none' }}>
         <div className="admin-workspace-hero">
-          <div><span className="admin-eyebrow">ภาพรวมวันนี้ · {new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}</span><h2>เริ่มงานเอกสารได้จากที่เดียว</h2><p>ดูสถานะใบเสนอราคา ออกใบเสร็จ และกลับไปจัดการข้อมูลเว็บไซต์ได้อย่างรวดเร็ว</p></div>
-          <div className="admin-primary-actions"><button onClick={() => navigate('/admin/quotations')}>＋ สร้างใบเสนอราคา</button><button onClick={() => navigate('/admin/prices')}>＋ จัดการคลังราคา</button></div>
+          <div><span className="admin-eyebrow">ภาพรวมวันนี้ · {new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}</span><h2>เริ่มงานที่สำคัญก่อน</h2><p>สร้างเอกสาร เลือกราคากลาง และติดตามงานล่าสุดจากหน้าเดียว</p></div>
+          <div className="admin-primary-actions"><button onClick={() => navigate('/admin/quotations')}><b>＋ สร้างใบเสนอราคา</b><span>เพิ่มรายการจากคลังราคาได้</span></button><button onClick={() => navigate('/admin/receipts')}><b>＋ ออกใบเสร็จรับเงิน</b><span>เลือกงวดจากใบเสนอราคา</span></button><button onClick={() => navigate('/admin/prices')}><b>คลังราคา 2569</b><span>ค้นหาและปรับราคา</span></button></div>
         </div>
 
         <div className="admin-stat-grid">
