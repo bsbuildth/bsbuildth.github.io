@@ -63,11 +63,13 @@ const FeaturedProjects = () => {
     return (i + dir + n) % n;
   });
 
-  const renderCard = (project, keyPrefix = '') => (
+  const renderCard = (project, keyPrefix = '', index = 0) => (
     <article
       className="project-card fp-card"
       key={`${keyPrefix}${project.id}`}
       onClick={() => handleOpenDetail(project)}
+      data-aos="fade-up"
+      data-aos-delay={(index % 3) * 90}
     >
       <div className="project-img-wrapper">
         <img src={getImgSrc(project.img)} alt={project.title} className="project-img" loading="lazy" decoding="async" />
@@ -105,7 +107,7 @@ const FeaturedProjects = () => {
         <p style={{ textAlign: 'center', color: 'var(--ink-soft)' }}>{projects.length ? 'ยังไม่มีผลงานในหมวดนี้' : 'กำลังจัดเตรียมผลงานสำหรับเผยแพร่'} <a href="#contact" style={{ textDecoration: 'underline' }}>สอบถามงานที่คุณสนใจ →</a></p>
       ) : (
         <div className="fp-grid">
-          {filteredProjects.map(p => renderCard(p, 'project-'))}
+          {filteredProjects.map((p, index) => renderCard(p, 'project-', index))}
         </div>
       )}
 

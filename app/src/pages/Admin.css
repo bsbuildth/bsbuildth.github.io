@@ -321,3 +321,7 @@ body:has(.admin-dashboard) { background: var(--adm-bg); }
   border-bottom: 1px solid #f1f1f1;
 }
 .ws-toggle-row span { font-size: 0.92rem; color: #333; }
+
+/* Responsive motion for the working dashboard. */
+.admin-workspace-hero{position:relative;overflow:hidden}.admin-workspace-hero::after{content:'';position:absolute;inset:-40% -15%;pointer-events:none;background:linear-gradient(110deg,transparent 38%,rgba(221,239,228,.14) 50%,transparent 62%);transform:translateX(-72%) rotate(8deg);animation:adminSheen 10s ease-in-out infinite}.admin-workspace-hero>*{position:relative;z-index:1}@keyframes adminSheen{0%,25%{transform:translateX(-72%) rotate(8deg)}58%,100%{transform:translateX(72%) rotate(8deg)}}.admin-primary-actions button,.admin-stat-grid>button,.admin-quick-card>button,.admin-recent-card,.admin-quick-card{transition:transform .28s var(--ease),box-shadow .28s var(--ease),border-color .28s var(--ease),background .28s var(--ease)}.admin-primary-actions button:hover{transform:translateY(-5px);box-shadow:0 14px 28px rgba(3,24,22,.2)}.admin-stat-grid>button:hover{box-shadow:0 14px 30px rgba(13,43,41,.12)}.admin-quick-card>button:hover{transform:translateX(5px)}
+@media(prefers-reduced-motion:reduce){.admin-workspace-hero::after{animation:none}.admin-primary-actions button:hover,.admin-stat-grid>button:hover,.admin-quick-card>button:hover{transform:none}}
