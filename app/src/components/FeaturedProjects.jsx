@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { getProjects, getProject } from '../firebase/api';
 import './FeaturedProjects.css';
 
@@ -18,11 +18,6 @@ const FeaturedProjects = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [procIdx, setProcIdx] = useState(0);
 
-  const scrollRef = useRef(null);
-  const pausedRef = useRef(false);
-  const dragRef = useRef({ active: false, startX: 0, startScroll: 0, moved: false });
-  const resumeTimer = useRef(null);
-
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
   useEffect(() => {
@@ -37,60 +32,6 @@ const FeaturedProjects = () => {
   }, [selectedProject]);
 
   const filteredProjects = (projects || []).filter(p => filter === 'all' || (p.category || 'renovation') === filter);
-
-  // Auto-scroll loop (pauses on hover / user interaction). Cards are duplicated
-  // once so scrollLeft can wrap seamlessly at the halfway point.
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el || filteredProjects.length === 0) return;
-    let raf;
-    const tick = () => {
-      if (el && !pausedRef.current && !dragRef.current.active) {
-        el.scrollLeft += 0.5;
-        const half = el.scrollWidth / 2;
-        if (half > 0 && el.scrollLeft >= half) el.scrollLeft -= half;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [filteredProjects.length, filter]);
-
-  const pauseThenResume = (delay = 1500) => {
-    pausedRef.current = true;
-    clearTimeout(resumeTimer.current);
-    resumeTimer.current = setTimeout(() => { pausedRef.current = false; }, delay);
-  };
-
-  const onWheel = (e) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-      el.scrollLeft += e.deltaY;
-      pauseThenResume();
-    }
-  };
-
-  const onPointerDown = (e) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    dragRef.current = { active: true, startX: e.clientX, startScroll: el.scrollLeft, moved: false };
-    pausedRef.current = true;
-    el.classList.add('dragging');
-  };
-  const onPointerMove = (e) => {
-    const el = scrollRef.current;
-    if (!el || !dragRef.current.active) return;
-    const dx = e.clientX - dragRef.current.startX;
-    if (Math.abs(dx) > 4) dragRef.current.moved = true;
-    el.scrollLeft = dragRef.current.startScroll - dx;
-  };
-  const endDrag = () => {
-    const el = scrollRef.current;
-    if (el) el.classList.remove('dragging');
-    dragRef.current.active = false;
-    pauseThenResume(1500);
-  };
 
   const handleOpenDetail = async (project) => {
     setSelectedProject(project);
@@ -126,7 +67,7 @@ const FeaturedProjects = () => {
     <article
       className="project-card fp-card"
       key={`${keyPrefix}${project.id}`}
-      onClick={() => { if (!dragRef.current.moved) handleOpenDetail(project); }}
+      onClick={() => handleOpenDetail(project)}
     >
       <div className="project-img-wrapper">
         <img src={getImgSrc(project.img)} alt={project.title} className="project-img" loading="lazy" decoding="async" />
@@ -163,19 +104,8 @@ const FeaturedProjects = () => {
       ) : filteredProjects.length === 0 ? (
         <p style={{ textAlign: 'center', color: 'var(--ink-soft)' }}>{projects.length ? 'ยังไม่มีผลงานในหมวดนี้' : 'กำลังจัดเตรียมผลงานสำหรับเผยแพร่'} <a href="#contact" style={{ textDecoration: 'underline' }}>สอบถามงานที่คุณสนใจ →</a></p>
       ) : (
-        <div
-          className="fp-scroller"
-          ref={scrollRef}
-          onWheel={onWheel}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={endDrag}
-          onPointerLeave={endDrag}
-          onMouseEnter={() => { pausedRef.current = true; }}
-          onMouseLeave={() => { if (!dragRef.current.active) pausedRef.current = false; }}
-        >
-          {filteredProjects.map(p => renderCard(p, 'a-'))}
-          {filteredProjects.map(p => renderCard(p, 'b-'))}
+        <div className="fp-grid">
+          {filteredProjects.map(p => renderCard(p, 'project-'))}
         </div>
       )}
 

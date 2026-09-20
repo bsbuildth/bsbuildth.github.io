@@ -1,16 +1,16 @@
-/* ───────────────────── Design tokens (Light Editorial) ───────────────────── */
+/* ───────────────────── Design tokens (Forest editorial) ───────────────────── */
 :root {
   /* Surfaces */
-  --bg:        #f7f5f1;   /* warm paper */
-  --bg-alt:    #efebe4;   /* alternating section */
-  --surface:   #ffffff;   /* cards */
-  --ink:       #1a1714;   /* primary text / headings */
-  --ink-soft:  #6b6259;   /* muted body */
-  --line:      rgba(26, 23, 20, .11);
-  --gold:      #a87c32;   /* premium gold */
-  --gold-hover:#8f6829;
-  --gold-soft: #f3ead8;   /* gold tint backgrounds */
-  --ink-deep:  #16130f;   /* dark contrast sections (footer) */
+  --bg:        #f4f0e8;
+  --bg-alt:    #e8e5db;
+  --surface:   #fffdf8;
+  --ink:       #173432;
+  --ink-soft:  #5c6a63;
+  --line:      rgba(23, 52, 50, .14);
+  --gold:      #9b7650;
+  --gold-hover:#765638;
+  --gold-soft: #e8ddcc;
+  --ink-deep:  #0d2b29;
 
   /* Back-compat aliases (old variable names still used around the codebase) */
   --bg-dark: var(--ink-deep);
@@ -22,7 +22,7 @@
   --text-dark: var(--ink);
   --text-muted: var(--ink-soft);
 
-  --font-display: 'Prompt', 'Sarabun', sans-serif;
+  --font-display: Georgia, 'Noto Serif Thai', 'Sarabun', serif;
   --font-heading: var(--font-display);
   --font-body: 'Sarabun', system-ui, -apple-system, sans-serif;
 
@@ -30,9 +30,9 @@
   --ease: cubic-bezier(.22, .61, .36, 1);
 
   /* Soft layered shadows (warm-tinted to match the paper palette) */
-  --shadow-sm: 0 2px 6px rgba(26, 23, 20, 0.05), 0 8px 24px rgba(26, 23, 20, 0.06);
-  --shadow-md: 0 6px 16px rgba(26, 23, 20, 0.08), 0 18px 40px rgba(26, 23, 20, 0.12);
-  --shadow-lg: 0 12px 28px rgba(26, 23, 20, 0.14), 0 32px 64px rgba(26, 23, 20, 0.18);
+  --shadow-sm: 0 2px 8px rgba(13, 43, 41, 0.06), 0 12px 28px rgba(13, 43, 41, 0.08);
+  --shadow-md: 0 8px 22px rgba(13, 43, 41, 0.10), 0 22px 48px rgba(13, 43, 41, 0.13);
+  --shadow-lg: 0 18px 38px rgba(13, 43, 41, 0.16), 0 40px 80px rgba(13, 43, 41, 0.2);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -59,9 +59,9 @@ html, body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
-  font-weight: 600;
-  line-height: 1.4;
-  letter-spacing: 0;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -.018em;
   color: var(--ink);
   margin-bottom: 1rem;
 }
@@ -85,7 +85,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
   letter-spacing: -0.02em;
   font-weight: 600;
 }
-.heading-lg { font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.1; }
+.heading-lg { font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.15; }
 .heading-md { font-size: clamp(1.5rem, 2.5vw, 2rem); line-height: 1.2; }
 
 .text-gold { color: var(--gold); }
@@ -127,20 +127,20 @@ a, button { -webkit-tap-highlight-color: transparent; }
   font-size: .95rem;
   font-weight: 600;
   letter-spacing: .02em;
-  border-radius: 2px;
+  border-radius: 0;
   border: 1px solid transparent;
   min-height: 44px; /* comfortable tap target */
   transition: all .3s var(--ease);
 }
 .btn-solid {
-  background-color: var(--gold);
+  background-color: var(--ink-deep);
   color: #fff;
-  border-color: var(--gold);
+  border-color: var(--ink-deep);
   box-shadow: var(--shadow-sm);
 }
 .btn-solid:hover {
-  background-color: var(--ink);
-  border-color: var(--ink);
+  background-color: var(--gold);
+  border-color: var(--gold);
   color: #fff;
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);

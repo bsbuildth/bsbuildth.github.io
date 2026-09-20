@@ -45,6 +45,7 @@ const Hero = () => {
         <div ref={parallaxRef} className="hero-bg" style={{ backgroundImage: `url(${src})` }} aria-hidden="true" />
       )}
       <div className="hero-scrim" aria-hidden="true"></div>
+      <div className="hero-frame" aria-hidden="true"></div>
 
       <div className="container hero-shell">
         <div className="hero-content" data-aos="fade-up">
@@ -55,6 +56,7 @@ const Hero = () => {
             <a href="#contact" className="btn btn-solid hero-cta">นัดสำรวจหน้างาน <span>→</span></a>
             <a href="#reference" className="hero-link">ชมผลงานและไอเดีย</a>
           </div>
+          <div className="hero-note"><span>01</span> ออกแบบเพื่อการอยู่อาศัยที่ดีในทุกวัน</div>
         </div>
       </div>
 
