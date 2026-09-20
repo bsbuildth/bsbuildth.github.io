@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { calculateQuote, demoQuote, newItem, newQuote, validateIssue } from '../lib/quotation';
+import { calculateQuote, catalogItemToQuoteItem, demoQuote, newItem, newQuote, quoteItemToCatalogInput, validateIssue } from '../lib/quotation';
 import { changeQuoteStatus, deleteDraftQuote, issueQuote, listQuotes, listRevisions, saveQuote } from '../firebase/quotations';
 import { applyCompanyDefaults, getCompanyDefaults, getDocumentPresets, nextDocumentNumber, saveCompanyDefaults, saveDocumentPresets } from '../firebase/documents';
+import { listPriceCatalog, savePriceCatalogItem } from '../firebase/priceCatalog';
 import QuotationA4Form from '../components/QuotationA4Form';
 import QuotationPreview from '../components/QuotationPreview';
 import AiShareDialog from '../components/AiShareDialog';
@@ -25,6 +26,10 @@ export default function Quotations() {
   const [exportContext, setExportContext] = useState(null);
   const [companyDefaults, setCompanyDefaults] = useState({});
   const [documentPresets, setDocumentPresets] = useState({ bankAccounts: [], signatures: [] });
+  const [priceCatalog, setPriceCatalog] = useState([]);
+  const [catalogOpen, setCatalogOpen] = useState(false);
+  const [catalogQuery, setCatalogQuery] = useState('');
+  const [catalogSection, setCatalogSection] = useState(0);
   const operation = useRef(false);
   const touched = useRef(false);
   const exportRef = useRef(null);
@@ -61,6 +66,29 @@ export default function Quotations() {
   const itemEdit = (sectionIndex, itemIndex, key, value) => {
     updateSections(sections => sections.map((section, i) => i === sectionIndex ? { ...section, items: section.items.map((item, j) => j === itemIndex ? { ...item, [key]: value } : item) } : section));
   };
+  const openCatalog = async sectionIndex => {
+    setCatalogSection(sectionIndex); setCatalogQuery(''); setCatalogOpen(true);
+    if (priceCatalog.length) return;
+    try { setPriceCatalog(await listPriceCatalog()); }
+    catch (error) { setMessage(error.message || 'โหลดคลังราคาไม่ได้'); }
+  };
+  const addCatalogItem = item => {
+    updateSections(sections => sections.map((section, index) => index === catalogSection ? { ...section, items: [...section.items, catalogItemToQuoteItem(item)] } : section));
+    setCatalogOpen(false); setMessage(`เพิ่ม ${item.name} จากคลังราคาแล้ว — ปรับราคาเฉพาะใบเสนอราคานี้ได้`);
+  };
+  const saveItemToCatalog = (sectionIndex, itemIndex, mode) => run(async () => {
+    const item = quote.sections[sectionIndex]?.items[itemIndex];
+    if (!item?.description?.trim() || !item.unit?.trim()) throw new Error('กรอกรายละเอียดและหน่วยให้ครบก่อนบันทึกเข้าคลังราคา');
+    const catalog = priceCatalog.length ? priceCatalog : await listPriceCatalog();
+    if (!priceCatalog.length) setPriceCatalog(catalog);
+    const original = catalog.find(row => row.id === item.catalogItemId);
+    if (mode === 'update' && !original) throw new Error('รายการนี้ยังไม่ได้มาจากคลังราคา กรุณาบันทึกเป็นรายการใหม่');
+    const id = await savePriceCatalogItem(mode === 'update' ? original.id : null, quoteItemToCatalogInput(item, original));
+    const refreshed = await listPriceCatalog(); setPriceCatalog(refreshed);
+    const saved = refreshed.find(row => row.id === id);
+    if (saved) itemEdit(sectionIndex, itemIndex, 'catalogItemId', saved.id);
+    setMessage(mode === 'update' ? 'อัปเดต REV. ราคากลางแล้ว' : 'บันทึกรายการใหม่เข้าคลังราคาแล้ว');
+  });
   const run = async action => {
     if (operation.current) return;
     operation.current = true; setBusy(true); setMessage('กำลังดำเนินการ...');
@@ -189,11 +217,12 @@ export default function Quotations() {
     <header className="quote-toolbar"><Link to="/admin" onClick={event => { if (!confirmLeave()) event.preventDefault(); }}>← ระบบจัดการ</Link><Link to="/admin/receipts" onClick={event => { if (!confirmLeave()) event.preventDefault(); }}>ใบเสร็จรับเงิน</Link><h1>ใบเสนอราคา A4 · REV. {String(displayRevision).padStart(2, '0')}</h1><button disabled={busy} onClick={() => open(null)}>สร้างใหม่</button><button disabled={busy || locked} onClick={() => run(async () => { const defaults = await saveCompanyDefaults(quote); setCompanyDefaults(defaults); setMessage('บันทึกข้อมูลบริษัทเป็นค่าเริ่มต้นแล้ว'); })}>จำข้อมูลบริษัท</button><button disabled={busy} onClick={() => { if (confirmLeave()) { setSelected(null); setQuote(applyCompanyDefaults(demoQuote(), companyDefaults)); setDirty(true); setHistoric(null); setPreviewMode(false); setHistory([]); touched.current = true; } }}>โหลดตัวอย่าง</button></header>
     <p className="quote-message" role="status" aria-live="polite">{message || 'กรอก แก้ไข เพิ่มรายการ คำนวณ และบันทึกบนแบบฟอร์ม A4 นี้ได้ทันที'}</p>
     <div className="quote-layout"><aside className="quote-sidebar"><label>ค้นหาเอกสาร<input value={search} onChange={event => setSearch(event.target.value)} placeholder="เลข / ลูกค้า / โครงการ / สถานะ" /></label><button disabled={busy} onClick={() => run(async () => { if (confirmLeave()) { const data = await listQuotes(); setRows(data); setMessage('โหลดรายการล่าสุดแล้ว'); } })}>รีเฟรชรายการ</button><p>แสดงล่าสุดไม่เกิน 200 เอกสาร</p>{filteredRows.map(row => <button disabled={busy} className={selected?.id === row.id ? 'selected' : ''} key={row.id} onClick={() => open(row)}><b>{row.quote.number || 'ร่างไม่มีเลข'}</b><span>{row.quote.customer || 'ยังไม่มีชื่อลูกค้า'}</span><small>{({ draft: 'ร่าง', issued: 'ออกแล้ว', void: 'ยกเลิก' })[row.status]}</small></button>)}</aside>
-      <main className="quote-a4-stage">{historic ? <><div className="quote-history-bar"><button onClick={() => setHistoric(null)}>← กลับมาแก้ฉบับปัจจุบัน</button><b>กำลังดู REV. {String(historic.revision).padStart(2, '0')}</b></div><QuotationPreview quote={historic.quote} status="issued" revision={historic.revision} /></> : previewMode ? <><div className="quote-preview-actions">{actions}</div><QuotationPreview quote={quote} status={selected?.status || 'draft'} revision={displayRevision} /></> : <QuotationA4Form quote={quote} revision={displayRevision} calculation={calculation} locked={locked} actions={actions} edit={edit} sectionEdit={editSection} itemEdit={itemEdit} presets={documentPresets} onSaveBankPreset={saveBankPreset} onDeleteBankPreset={deleteBankPreset} onSaveSignaturePreset={saveSignaturePreset} onDeleteSignaturePreset={deleteSignaturePreset} addItem={sectionIndex => editSection(sectionIndex, section => ({ ...section, items: [...section.items, newItem()] }))} removeItem={(sectionIndex, itemIndex) => editSection(sectionIndex, section => ({ ...section, items: section.items.filter((_, i) => i !== itemIndex) }))} addSection={() => updateSections(sections => [...sections, { id: crypto.randomUUID(), title: 'หมวดใหม่', kind: 'main', items: [newItem()] }])} removeSection={sectionIndex => updateSections(sections => sections.filter((_, i) => i !== sectionIndex))} />}
+      <main className="quote-a4-stage">{historic ? <><div className="quote-history-bar"><button onClick={() => setHistoric(null)}>← กลับมาแก้ฉบับปัจจุบัน</button><b>กำลังดู REV. {String(historic.revision).padStart(2, '0')}</b></div><QuotationPreview quote={historic.quote} status="issued" revision={historic.revision} /></> : previewMode ? <><div className="quote-preview-actions">{actions}</div><QuotationPreview quote={quote} status={selected?.status || 'draft'} revision={displayRevision} /></> : <QuotationA4Form quote={quote} revision={displayRevision} calculation={calculation} locked={locked} actions={actions} edit={edit} sectionEdit={editSection} itemEdit={itemEdit} presets={documentPresets} onSaveBankPreset={saveBankPreset} onDeleteBankPreset={deleteBankPreset} onSaveSignaturePreset={saveSignaturePreset} onDeleteSignaturePreset={deleteSignaturePreset} addItem={sectionIndex => editSection(sectionIndex, section => ({ ...section, items: [...section.items, newItem()] }))} addCatalogItem={openCatalog} onSaveItemToCatalog={saveItemToCatalog} removeItem={(sectionIndex, itemIndex) => editSection(sectionIndex, section => ({ ...section, items: section.items.filter((_, i) => i !== itemIndex) }))} addSection={() => updateSections(sections => [...sections, { id: crypto.randomUUID(), title: 'หมวดใหม่', kind: 'main', items: [newItem()] }])} removeSection={sectionIndex => updateSections(sections => sections.filter((_, i) => i !== sectionIndex))} />}
         {history.length > 0 && <div className="quote-history-list">{history.map(revision => <button key={revision.id} onClick={() => setHistoric(revision)}>ดู REV. {String(revision.revision).padStart(2, '0')}</button>)}</div>}
       </main>
     </div>
     {aiShareOpen && <AiShareDialog busy={busy} onClose={() => setAiShareOpen(false)} onShare={sharePdfWithAi} onDownload={downloadPdfForAi} />}
+    {catalogOpen && <div className="catalog-picker-modal" role="dialog" aria-modal="true" aria-label="เลือกรายการจากคลังราคา"><section><header><div><p>เพิ่มจากราคากลาง</p><h2>เลือกรายการสำหรับ {quote.sections[catalogSection]?.title || 'หมวดงาน'}</h2></div><button onClick={() => setCatalogOpen(false)}>×</button></header><input autoFocus value={catalogQuery} placeholder="ค้นหารหัส รายการ สเปก หรือหมวดงาน" onChange={event => setCatalogQuery(event.target.value)} /><div className="catalog-picker-list">{priceCatalog.filter(item => item.active !== false && `${item.code} ${item.name} ${item.specification} ${item.category}`.toLowerCase().includes(catalogQuery.toLowerCase())).map(item => <button key={item.id} onClick={() => addCatalogItem(item)}><b>{item.code} · {item.name}</b><span>{item.specification || item.category} · {item.unit}</span><strong>{Number(item.companyPrice || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท</strong></button>)}{priceCatalog.length === 0 && <p>กำลังโหลดคลังราคา…</p>}</div></section></div>}
     {exportContext && <div className="pdf-export-host" ref={exportRef} aria-hidden="true"><QuotationPreview quote={exportContext.quote} status={exportContext.status} revision={exportContext.revision} /></div>}
   </div>;
 }

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bahtText, demoQuote, calculateQuote, validateIssue } from '../src/lib/quotation.js';
+import { bahtText, catalogItemToQuoteItem, demoQuote, calculateQuote, quoteItemToCatalogInput, validateIssue } from '../src/lib/quotation.js';
 import { createContactSender } from '../src/lib/contact.js';
 import { hasAdminAccess, hasAdminClaim } from '../src/lib/admin-access.js';
 import { validateMedia, validateDocument } from '../src/lib/media.js';
@@ -93,4 +93,13 @@ test('price catalog calculates material allowances, labor and company overrides'
  assert.equal(fixed.companyPrice,1999);
  const reduced=calculateCatalogPrice({materialCost:857,laborCost:450,wastePercent:10,transportPercent:5,materialMarkupPercent:20,overheadPercent:0,companyMode:'percent',companyAdjustmentPercent:-10});
  assert.equal(reduced.companyPrice,1474.0218);
+});
+test('catalog rows create independent quotation snapshots and can save a fixed company price', () => {
+ const row={id:'wpc',code:'FIN-003',name:'พื้นไม้เทียม WPC',specification:'14 ซม.',unit:'ตร.ม.',companyPrice:1637.8,version:4};
+ const item=catalogItemToQuoteItem(row);
+ assert.equal(item.price,'1637.80');assert.equal(item.catalogItemId,'wpc');assert.equal(item.catalogVersion,4);
+ item.price='1750';item.description='พื้น WPC สีพิเศษ';
+ const saved=quoteItemToCatalogInput(item,row);
+ assert.equal(saved.companyMode,'fixed');assert.equal(saved.companyPrice,1750);assert.equal(saved.name,'พื้น WPC สีพิเศษ');
+ assert.equal(row.name,'พื้นไม้เทียม WPC');
 });
