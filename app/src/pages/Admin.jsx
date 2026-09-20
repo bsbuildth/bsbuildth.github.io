@@ -126,6 +126,14 @@ const Admin = ({ setIsAuthenticated }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [dockOpen, setDockOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [dockPosition, setDockPosition] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('bsbuild-dock-position'));
+      if (saved && ['left', 'right'].includes(saved.side) && Number.isFinite(saved.y)) return saved;
+    } catch { /* use default */ }
+    return { side: 'left', y: 0.7 };
+  });
+  const dockDragRef = React.useRef({ active: false, moved: false, suppressClick: false });
   const [quotationRows, setQuotationRows] = useState([]);
   const [receiptRows, setReceiptRows] = useState([]);
   const [documentLoading, setDocumentLoading] = useState(true);
@@ -842,9 +850,49 @@ const Admin = ({ setIsAuthenticated }) => {
   ];
   const chooseTab = (key) => {
     setActiveTab(key);
-    setDockOpen(false);
     setMoreOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  const dockStyle = {
+    top: `${dockPosition.y * 100}vh`,
+    bottom: 'auto',
+    left: dockPosition.side === 'left' ? 0 : 'auto',
+    right: dockPosition.side === 'right' ? 0 : 'auto',
+  };
+  const dockPanelStyle = {
+    top: `${dockPosition.y * 100}vh`,
+    bottom: 'auto',
+    left: dockPosition.side === 'left' ? '12px' : 'auto',
+    right: dockPosition.side === 'right' ? '12px' : 'auto',
+  };
+  const handleDockPointerDown = (event) => {
+    dockDragRef.current = { active: true, moved: false, suppressClick: false, startX: event.clientX, startY: event.clientY };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  };
+  const handleDockPointerMove = (event) => {
+    const drag = dockDragRef.current;
+    if (!drag.active) return;
+    const distance = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY);
+    if (distance < 8 && !drag.moved) return;
+    drag.moved = true;
+    if (dockOpen) setDockOpen(false);
+    const safeTop = 74;
+    const safeBottom = 88;
+    const y = Math.min(1 - safeBottom / window.innerHeight, Math.max(safeTop / window.innerHeight, event.clientY / window.innerHeight));
+    setDockPosition({ side: event.clientX >= window.innerWidth / 2 ? 'right' : 'left', y });
+  };
+  const handleDockPointerUp = () => {
+    const drag = dockDragRef.current;
+    if (!drag.active) return;
+    drag.active = false;
+    if (drag.moved) {
+      drag.suppressClick = true;
+      setDockPosition(position => {
+        const next = { side: position.side, y: Math.round(position.y * 1000) / 1000 };
+        localStorage.setItem('bsbuild-dock-position', JSON.stringify(next));
+        return next;
+      });
+    }
   };
 
   return (
@@ -870,11 +918,11 @@ const Admin = ({ setIsAuthenticated }) => {
         </div>
       </header>
 
-      <button className={`admin-dock-trigger ${dockOpen ? 'is-open' : ''}`} onClick={() => setDockOpen(open => !open)} aria-label={dockOpen ? 'ซ่อนเมนู' : 'เปิดเมนู'} aria-expanded={dockOpen}>
+      <button className={`admin-dock-trigger dock-${dockPosition.side} ${dockOpen ? 'is-open' : ''}`} style={dockStyle} onPointerDown={handleDockPointerDown} onPointerMove={handleDockPointerMove} onPointerUp={handleDockPointerUp} onPointerCancel={handleDockPointerUp} onClick={() => { if (dockDragRef.current.suppressClick) { dockDragRef.current.suppressClick = false; return; } setDockOpen(open => !open); }} aria-label={dockOpen ? 'ซ่อนเมนู' : 'เปิดเมนู'} aria-expanded={dockOpen}>
         <span>{dockOpen ? '×' : '☰'}</span>
       </button>
       {dockOpen && <button className="admin-dock-backdrop" onClick={() => setDockOpen(false)} aria-label="ปิดเมนู" />}
-      <nav className={`admin-dock-panel ${dockOpen ? 'is-open' : ''}`} aria-label="เมนูจัดการระบบ">
+      <nav className={`admin-dock-panel dock-${dockPosition.side} ${dockOpen ? 'is-open' : ''}`} style={dockPanelStyle} aria-label="เมนูจัดการระบบ">
         <div className="admin-dock-panel-head"><span>BS BUILD</span><button onClick={() => setDockOpen(false)} aria-label="ปิดเมนู">×</button></div>
         <button className={`admin-dock-row ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => chooseTab('overview')}><i>⌂</i><span>หน้าทำงาน</span></button>
         <button className="admin-dock-row" onClick={() => { navigate('/admin/quotations'); setDockOpen(false); }}><i>▤</i><span>ใบเสนอราคา</span></button>
