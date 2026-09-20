@@ -1,5 +1,17 @@
 const MAX = 100_000_000_000n;
 export const newItem = () => ({ id: crypto.randomUUID(), description: '', quantity: '1', unit: 'งาน', price: '0.00', free: false, included: true });
+export const catalogItemToQuoteItem = catalog => ({
+  ...newItem(), description: catalog.name || '', quantity: '1', unit: catalog.unit || 'งาน',
+  price: String(Number(catalog.companyPrice ?? catalog.centralPrice ?? 0).toFixed(2)),
+  catalogItemId: catalog.id || '', catalogVersion: Number(catalog.version || 1),
+  catalogCode: catalog.code || '', catalogSpecification: catalog.specification || '',
+});
+export const quoteItemToCatalogInput = (item, original = {}) => ({
+  ...original, code: original.code || item.catalogCode || `QT-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}`,
+  name: String(item.description || '').trim(), specification: original.specification || item.catalogSpecification || '', unit: item.unit || 'งาน',
+  companyMode: 'fixed', companyPrice: Number(item.price || 0), active: true,
+  source: original.source || 'บันทึกจากใบเสนอราคา — ตรวจและปรับก่อนใช้จริง',
+});
 export function newQuote() {
   const now = new Date();
   const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
