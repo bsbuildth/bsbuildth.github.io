@@ -849,28 +849,29 @@ const Admin = ({ setIsAuthenticated }) => {
         </div>
       </header>
 
-      <nav className="admin-tabs">
+      <nav className="admin-dock" aria-label="เมนูจัดการระบบ">
         {[
-          { key: 'overview', label: 'หน้าทำงาน' },
-          { key: 'inbox', label: 'ข้อความ' },
-          { key: 'projects', label: 'ผลงาน' },
-          { key: 'references', label: 'รูปอ้างอิง' },
-          { key: 'reviews', label: 'รีวิว' },
-          { key: 'services', label: 'บริการ' },
-          { key: 'calculator', label: 'คำนวณราคา' },
-          { key: 'content', label: 'เนื้อหา' },
-          { key: 'articles', label: 'บทความ' },
-          { key: 'hero', label: 'Hero' },
-          { key: 'business', label: 'ข้อมูลธุรกิจ' },
-          { key: 'notifications', label: 'แจ้งเตือน' },
-          { key: 'settings', label: 'ตั้งค่า' },
+          { key: 'overview', label: 'หน้าทำงาน', icon: '⌂' },
+          { key: 'inbox', label: 'ข้อความ', icon: '✉' },
+          { key: 'projects', label: 'ผลงาน', icon: '▣' },
+          { key: 'references', label: 'รูปอ้างอิง', icon: '◇' },
+          { key: 'reviews', label: 'รีวิว', icon: '★' },
+          { key: 'services', label: 'บริการ', icon: '◌' },
+          { key: 'calculator', label: 'คำนวณราคา', icon: '⌁' },
+          { key: 'content', label: 'เนื้อหา', icon: '≡' },
+          { key: 'articles', label: 'บทความ', icon: '▤' },
+          { key: 'hero', label: 'Hero', icon: '✦' },
+          { key: 'business', label: 'ข้อมูลธุรกิจ', icon: '⌂' },
+          { key: 'notifications', label: 'แจ้งเตือน', icon: '♢' },
+          { key: 'settings', label: 'ตั้งค่า', icon: '⚙' },
         ].map(t => (
           <button
             key={t.key}
-            className={`admin-tab ${activeTab === t.key ? 'active' : ''}`}
+            className={`admin-dock-item ${activeTab === t.key ? 'active' : ''}`}
             onClick={() => { setActiveTab(t.key); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           >
-            {t.label}
+            <span className="admin-dock-icon" aria-hidden="true">{t.icon}</span>
+            <span className="admin-dock-label">{t.label}</span>
           </button>
         ))}
       </nav>
