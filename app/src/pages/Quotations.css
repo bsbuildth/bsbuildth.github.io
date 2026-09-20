@@ -247,3 +247,6 @@
   .reference-document .quote-watermark{display:none}
   .receipt-paper{min-height:297mm}
 }
+
+/* Tactile controls in document workspace; excluded from print rules. */
+@media screen and (hover:hover){.quotation-workspace button{transition:transform .2s var(--ease),box-shadow .2s var(--ease),background .2s var(--ease)}.quotation-workspace button:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 18px rgba(13,43,41,.12)}.quote-item{transition:transform .25s var(--ease),box-shadow .25s var(--ease)}.quote-item:hover{transform:translateX(3px);box-shadow:0 8px 20px rgba(13,43,41,.07)}}

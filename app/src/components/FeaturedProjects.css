@@ -148,8 +148,8 @@
 }
 .project-card:hover {
   filter: brightness(1.03);
-  transform: none;
-  box-shadow: none;
+  transform: translateY(-8px);
+  box-shadow: 0 24px 42px rgba(13,43,41,.22);
   z-index: 3;
 }
 
@@ -160,7 +160,7 @@
   overflow: hidden;
 }
 .project-img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.1s var(--ease); }
-.project-card:hover .project-img { transform: scale(1.04); }
+.project-card:hover .project-img { transform: scale(1.075); }
 
 /* dark gradient so overlaid text stays legible */
 .project-shade {
@@ -180,6 +180,8 @@
   align-items: flex-start;
   gap: 0.3rem;
 }
+.project-caption::before { content: ''; width: 32px; height: 1px; margin-bottom: .45rem; background: #d5bd9d; transform: scaleX(.35); transform-origin: left; transition: transform .45s var(--ease); }
+.project-card:hover .project-caption::before { transform: scaleX(1); }
 .project-caption .project-cat {
   font-family: var(--font-body);
   font-size: 0.58rem;
@@ -240,6 +242,11 @@
   padding-bottom: 2px;
 }
 .project-card:hover .project-btn em { transform: translateX(4px); }
+
+@media (hover: none) {
+  .project-btn { max-height: 2em; opacity: 1; margin-top: .45rem; transform: none; padding-bottom: 2px; }
+  .project-caption::before { transform: scaleX(1); }
+}
 
 /* ─── Project Detail Modal (light) ─── */
 .project-modal-overlay {

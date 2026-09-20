@@ -23,8 +23,11 @@
   inset: 0;
   background: linear-gradient(90deg, rgba(9, 38, 36, .96) 0%, rgba(9, 38, 36, .90) 39%, rgba(9, 38, 36, .40) 65%, rgba(9, 38, 36, .13) 100%), linear-gradient(0deg, rgba(9, 38, 36, .54), transparent 56%);
 }
+.hero-scrim::after { content: ''; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 25%, rgba(210,233,219,.13) 47%, transparent 64%); transform: translateX(-125%); animation: heroLight 9s var(--ease) infinite 1.2s; }
+@keyframes heroLight { 0%, 22% { transform: translateX(-125%); } 58%, 100% { transform: translateX(125%); } }
 
-.hero-frame { position: absolute; z-index: 1; width: min(43vw, 600px); height: 65%; left: clamp(1.5rem, 5vw, 6rem); top: 16%; border: 1px solid rgba(255,255,255,.14); border-right: 0; pointer-events: none; }
+.hero-frame { position: absolute; z-index: 1; width: min(43vw, 600px); height: 65%; left: clamp(1.5rem, 5vw, 6rem); top: 16%; border: 1px solid rgba(255,255,255,.14); border-right: 0; pointer-events: none; animation: frameFloat 7s ease-in-out infinite; }
+@keyframes frameFloat { 50% { transform: translateY(-12px); border-color: rgba(213,189,157,.34); } }
 
 .hero-shell {
   position: relative;
@@ -82,6 +85,9 @@
   transition: transform .25s var(--ease);
 }
 .hero-cta:hover span { transform: translateX(4px); }
+.hero-cta { position: relative; overflow: hidden; }
+.hero-cta::after { content: ''; position: absolute; inset: 0 auto 0 -125%; width: 55%; background: linear-gradient(105deg, transparent, rgba(255,255,255,.32), transparent); transform: skewX(-18deg); transition: left .65s var(--ease); }
+.hero-cta:hover::after { left: 145%; }
 
 .hero-link {
   color: #fff;
@@ -117,6 +123,8 @@
   border-right: 1px solid rgba(255,255,255,.14);
 }
 .hero-trust-strip > div:last-child { border-right: 0; }
+.hero-trust-strip > div { transition: background .3s var(--ease), transform .3s var(--ease); }
+.hero-trust-strip > div:hover { background: rgba(255,255,255,.075); transform: translateY(-4px); }
 .hero-trust-strip strong { color: #fff; font-family: var(--font-display); font-size: 1.55rem; }
 .hero-trust-strip span { color: rgba(255,255,255,.68); font-size: .8rem; }
 
