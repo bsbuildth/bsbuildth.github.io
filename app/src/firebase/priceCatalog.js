@@ -8,6 +8,10 @@ const cleanNumber = value => {
   const number = Number(value);
   return Number.isFinite(number) && number >= 0 ? number : 0;
 };
+const cleanSignedNumber = value => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
 
 export function prepareCatalogItem(input) {
   const price = calculateCatalogPrice(input);
@@ -17,7 +21,7 @@ export function prepareCatalogItem(input) {
     materialCost: cleanNumber(input.materialCost), laborCost: cleanNumber(input.laborCost), wastePercent: cleanNumber(input.wastePercent),
     transportPercent: cleanNumber(input.transportPercent), materialMarkupPercent: cleanNumber(input.materialMarkupPercent), overheadPercent: cleanNumber(input.overheadPercent),
     centralPrice: price.centralPrice, companyMode: input.companyMode === 'fixed' ? 'fixed' : 'percent',
-    companyAdjustmentPercent: cleanNumber(input.companyAdjustmentPercent), companyPrice: price.companyPrice,
+    companyAdjustmentPercent: cleanSignedNumber(input.companyAdjustmentPercent), companyPrice: price.companyPrice,
     source: cleanText(input.source).slice(0, 500), active: input.active !== false,
   };
 }

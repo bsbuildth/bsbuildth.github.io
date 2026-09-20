@@ -20,6 +20,10 @@ const number = value => {
   const result = Number(value);
   return Number.isFinite(result) && result >= 0 ? result : 0;
 };
+const signedNumber = value => {
+  const result = Number(value);
+  return Number.isFinite(result) ? result : 0;
+};
 
 export function calculateCatalogPrice(input = {}) {
   const materialCost = number(input.materialCost), laborCost = number(input.laborCost);
@@ -30,7 +34,7 @@ export function calculateCatalogPrice(input = {}) {
   const centralPrice = (materialSell + laborCost) * (1 + overheadPercent / 100);
   const companyPrice = input.companyMode === 'fixed'
     ? number(input.companyPrice)
-    : centralPrice * (1 + number(input.companyAdjustmentPercent) / 100);
+    : centralPrice * (1 + signedNumber(input.companyAdjustmentPercent) / 100);
   return { materialCost, laborCost, landedMaterial, materialSell, centralPrice, companyPrice };
 }
 
