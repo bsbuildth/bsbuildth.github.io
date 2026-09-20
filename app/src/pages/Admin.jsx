@@ -124,6 +124,8 @@ const Admin = ({ setIsAuthenticated }) => {
   const [refDetail, setRefDetail] = useState('');
   const [editingRefId, setEditingRefId] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [dockOpen, setDockOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [quotationRows, setQuotationRows] = useState([]);
   const [receiptRows, setReceiptRows] = useState([]);
   const [documentLoading, setDocumentLoading] = useState(true);
@@ -825,6 +827,25 @@ const Admin = ({ setIsAuthenticated }) => {
     ...quotationRows.map(row => ({ ...row, kind: 'quotation', number: row.quote?.number, party: row.quote?.customer, total: row.totals?.total })),
     ...receiptRows.map(row => ({ ...row, kind: 'receipt', number: row.receipt?.number, party: row.receipt?.payer, total: row.totals?.total })),
   ].sort((a, b) => (b.updatedAt?.toMillis?.() || 0) - (a.updatedAt?.toMillis?.() || 0)).slice(0, 8);
+  const secondaryTabs = [
+    { key: 'projects', label: 'ผลงาน', icon: '▣' },
+    { key: 'references', label: 'รูปอ้างอิง', icon: '◇' },
+    { key: 'reviews', label: 'รีวิว', icon: '★' },
+    { key: 'services', label: 'บริการ', icon: '◌' },
+    { key: 'calculator', label: 'คำนวณราคา', icon: '⌁' },
+    { key: 'content', label: 'เนื้อหา', icon: '≡' },
+    { key: 'articles', label: 'บทความ', icon: '▤' },
+    { key: 'hero', label: 'Hero', icon: '✦' },
+    { key: 'business', label: 'ข้อมูลธุรกิจ', icon: '⌂' },
+    { key: 'notifications', label: 'แจ้งเตือน', icon: '♢' },
+    { key: 'settings', label: 'ตั้งค่า', icon: '⚙' },
+  ];
+  const chooseTab = (key) => {
+    setActiveTab(key);
+    setDockOpen(false);
+    setMoreOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="admin-dashboard container">
@@ -849,32 +870,20 @@ const Admin = ({ setIsAuthenticated }) => {
         </div>
       </header>
 
-      <nav className="admin-dock" aria-label="เมนูจัดการระบบ">
-        {[
-          { key: 'overview', label: 'หน้าทำงาน', icon: '⌂' },
-          { key: 'inbox', label: 'ข้อความ', icon: '✉' },
-          { key: 'projects', label: 'ผลงาน', icon: '▣' },
-          { key: 'references', label: 'รูปอ้างอิง', icon: '◇' },
-          { key: 'reviews', label: 'รีวิว', icon: '★' },
-          { key: 'services', label: 'บริการ', icon: '◌' },
-          { key: 'calculator', label: 'คำนวณราคา', icon: '⌁' },
-          { key: 'content', label: 'เนื้อหา', icon: '≡' },
-          { key: 'articles', label: 'บทความ', icon: '▤' },
-          { key: 'hero', label: 'Hero', icon: '✦' },
-          { key: 'business', label: 'ข้อมูลธุรกิจ', icon: '⌂' },
-          { key: 'notifications', label: 'แจ้งเตือน', icon: '♢' },
-          { key: 'settings', label: 'ตั้งค่า', icon: '⚙' },
-        ].map(t => (
-          <button
-            key={t.key}
-            className={`admin-dock-item ${activeTab === t.key ? 'active' : ''}`}
-            onClick={() => { setActiveTab(t.key); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          >
-            <span className="admin-dock-icon" aria-hidden="true">{t.icon}</span>
-            <span className="admin-dock-label">{t.label}</span>
-          </button>
-        ))}
+      <button className={`admin-dock-trigger ${dockOpen ? 'is-open' : ''}`} onClick={() => setDockOpen(open => !open)} aria-label={dockOpen ? 'ซ่อนเมนู' : 'เปิดเมนู'} aria-expanded={dockOpen}>
+        <span>{dockOpen ? '×' : '☰'}</span>
+      </button>
+      {dockOpen && <button className="admin-dock-backdrop" onClick={() => setDockOpen(false)} aria-label="ปิดเมนู" />}
+      <nav className={`admin-dock-panel ${dockOpen ? 'is-open' : ''}`} aria-label="เมนูจัดการระบบ">
+        <div className="admin-dock-panel-head"><span>BS BUILD</span><button onClick={() => setDockOpen(false)} aria-label="ปิดเมนู">×</button></div>
+        <button className={`admin-dock-row ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => chooseTab('overview')}><i>⌂</i><span>หน้าทำงาน</span></button>
+        <button className="admin-dock-row" onClick={() => { navigate('/admin/quotations'); setDockOpen(false); }}><i>▤</i><span>ใบเสนอราคา</span></button>
+        <button className="admin-dock-row" onClick={() => { navigate('/admin/receipts'); setDockOpen(false); }}><i>◫</i><span>ใบเสร็จรับเงิน</span></button>
+        <button className="admin-dock-row" onClick={() => { navigate('/admin/prices'); setDockOpen(false); }}><i>⌁</i><span>คลังราคา</span></button>
+        <button className={`admin-dock-row ${activeTab === 'inbox' ? 'active' : ''}`} onClick={() => chooseTab('inbox')}><i>✉</i><span>ข้อความลูกค้า</span></button>
+        <button className="admin-dock-row admin-dock-more" onClick={() => { setMoreOpen(true); setDockOpen(false); }}><i>···</i><span>เพิ่มเติม</span><b>›</b></button>
       </nav>
+      {moreOpen && <div className="admin-more-sheet" role="dialog" aria-modal="true" aria-label="เมนูเพิ่มเติม"><button className="admin-more-backdrop" onClick={() => setMoreOpen(false)} aria-label="ปิดเมนูเพิ่มเติม"/><section><header><div><small>เมนูเพิ่มเติม</small><h2>จัดการเว็บไซต์และระบบ</h2></div><button onClick={() => setMoreOpen(false)} aria-label="ปิด">×</button></header><div className="admin-more-grid">{secondaryTabs.map(tab => <button key={tab.key} onClick={() => chooseTab(tab.key)}><i>{tab.icon}</i><span>{tab.label}</span></button>)}</div><footer><button onClick={() => navigate('/')}>← กลับหน้าเว็บ</button><button className="danger" onClick={handleLogout}>ออกจากระบบ</button></footer></section></div>}
 
       <section className="admin-workspace" style={{ display: activeTab === 'overview' ? 'block' : 'none' }}>
         <div className="admin-workspace-hero">
