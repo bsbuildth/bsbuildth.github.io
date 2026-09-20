@@ -1,8 +1,8 @@
 .services {
   position: relative;
   overflow: hidden;
-  background: #f7f5f1;
-  border-bottom: 1px solid rgba(26, 23, 20, .08);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
 }
 
 .services-head {
@@ -19,8 +19,8 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 0;
   margin-top: clamp(3rem, 6vw, 5rem);
-  border-top: 1px solid rgba(26, 23, 20, .14);
-  border-bottom: 1px solid rgba(26, 23, 20, .14);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .service-card {
@@ -28,7 +28,7 @@
   min-width: 0;
   padding: 2.6rem clamp(1.5rem, 3vw, 2.6rem) 2.8rem;
   background: transparent;
-  border-right: 1px solid rgba(26, 23, 20, .14);
+  border-right: 1px solid var(--line);
   text-align: left;
 }
 .service-card:last-child { border-right: 0; }
@@ -46,6 +46,6 @@
 @media (max-width: 760px) {
   .services-head { grid-template-columns: 1fr; gap: 1rem; }
   .services-grid { grid-template-columns: 1fr; margin-top: 2.5rem; }
-  .service-card { padding: 2rem .25rem; border-right: 0; border-bottom: 1px solid rgba(26, 23, 20, .12); }
+  .service-card { padding: 2rem .25rem; border-right: 0; border-bottom: 1px solid var(--line); }
   .service-card:last-child { border-bottom: 0; }
 }
