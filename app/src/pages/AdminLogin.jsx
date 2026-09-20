@@ -41,22 +41,22 @@ const AdminLogin = ({ setIsAuthenticated }) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-      fontFamily: 'var(--font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto)'
+      background: 'linear-gradient(135deg, #0d2b29 0%, #245b55 100%)',
+      fontFamily: 'var(--font-body)'
     }}>
       <div style={{
-        background: 'rgba(255, 255, 255, 0.95)',
+        background: 'rgba(255, 253, 248, 0.96)',
         padding: '2rem',
-        borderRadius: '8px',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+        borderRadius: '0',
+        boxShadow: '0 18px 52px rgba(5, 31, 29, 0.24)',
         width: '100%',
         maxWidth: '400px'
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{ margin: '0 0 0.5rem', color: '#1a1a2e', fontSize: '1.8rem' }}>
+          <h1 style={{ margin: '0 0 0.5rem', color: '#173432', fontFamily: 'var(--font-display)', fontSize: '1.8rem' }}>
             ทีมผู้รับเหมา
           </h1>
-          <h2 style={{ margin: '0', color: '#666', fontSize: '1.2rem', fontWeight: 'normal' }}>
+          <h2 style={{ margin: '0', color: '#60706a', fontSize: '1.2rem', fontWeight: 'normal' }}>
             Admin Dashboard
           </h2>
         </div>
@@ -66,7 +66,7 @@ const AdminLogin = ({ setIsAuthenticated }) => {
             <label style={{
               display: 'block',
               marginBottom: '0.5rem',
-              color: '#333',
+              color: '#36554d',
               fontWeight: '500'
             }}>
               Email
@@ -80,8 +80,8 @@ const AdminLogin = ({ setIsAuthenticated }) => {
               style={{
                 width: '100%',
                 padding: '0.75rem',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
+                border: '1px solid #bdcbc4',
+                borderRadius: '0',
                 fontSize: '1rem',
                 boxSizing: 'border-box'
               }}
@@ -92,7 +92,7 @@ const AdminLogin = ({ setIsAuthenticated }) => {
             <label style={{
               display: 'block',
               marginBottom: '0.5rem',
-              color: '#333',
+              color: '#36554d',
               fontWeight: '500'
             }}>
               Password
@@ -106,8 +106,8 @@ const AdminLogin = ({ setIsAuthenticated }) => {
               style={{
                 width: '100%',
                 padding: '0.75rem',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
+                border: '1px solid #bdcbc4',
+                borderRadius: '0',
                 fontSize: '1rem',
                 boxSizing: 'border-box'
               }}
@@ -133,17 +133,17 @@ const AdminLogin = ({ setIsAuthenticated }) => {
             style={{
               width: '100%',
               padding: '0.75rem',
-              background: loading ? '#ccc' : '#1a1a2e',
+              background: loading ? '#aebfb7' : '#174b47',
               color: '#fff',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '0',
               fontSize: '1rem',
               fontWeight: '600',
               cursor: loading ? 'not-allowed' : 'pointer',
               transition: 'background 0.3s'
             }}
-            onMouseEnter={(e) => !loading && (e.target.style.background = '#0d0d1a')}
-            onMouseLeave={(e) => !loading && (e.target.style.background = '#1a1a2e')}
+            onMouseEnter={(e) => !loading && (e.target.style.background = '#0d2b29')}
+            onMouseLeave={(e) => !loading && (e.target.style.background = '#174b47')}
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
@@ -151,7 +151,7 @@ const AdminLogin = ({ setIsAuthenticated }) => {
 
         <p style={{
           textAlign: 'center',
-          color: '#999',
+          color: '#718078',
           marginTop: '1.5rem',
           fontSize: '0.9rem'
         }}>
