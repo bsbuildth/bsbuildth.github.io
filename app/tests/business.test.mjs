@@ -91,4 +91,6 @@ test('price catalog calculates material allowances, labor and company overrides'
  assert.equal(result.companyPrice,1801.5822);
  const fixed=calculateCatalogPrice({...result,companyMode:'fixed',companyPrice:1999});
  assert.equal(fixed.companyPrice,1999);
+ const reduced=calculateCatalogPrice({materialCost:857,laborCost:450,wastePercent:10,transportPercent:5,materialMarkupPercent:20,overheadPercent:0,companyMode:'percent',companyAdjustmentPercent:-10});
+ assert.equal(reduced.companyPrice,1474.0218);
 });
