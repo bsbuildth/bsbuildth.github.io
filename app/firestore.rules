@@ -95,5 +95,8 @@ service cloud.firestore {
         allow update, delete: if false;
       }
     }
+    match /siteUpdates/{id} {
+      allow read, create, update, delete: if admin();
+    }
   }
 }

@@ -25,6 +25,7 @@ import { getSettings } from './firebase/api';
 const Quotations = lazy(() => import('./pages/Quotations'));
 const Receipts = lazy(() => import('./pages/Receipts'));
 const PriceCatalog = lazy(() => import('./pages/PriceCatalog'));
+const SiteUpdates = lazy(() => import('./pages/SiteUpdates'));
 
 const MainSite = () => {
   const [show, setShow] = useState({});
@@ -112,6 +113,7 @@ function App() {
       <Route path="/admin/quotations" element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<Quotations />} />} />
       <Route path="/admin/receipts" element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<Receipts />} />} />
       <Route path="/admin/prices" element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<PriceCatalog />} />} />
+      <Route path="/admin/site-updates" element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<SiteUpdates />} />} />
       <Route path="*" element={<main className="container"><h1>ไม่พบหน้านี้</h1><a href="/">กลับหน้าแรก</a></main>} />
     </Routes></Suspense>
   );

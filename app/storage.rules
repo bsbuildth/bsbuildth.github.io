@@ -9,5 +9,14 @@ service firebase.storage {
       allow delete: if request.auth != null && request.auth.token.admin == true;
       allow update: if false;
     }
+    match /site-updates/{updateId}/{kind}/{file} {
+      allow read: if request.auth != null && request.auth.token.admin == true;
+      allow create: if request.auth != null && request.auth.token.admin == true
+        && kind in ['originals', 'previews']
+        && request.resource.size < 12 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp|heic|heif)');
+      allow delete: if request.auth != null && request.auth.token.admin == true;
+      allow update: if false;
+    }
   }
 }
