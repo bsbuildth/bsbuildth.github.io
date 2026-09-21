@@ -20,10 +20,22 @@ export async function listSiteUpdates() {
   return snap.docs.map(item => ({ id: item.id, ...item.data() }));
 }
 
+export async function listSiteUpdateProjects() {
+  const snap = await getDocs(query(collection(db, 'siteUpdateProjects'), orderBy('title'), limit(250)));
+  return snap.docs.map(item => ({ id: item.id, ...item.data(), source: 'site-update' }));
+}
+
+export async function createSiteUpdateProject(title) {
+  const clean = String(title || '').trim().replace(/\s+/g, ' ').slice(0, 160);
+  if (!clean) throw new Error('กรอกชื่อโครงการก่อนบันทึก');
+  const ref = await addDoc(collection(db, 'siteUpdateProjects'), { title: clean, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+  return { id: ref.id, title: clean, source: 'site-update' };
+}
+
 export async function createSiteUpdate({ project, updateDate, note }) {
   const operationId = crypto.randomUUID();
   const ref = await addDoc(collection(db, 'siteUpdates'), {
-    projectId: String(project.id), projectName: project.title || 'โครงการไม่มีชื่อ', updateDate,
+    projectId: String(project.id), projectName: project.title || 'โครงการไม่มีชื่อ', projectSource: project.source || 'website', updateDate,
     note: String(note || '').trim().slice(0, 2000), status: 'uploading', operationId,
     photos: [], driveFolderId: '', driveUrl: '', createdBy: auth.currentUser?.uid || '',
     createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
