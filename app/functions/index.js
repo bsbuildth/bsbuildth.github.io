@@ -71,17 +71,21 @@ async function makeTargetFolder(data) {
   return { drive, folder: update };
 }
 
-async function uploadToDrive(drive, parentId, photo) {
+async function uploadToDrive(drive, parentId, updateId, photo) {
   const source = bucket.file(photo.sourcePath);
   const [exists] = await source.exists();
   if (!exists) throw new Error(`ไม่พบไฟล์ต้นฉบับ ${photo.name}`);
+  const found = await drive.files.list({
+    q: `'${parentId}' in parents and trashed = false and appProperties has { key='bsBuildPhotoId' and value='${photo.id}' }`,
+    fields: 'files(id,webViewLink)', pageSize: 1, spaces: 'drive',
+  });
+  if (found.data.files?.[0]) return found.data.files[0];
   const [contents] = await source.download();
   const response = await drive.files.create({
-    requestBody: { name: safeName(photo.name, `${photo.id}.jpg`), parents: [parentId] },
+    requestBody: { name: safeName(photo.name, `${photo.id}.jpg`), parents: [parentId], appProperties: { bsBuildPhotoId: photo.id, bsBuildUpdateId: String(updateId) } },
     media: { mimeType: 'application/octet-stream', body: Readable.from(contents) },
     fields: 'id,webViewLink',
   });
-  await source.delete({ ignoreNotFound: true });
   return response.data;
 }
 
@@ -100,15 +104,29 @@ exports.syncSiteUpdateToDrive = onRequest({ timeoutSeconds: 540, memory: '512MiB
     if (data.operationId !== operationId) return res.status(409).json({ message: 'รหัสการส่งรูปไม่ตรงกัน' });
     if (data.status === 'saved' && data.driveUrl) return res.json({ folderId: data.driveFolderId, driveUrl: data.driveUrl, reused: true });
     const { drive, folder } = await makeTargetFolder(data);
-    const photos = Array.isArray(data.photos) ? data.photos : [];
-    const completed = [];
+    let photos = Array.isArray(data.photos) ? data.photos : [];
+    const replacePhoto = replacement => { photos = photos.map(photo => photo.id === replacement.id ? replacement : photo); };
     for (const photo of photos) {
-      if (photo.driveFileId || !photo.sourcePath) { completed.push({ ...photo, sourcePath: '', syncStatus: 'done' }); continue; }
-      const file = await uploadToDrive(drive, folder.id, photo);
-      completed.push({ ...photo, sourcePath: '', driveFileId: file.id || '', driveUrl: file.webViewLink || '', syncStatus: 'done' });
+      if (!photo.sourcePath && photo.driveFileId) continue;
+      if (photo.driveFileId && photo.sourcePath) {
+        await bucket.file(photo.sourcePath).delete({ ignoreNotFound: true });
+        const completed = { ...photo, sourcePath: '', syncStatus: 'done' };
+        replacePhoto(completed);
+        await ref.update({ photos, updatedAt: FieldValue.serverTimestamp() });
+        continue;
+      }
+      if (!photo.sourcePath) continue;
+      const file = await uploadToDrive(drive, folder.id, updateId, photo);
+      const uploaded = { ...photo, driveFileId: file.id || '', driveUrl: file.webViewLink || '', syncStatus: 'uploaded' };
+      replacePhoto(uploaded);
+      await ref.update({ status: 'uploading', photos, driveFolderId: folder.id, driveUrl: folder.webViewLink || `https://drive.google.com/drive/folders/${folder.id}`, updatedAt: FieldValue.serverTimestamp() });
+      await bucket.file(photo.sourcePath).delete({ ignoreNotFound: true });
+      const completed = { ...uploaded, sourcePath: '', syncStatus: 'done' };
+      replacePhoto(completed);
+      await ref.update({ photos, updatedAt: FieldValue.serverTimestamp() });
     }
     const driveUrl = folder.webViewLink || `https://drive.google.com/drive/folders/${folder.id}`;
-    await ref.update({ status: 'saved', photos: completed, driveFolderId: folder.id, driveUrl, lastError: FieldValue.delete(), updatedAt: FieldValue.serverTimestamp() });
+    await ref.update({ status: 'saved', photos, driveFolderId: folder.id, driveUrl, lastError: FieldValue.delete(), updatedAt: FieldValue.serverTimestamp() });
     return res.json({ folderId: folder.id, driveUrl });
   } catch (error) {
     console.error('syncSiteUpdateToDrive failed', error);

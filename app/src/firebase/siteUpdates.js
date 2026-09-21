@@ -77,15 +77,14 @@ export async function uploadSiteUpdatePhotos(updateId, files, onProgress = () =>
   return photos;
 }
 
-export async function requestDriveSync(updateId, operationId, photos = []) {
+export async function requestDriveSync(updateId, operationId) {
   const endpoint = import.meta.env.VITE_DRIVE_BRIDGE_URL;
   if (!endpoint) throw new Error('ยังไม่ได้ตั้งบริการเชื่อม Google Drive');
   const token = await auth.currentUser?.getIdToken();
   const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ updateId, operationId }) });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(payload.message || 'ส่งรูปเข้า Google Drive ไม่สำเร็จ');
-  const syncedPhotos = photos.map(photo => ({ ...photo, sourcePath: '', syncStatus: 'done' }));
-  await updateDoc(doc(db, 'siteUpdates', updateId), { status: 'saved', photos: syncedPhotos, driveFolderId: payload.folderId || '', driveUrl: payload.driveUrl || '', updatedAt: serverTimestamp() });
+  await updateDoc(doc(db, 'siteUpdates', updateId), { status: 'saved', driveFolderId: payload.folderId || '', driveUrl: payload.driveUrl || '', updatedAt: serverTimestamp() });
   return payload;
 }
 
