@@ -13,6 +13,7 @@ setGlobalOptions({ region: 'asia-southeast1', maxInstances: 3 });
 
 const db = getFirestore();
 const bucket = getStorage().bucket();
+const driveServiceAccount = 'firebase-adminsdk-fbsvc@bs-build.iam.gserviceaccount.com';
 const allowedOrigins = new Set(['https://bsbuildth.github.io', 'http://localhost:5173', 'http://127.0.0.1:5173']);
 
 function sendCors(req, res) {
@@ -84,7 +85,7 @@ async function uploadToDrive(drive, parentId, photo) {
   return response.data;
 }
 
-exports.syncSiteUpdateToDrive = onRequest({ timeoutSeconds: 540, memory: '512MiB' }, async (req, res) => {
+exports.syncSiteUpdateToDrive = onRequest({ timeoutSeconds: 540, memory: '512MiB', serviceAccount: driveServiceAccount }, async (req, res) => {
   sendCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).send('');
   if (req.method !== 'POST') return res.status(405).json({ message: 'ใช้ได้เฉพาะ POST' });
@@ -115,7 +116,7 @@ exports.syncSiteUpdateToDrive = onRequest({ timeoutSeconds: 540, memory: '512MiB
   }
 });
 
-exports.removeExpiredSiteUpdatePreviews = onSchedule({ schedule: '30 2 * * *', timeZone: 'Asia/Bangkok', timeoutSeconds: 540 }, async () => {
+exports.removeExpiredSiteUpdatePreviews = onSchedule({ schedule: '30 2 * * *', timeZone: 'Asia/Bangkok', timeoutSeconds: 540, serviceAccount: driveServiceAccount }, async () => {
   const expired = await db.collection('siteUpdates').where('previewExpiresAt', '<=', Timestamp.now()).limit(250).get();
   await Promise.all(expired.docs.map(async snapshot => {
     const data = snapshot.data();
