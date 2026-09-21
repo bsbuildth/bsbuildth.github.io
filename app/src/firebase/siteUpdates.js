@@ -43,6 +43,10 @@ export async function createSiteUpdate({ project, updateDate, note }) {
   return { id: ref.id, operationId };
 }
 
+export async function completeSiteUpdate(updateId, { photos, folderId, driveUrl }) {
+  await updateDoc(doc(db, 'siteUpdates', updateId), { status: 'saved', photos, driveFolderId: folderId, driveUrl, previewExpiresAt: null, updatedAt: serverTimestamp() });
+}
+
 function canvasBlob(file, maxWidth, quality) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file); const image = new Image();
