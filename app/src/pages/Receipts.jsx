@@ -7,6 +7,7 @@ import { issueReceipt, listReceipts, saveReceipt } from '../firebase/receipts';
 import { applyCompanyDefaults, getCompanyDefaults, nextDocumentNumber, saveCompanyDefaults } from '../firebase/documents';
 import ReceiptA4Form from '../components/ReceiptA4Form';
 import ReceiptPreview from '../components/ReceiptPreview';
+import AdminRouteDock from '../components/AdminRouteDock';
 import './Quotations.css';
 
 export default function Receipts() {
@@ -90,7 +91,7 @@ export default function Receipts() {
   const actions = <div className="quote-controls"><button className="quote-save" disabled={locked || !dirty || !!calculation.error} onClick={save}>คำนวณและบันทึก{dirty ? ' *' : ''}</button><button className="quote-preview-button" disabled={!!calculation.error} onClick={() => setPreviewMode(current => !current)}>{previewMode ? '← กลับมาแก้ไข' : 'ดูต้นฉบับ + สำเนา'}</button><button disabled={locked || dirty || !selected} onClick={issue}>ออกใบเสร็จ</button><button disabled={busy} onClick={copy}>ทำใบเสร็จใหม่จากฉบับนี้</button><button disabled={busy || dirty || selected?.status !== 'issued'} onClick={print}>พิมพ์ / PDF 2 หน้า</button></div>;
   const filteredRows = rows.filter(row => `${row.receipt.number} ${row.receipt.payer} ${row.receipt.project} ${row.receipt.quoteNumber}`.toLowerCase().includes(search.toLowerCase()));
 
-  return <div className="quotation-workspace receipt-workspace">
+  return <><AdminRouteDock activePath="/admin/receipts" /><div className="quotation-workspace receipt-workspace">
     <header className="quote-toolbar"><Link to="/admin" onClick={event => { if (!confirmLeave()) event.preventDefault(); }}>← ระบบจัดการ</Link><Link to="/admin/quotations" onClick={event => { if (!confirmLeave()) event.preventDefault(); }}>ใบเสนอราคา</Link><h1>ใบเสร็จรับเงิน A4</h1><button disabled={busy} onClick={() => open(null)}>สร้างใหม่</button><button disabled={busy || locked} onClick={() => run(async () => { const defaults = await saveCompanyDefaults(receipt); setCompanyDefaults(defaults); setMessage('บันทึกข้อมูลบริษัทเป็นค่าเริ่มต้นแล้ว'); })}>จำข้อมูลบริษัท</button></header>
     <p className="quote-message" role="status" aria-live="polite">{message || 'กรอกและบันทึกครั้งเดียว แล้วพิมพ์ต้นฉบับกับสำเนาได้ทันที'}</p>
     <div className="quote-controls quote-edit-only" style={{ padding: '1rem', flexWrap: 'wrap' }}>
@@ -114,5 +115,5 @@ export default function Receipts() {
     <div className="quote-layout"><aside className="quote-sidebar"><label>ค้นหาใบเสร็จ<input value={search} onChange={event => setSearch(event.target.value)} placeholder="เลข / ผู้ชำระ / โครงการ / ใบเสนอราคา" /></label><button disabled={busy} onClick={() => run(async () => { const data = await listReceipts(); setRows(data); setMessage('โหลดรายการล่าสุดแล้ว'); })}>รีเฟรชรายการ</button>{filteredRows.map(row => <button disabled={busy} className={selected?.id === row.id ? 'selected' : ''} key={row.id} onClick={() => open(row)}><b>{row.receipt.number || 'ร่างไม่มีเลข'}</b><span>{row.receipt.payer || 'ยังไม่มีชื่อผู้ชำระ'}</span><small>{row.status === 'issued' ? 'ออกแล้ว' : 'ร่าง'}</small></button>)}</aside>
       <main className="quote-a4-stage">{previewMode ? <><div className="quote-preview-actions">{actions}</div><ReceiptPreview receipt={receipt} status={selected?.status || 'draft'} /></> : <ReceiptA4Form receipt={receipt} calculation={calculation} locked={locked} actions={actions} edit={edit} itemEdit={itemEdit} addItem={() => edit('items', [...receipt.items, newReceiptItem()])} removeItem={index => edit('items', receipt.items.filter((_, i) => i !== index))} />}</main>
     </div>
-  </div>;
+  </div></>;
 }
