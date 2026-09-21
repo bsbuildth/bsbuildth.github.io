@@ -72,8 +72,6 @@ export async function requestDriveSync(updateId, operationId, photos = []) {
   const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ updateId, operationId }) });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(payload.message || 'ส่งรูปเข้า Google Drive ไม่สำเร็จ');
-  const { deleteObject, getStorage, ref } = await import('firebase/storage');
-  await Promise.all(photos.map(async photo => { if (photo.sourcePath) await deleteObject(ref(getStorage(), photo.sourcePath)); }));
   const syncedPhotos = photos.map(photo => ({ ...photo, sourcePath: '', syncStatus: 'done' }));
   await updateDoc(doc(db, 'siteUpdates', updateId), { status: 'saved', photos: syncedPhotos, driveFolderId: payload.folderId || '', driveUrl: payload.driveUrl || '', updatedAt: serverTimestamp() });
   return payload;

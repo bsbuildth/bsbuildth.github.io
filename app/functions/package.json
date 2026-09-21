@@ -1,0 +1,11 @@
+{
+  "name": "bs-build-functions",
+  "private": true,
+  "main": "index.js",
+  "engines": { "node": "22" },
+  "dependencies": {
+    "firebase-admin": "^13.6.0",
+    "firebase-functions": "^6.4.0",
+    "googleapis": "^144.0.0"
+  }
+}
