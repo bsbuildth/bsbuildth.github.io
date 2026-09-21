@@ -859,8 +859,11 @@ const Admin = ({ setIsAuthenticated }) => {
     left: dockPosition.side === 'left' ? 0 : 'auto',
     right: dockPosition.side === 'right' ? 0 : 'auto',
   };
+  const panelTop = typeof window === 'undefined'
+    ? 360
+    : Math.max(210, Math.min(window.innerHeight - 210, dockPosition.y * window.innerHeight));
   const dockPanelStyle = {
-    top: `${dockPosition.y * 100}vh`,
+    top: `${panelTop}px`,
     bottom: 'auto',
     left: dockPosition.side === 'left' ? '12px' : 'auto',
     right: dockPosition.side === 'right' ? '12px' : 'auto',
