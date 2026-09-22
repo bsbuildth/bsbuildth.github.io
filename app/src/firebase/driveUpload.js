@@ -95,6 +95,14 @@ function downscaleImage(blob, maxWidth = 1200) {
   });
 }
 
+async function getDriveThumbnail(token, fileId) {
+  const metadata = await driveRequest(token, `files/${encodeURIComponent(fileId)}?fields=thumbnailLink`);
+  if (!metadata.thumbnailLink) throw new Error('Drive ยังไม่มีภาพตัวอย่าง');
+  const response = await fetch(metadata.thumbnailLink, { headers: { Authorization: `Bearer ${token}` }, credentials: 'omit' });
+  if (!response.ok) throw new Error('ดาวน์โหลดภาพตัวอย่างจาก Drive ไม่สำเร็จ');
+  return response.blob();
+}
+
 export async function loadDrivePhotoPreviews(token, photos) {
   const output = {};
   await Promise.all((photos || []).map(async photo => {
@@ -103,7 +111,18 @@ export async function loadDrivePhotoPreviews(token, photos) {
       const response = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(photo.driveFileId)}?alt=media`, { headers: { Authorization: `Bearer ${token}` } });
       if (!response.ok) throw new Error('download failed');
       output[photo.id] = await downscaleImage(await response.blob());
-    } catch { output[photo.id] = ''; }
+    } catch {
+      try { output[photo.id] = await downscaleImage(await getDriveThumbnail(token, photo.driveFileId)); }
+      catch { output[photo.id] = ''; }
+    }
   }));
   return output;
+}
+
+export function drivePreviewToFile(dataUrl, filename, order) {
+  const [header, data] = dataUrl.split(',');
+  const mime = header.match(/data:(.*?);/)?.[1] || 'image/jpeg';
+  const binary = atob(data); const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  return new File([bytes], `${String(order || 1).padStart(2, '0')}-${safeName(filename, 'รูปหน้างาน')}.jpg`, { type: mime });
 }
