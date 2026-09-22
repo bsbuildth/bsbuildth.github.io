@@ -246,6 +246,10 @@
   .reference-document .reference-notes{margin-top:4mm}
   .reference-document .reference-signatures{padding-top:3mm}
   .reference-document .signature-party>p{margin-bottom:10mm}
+  /* Android Print Service treats a grid with break-inside:avoid as an unsplittable next page. */
+  .reference-document .reference-signatures{display:block!important;break-before:auto!important;break-inside:auto!important;page-break-before:auto!important;page-break-inside:auto!important}
+  .reference-document .signature-party{display:inline-block;box-sizing:border-box;width:calc(50% - 16mm);vertical-align:top;break-inside:avoid;page-break-inside:avoid}
+  .reference-document .signature-party+.signature-party{margin-left:32mm}
   .reference-document .quote-watermark{display:none}
   .receipt-paper{min-height:297mm}
 }
