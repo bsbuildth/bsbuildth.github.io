@@ -24,7 +24,9 @@ export default function QuotationPreview({ quote, status = 'draft', revision = 0
   try { totals = calculateQuote(quote); } catch (error) { return <p role="alert">{error.message}</p>; }
   const date = new Date(`${quote.date}T12:00:00`);
   const rows = totals.sections.flatMap(section => section.items);
-  return <article className={`quote-paper reference-document quotation-document${rows.length > 15 ? ' document-long' : ''}`}>
+  const printNotesLength = [quote.terms, quote.warranty, quote.bankName, quote.bankAccountName, quote.bankAccountNumber, ...totals.installments.flatMap(item => [item.label, item.condition])].join('').length;
+  const onePageSignatureLayout = rows.length <= 10 && printNotesLength <= 900;
+  return <article className={`quote-paper reference-document quotation-document${rows.length > 15 ? ' document-long' : ''}${onePageSignatureLayout ? ' document-one-page' : ''}`}>
     <header className="reference-header">
       <Brand quote={quote} />
       <div className="document-meta"><h1>ใบเสนอราคา</h1><dl><dt>เลขที่</dt><dd>{quote.number || 'ยังไม่กำหนดเลข'}</dd><dt>วันที่</dt><dd>{Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('th-TH')}</dd><dt>ผู้ขาย</dt><dd>{quote.salesperson || quote.seller}</dd><dt>REV.</dt><dd>{String(revision).padStart(2, '0')}</dd></dl></div>

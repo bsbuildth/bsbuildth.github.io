@@ -250,6 +250,10 @@
   .reference-document .reference-signatures{display:block!important;break-before:auto!important;break-inside:auto!important;page-break-before:auto!important;page-break-inside:auto!important}
   .reference-document .signature-party{display:inline-block;box-sizing:border-box;width:calc(50% - 16mm);vertical-align:top;break-inside:avoid;page-break-inside:avoid}
   .reference-document .signature-party+.signature-party{margin-left:32mm}
+  /* A short quotation has a reserved signing area, independent of browser pagination. */
+  .reference-document.document-one-page{height:297mm!important;min-height:297mm!important}
+  .reference-document.document-one-page .reference-signatures{position:absolute;right:12.7mm;bottom:12mm;left:12.7mm;width:auto;margin:0!important;padding-top:0!important}
+  .reference-document.document-one-page .signature-party>p{margin-bottom:9mm}
   .reference-document .quote-watermark{display:none}
   .receipt-paper{min-height:297mm}
 }
