@@ -259,7 +259,7 @@
   .reference-document.document-one-page .reference-installments{gap:.5mm 2mm;margin-top:.5mm}
   .reference-document.document-one-page .reference-signatures{position:absolute;right:12.7mm;bottom:16mm;left:12.7mm;width:auto;margin:0!important;padding-top:0!important}
   .reference-document.document-one-page .signature-party>p{margin-bottom:2mm}
-  .reference-document .signature-image{position:static;display:block;width:64%;height:9mm;margin:0 auto 1.5mm;object-position:center bottom}
+  .reference-document .signature-image{position:static;display:block;width:64%;height:9mm;margin:0 auto 1.5mm;object-position:center bottom;transform:translateY(3mm)}
   .reference-document .signature-party>div{position:relative;z-index:3}
   .reference-document .signature-party>div span{min-height:3.5mm;background:#fff}
   .reference-document .quote-watermark{display:none}
