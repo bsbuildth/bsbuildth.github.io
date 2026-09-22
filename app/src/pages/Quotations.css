@@ -252,13 +252,14 @@
   .reference-document .signature-party+.signature-party{margin-left:32mm}
   /* A short quotation has a reserved signing area, independent of browser pagination. */
   .reference-document.document-one-page{height:297mm!important;min-height:297mm!important}
-  .reference-document.document-one-page .reference-notes{margin-top:3mm;font-size:8pt;line-height:1.2}
+  .reference-document.document-one-page .reference-notes{margin-top:3mm;font-size:7.5pt;line-height:1.12}
   .reference-document.document-one-page .reference-notes p{margin:.4mm 0}
   .reference-document.document-one-page .reference-notes h3{margin:.8mm 0 .5mm}
   .reference-document.document-one-page .reference-bank{margin:.6mm 0!important;padding:1mm 1.5mm}
   .reference-document.document-one-page .reference-installments{gap:.5mm 2mm;margin-top:.5mm}
-  .reference-document.document-one-page .reference-signatures{position:absolute;right:12.7mm;bottom:18mm;left:12.7mm;width:auto;margin:0!important;padding-top:0!important}
-  .reference-document.document-one-page .signature-party>p{margin-bottom:7mm}
+  .reference-document.document-one-page .reference-signatures{position:absolute;right:12.7mm;bottom:16mm;left:12.7mm;width:auto;margin:0!important;padding-top:0!important}
+  .reference-document.document-one-page .signature-party>p{margin-bottom:12mm}
+  .reference-document.document-one-page .signature-image{top:1mm;height:10mm}
   .reference-document .signature-image{top:0;height:6mm}
   .reference-document .signature-party>div{position:relative;z-index:3}
   .reference-document .signature-party>div span{min-height:3.5mm;background:#fff}
