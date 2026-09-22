@@ -260,6 +260,7 @@
   .reference-document.document-one-page .reference-signatures{position:absolute;right:12.7mm;bottom:16mm;left:12.7mm;width:auto;margin:0!important;padding-top:0!important}
   .reference-document.document-one-page .signature-party>p{margin-bottom:1mm}
   .reference-document .signature-slot{height:12mm;margin:0}
+  .reference-document .signature-party>.signature-slot{width:calc((100% - 5mm)/2);justify-self:start}
   .reference-document .signature-image{width:58%;height:10mm;margin:0;transform:none}
   .reference-document .signature-party>div{position:relative;z-index:3}
   .reference-document .signature-party>div span{min-height:3.5mm;background:#fff}
