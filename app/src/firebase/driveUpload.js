@@ -79,19 +79,28 @@ export async function trashDriveFolder(token, folderId) {
   }
 }
 
+async function makeBrowserReadable(blob) {
+  if (!/image\/(heic|heif)/i.test(blob.type || '')) return blob;
+  const { default: heic2any } = await import('heic2any');
+  const converted = await heic2any({ blob, toType: 'image/jpeg', quality: .84 });
+  return Array.isArray(converted) ? converted[0] : converted;
+}
+
 function downscaleImage(blob, maxWidth = 1200) {
   return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(blob); const image = new Image();
-    image.onload = () => {
-      URL.revokeObjectURL(url);
-      const scale = Math.min(1, maxWidth / image.naturalWidth);
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale)); canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL('image/jpeg', .78));
-    };
-    image.onerror = () => { URL.revokeObjectURL(url); reject(new Error('อ่านรูปจาก Drive ไม่สำเร็จ')); };
-    image.src = url;
+    makeBrowserReadable(blob).then(readable => {
+      const url = URL.createObjectURL(readable); const image = new Image();
+      image.onload = () => {
+        URL.revokeObjectURL(url);
+        const scale = Math.min(1, maxWidth / image.naturalWidth);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale)); canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', .78));
+      };
+      image.onerror = () => { URL.revokeObjectURL(url); reject(new Error('อ่านรูปจาก Drive ไม่สำเร็จ')); };
+      image.src = url;
+    }).catch(() => reject(new Error('แปลงรูป HEIC จาก Drive ไม่สำเร็จ')));
   });
 }
 
