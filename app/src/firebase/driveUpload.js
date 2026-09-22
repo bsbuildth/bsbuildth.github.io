@@ -67,3 +67,43 @@ export async function uploadSiteUpdateDirectToDrive({ updateId, projectName, upd
   }
   return { photos, folderId: folder.id, driveUrl: folder.webViewLink || `https://drive.google.com/drive/folders/${folder.id}` };
 }
+
+export async function trashDriveFolder(token, folderId) {
+  if (!folderId) return;
+  const response = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(folderId)}`, {
+    method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ trashed: true }),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.error?.message || 'ย้ายโฟลเดอร์รูปไปถังขยะ Google Drive ไม่สำเร็จ');
+  }
+}
+
+function downscaleImage(blob, maxWidth = 1200) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob); const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxWidth / image.naturalWidth);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale)); canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', .78));
+    };
+    image.onerror = () => { URL.revokeObjectURL(url); reject(new Error('อ่านรูปจาก Drive ไม่สำเร็จ')); };
+    image.src = url;
+  });
+}
+
+export async function loadDrivePhotoPreviews(token, photos) {
+  const output = {};
+  await Promise.all((photos || []).map(async photo => {
+    if (!photo.driveFileId) return;
+    try {
+      const response = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(photo.driveFileId)}?alt=media`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!response.ok) throw new Error('download failed');
+      output[photo.id] = await downscaleImage(await response.blob());
+    } catch { output[photo.id] = ''; }
+  }));
+  return output;
+}
