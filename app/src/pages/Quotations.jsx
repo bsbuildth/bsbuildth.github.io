@@ -21,6 +21,7 @@ export default function Quotations() {
   const [message, setMessage] = useState('');
   const [search, setSearch] = useState('');
   const [history, setHistory] = useState([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [historic, setHistoric] = useState(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [aiShareOpen, setAiShareOpen] = useState(false);
@@ -33,6 +34,7 @@ export default function Quotations() {
   const [catalogSection, setCatalogSection] = useState(0);
   const operation = useRef(false);
   const touched = useRef(false);
+  const loadedDocument = useRef(false);
   const exportRef = useRef(null);
   const locked = busy || (!!selected && selected.status !== 'draft');
   const displayRevision = selected?.status === 'draft' && selected.revision > 0 ? selected.revision + 1 : selected?.revision || 0;
@@ -42,10 +44,15 @@ export default function Quotations() {
   }, [quote]);
 
   useEffect(() => {
-    listQuotes().then(setRows).catch(() => setMessage('โหลดเอกสารไม่ได้ กรุณาตรวจการเชื่อมต่อและสิทธิ์ผู้ดูแล'));
+    listQuotes().then(data => {
+      setRows(data);
+      if (data[0]) {
+        loadedDocument.current = true; setSelected(data[0]); setQuote(structuredClone(data[0].quote)); setDirty(false);
+      }
+    }).catch(() => setMessage('โหลดเอกสารไม่ได้ กรุณาตรวจการเชื่อมต่อและสิทธิ์ผู้ดูแล'));
     getCompanyDefaults().then(defaults => {
       setCompanyDefaults(defaults);
-      if (!touched.current) setQuote(current => applyCompanyDefaults(current, defaults));
+      if (!touched.current && !loadedDocument.current) setQuote(current => applyCompanyDefaults(current, defaults));
     }).catch(() => setMessage('โหลดข้อมูลบริษัทเริ่มต้นไม่ได้ แต่ยังกรอกเอกสารได้ตามปกติ'));
     getDocumentPresets().then(setDocumentPresets).catch(() => setMessage('โหลดคลังบัญชีและลายเซ็นไม่ได้ แต่ยังกรอกเอกสารได้ตามปกติ'));
   }, []);
@@ -59,7 +66,7 @@ export default function Quotations() {
   const confirmLeave = () => !dirty || window.confirm('มีข้อมูลที่ยังไม่บันทึก ต้องการละทิ้งหรือไม่?');
   const open = row => {
     if (!confirmLeave()) return;
-    setSelected(row); setQuote(row ? structuredClone(row.quote) : applyCompanyDefaults(newQuote(), companyDefaults)); setDirty(false); setHistory([]); setHistoric(null); setPreviewMode(false); setMessage(''); touched.current = false;
+    loadedDocument.current = !!row; setSelected(row); setQuote(row ? structuredClone(row.quote) : applyCompanyDefaults(newQuote(), companyDefaults)); setDirty(false); setHistory([]); setHistoryOpen(false); setHistoric(null); setPreviewMode(false); setMessage(''); touched.current = false;
   };
   const edit = (key, value) => { touched.current = true; setQuote(current => ({ ...current, [key]: value })); setDirty(true); setHistoric(null); setPreviewMode(false); };
   const updateSections = updater => { touched.current = true; setQuote(current => ({ ...current, sections: updater(current.sections) })); setDirty(true); setHistoric(null); setPreviewMode(false); };
@@ -99,7 +106,7 @@ export default function Quotations() {
   const reload = async id => {
     const data = await listQuotes(); setRows(data);
     const row = data.find(item => item.id === id);
-    if (row) { setSelected(row); setQuote(structuredClone(row.quote)); }
+    if (row) { loadedDocument.current = true; setSelected(row); setQuote(structuredClone(row.quote)); }
     setHistoric(null);
   };
   const save = () => run(async () => {
@@ -211,7 +218,7 @@ export default function Quotations() {
     setDocumentPresets(await saveDocumentPresets(next)); setMessage('ลบลายเซ็นออกจากคลังแล้ว');
   });
 
-  const actions = <div className="quote-controls"><button className="quote-save" disabled={locked || !dirty || !!calculation.error} onClick={save}>คำนวณและบันทึก{dirty ? ' *' : ''}</button><button className="quote-preview-button" disabled={!!calculation.error} onClick={() => setPreviewMode(current => !current)}>{previewMode ? '← กลับมาแก้ไข' : 'ดูตัวอย่าง'}</button><button disabled={locked || dirty || !selected} onClick={issue}>ออกเอกสาร REV. {String(displayRevision || 1).padStart(2, '0')}</button><button disabled={busy} onClick={copy}>ทำสำเนา</button><button disabled={busy || dirty || !selected} onClick={print}>พิมพ์ / PDF</button><button className="quote-ai-share" disabled={busy || dirty || !selected || !!calculation.error} onClick={() => setAiShareOpen(true)}>แชร์ PDF ให้ AI ตรวจ</button>{selected?.status === 'draft' && selected.revision === 0 && <button className="quote-danger" disabled={busy || dirty} onClick={removeDraft}>ลบร่าง</button>}{selected?.status === 'issued' && <><button disabled={busy} onClick={() => transition('draft')}>สร้าง REV. ราคาใหม่</button><button disabled={busy} onClick={() => navigate('/admin/receipts', { state: { quote: structuredClone(quote), totals: calculation.totals } })}>สร้างใบเสร็จ</button><button disabled={busy} onClick={() => transition('void')}>ยกเลิกเอกสาร</button></>}{selected && <button disabled={busy} onClick={() => run(async () => { setHistory(await listRevisions(selected.id)); setMessage('โหลดประวัติ REV. แล้ว'); })}>ประวัติ REV.</button>}</div>;
+  const actions = <div className="quote-controls"><button className="quote-save" disabled={locked || !dirty || !!calculation.error} onClick={save}>คำนวณและบันทึก{dirty ? ' *' : ''}</button><button className="quote-preview-button" disabled={!!calculation.error} onClick={() => setPreviewMode(current => !current)}>{previewMode ? '← กลับมาแก้ไข' : 'ดูตัวอย่าง'}</button><button disabled={locked || dirty || !selected} onClick={issue}>ออกเอกสาร REV. {String(displayRevision || 1).padStart(2, '0')}</button><button disabled={busy} onClick={copy}>ทำสำเนา</button><button disabled={busy || dirty || !selected} onClick={print}>พิมพ์ / PDF</button><button className="quote-ai-share" disabled={busy || dirty || !selected || !!calculation.error} onClick={() => setAiShareOpen(true)}>แชร์ PDF ให้ AI ตรวจ</button>{selected?.status === 'draft' && selected.revision === 0 && <button className="quote-danger" disabled={busy || dirty} onClick={removeDraft}>ลบร่าง</button>}{selected?.status === 'issued' && <><button disabled={busy} onClick={() => transition('draft')}>สร้าง REV. ราคาใหม่</button><button disabled={busy} onClick={() => navigate('/admin/receipts', { state: { quote: structuredClone(quote), totals: calculation.totals } })}>สร้างใบเสร็จ</button><button disabled={busy} onClick={() => transition('void')}>ยกเลิกเอกสาร</button></>}{selected && <button disabled={busy} onClick={() => run(async () => { setHistory(await listRevisions(selected.id)); setHistoryOpen(true); setMessage('เลือก REV. ที่ต้องการดูได้ทันที'); })}>ประวัติ REV.</button>}</div>;
   const filteredRows = rows.filter(row => `${row.quote.number} ${row.quote.customer} ${row.quote.project} ${row.status}`.toLowerCase().includes(search.toLowerCase()));
 
   return <><AdminRouteDock activePath="/admin/quotations" /><div className="quotation-workspace">
@@ -219,10 +226,10 @@ export default function Quotations() {
     <p className="quote-message" role="status" aria-live="polite">{message || 'กรอก แก้ไข เพิ่มรายการ คำนวณ และบันทึกบนแบบฟอร์ม A4 นี้ได้ทันที'}</p>
     <div className="quote-layout"><aside className="quote-sidebar"><label>ค้นหาเอกสาร<input value={search} onChange={event => setSearch(event.target.value)} placeholder="เลข / ลูกค้า / โครงการ / สถานะ" /></label><button disabled={busy} onClick={() => run(async () => { if (confirmLeave()) { const data = await listQuotes(); setRows(data); setMessage('โหลดรายการล่าสุดแล้ว'); } })}>รีเฟรชรายการ</button><p>แสดงล่าสุดไม่เกิน 200 เอกสาร</p>{filteredRows.map(row => <button disabled={busy} className={selected?.id === row.id ? 'selected' : ''} key={row.id} onClick={() => open(row)}><b>{row.quote.number || 'ร่างไม่มีเลข'}</b><span>{row.quote.customer || 'ยังไม่มีชื่อลูกค้า'}</span><small>{({ draft: 'ร่าง', issued: 'ออกแล้ว', void: 'ยกเลิก' })[row.status]}</small></button>)}</aside>
       <main className="quote-a4-stage">{historic ? <><div className="quote-history-bar"><button onClick={() => setHistoric(null)}>← กลับมาแก้ฉบับปัจจุบัน</button><b>กำลังดู REV. {String(historic.revision).padStart(2, '0')}</b></div><QuotationPreview quote={historic.quote} status="issued" revision={historic.revision} /></> : previewMode ? <><div className="quote-preview-actions">{actions}</div><QuotationPreview quote={quote} status={selected?.status || 'draft'} revision={displayRevision} /></> : <QuotationA4Form quote={quote} revision={displayRevision} calculation={calculation} locked={locked} actions={actions} edit={edit} sectionEdit={editSection} itemEdit={itemEdit} presets={documentPresets} onSaveBankPreset={saveBankPreset} onDeleteBankPreset={deleteBankPreset} onSaveSignaturePreset={saveSignaturePreset} onDeleteSignaturePreset={deleteSignaturePreset} addItem={sectionIndex => editSection(sectionIndex, section => ({ ...section, items: [...section.items, newItem()] }))} addCatalogItem={openCatalog} onSaveItemToCatalog={saveItemToCatalog} removeItem={(sectionIndex, itemIndex) => editSection(sectionIndex, section => ({ ...section, items: section.items.filter((_, i) => i !== itemIndex) }))} addSection={() => updateSections(sections => [...sections, { id: crypto.randomUUID(), title: 'หมวดใหม่', kind: 'main', items: [newItem()] }])} removeSection={sectionIndex => updateSections(sections => sections.filter((_, i) => i !== sectionIndex))} />}
-        {history.length > 0 && <div className="quote-history-list">{history.map(revision => <button key={revision.id} onClick={() => setHistoric(revision)}>ดู REV. {String(revision.revision).padStart(2, '0')}</button>)}</div>}
       </main>
     </div>
     {aiShareOpen && <AiShareDialog busy={busy} onClose={() => setAiShareOpen(false)} onShare={sharePdfWithAi} onDownload={downloadPdfForAi} />}
+    {historyOpen && <div className="quote-history-modal" role="dialog" aria-modal="true" aria-label="ประวัติ REV. ใบเสนอราคา"><section><header><div><p>ประวัติเอกสาร</p><h2>{quote.number || 'ใบเสนอราคา'}</h2></div><button onClick={() => setHistoryOpen(false)} aria-label="ปิด">×</button></header><div className="quote-history-cards">{history.map(revision => <button key={revision.id} onClick={() => { setHistoric(revision); setHistoryOpen(false); setPreviewMode(false); }}><b>REV. {String(revision.revision).padStart(2, '0')}</b><span>{revision.reason || 'ไม่มีหมายเหตุ'}</span><small>{revision.issuedAt?.toDate ? revision.issuedAt.toDate().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : 'วันที่ออกเอกสาร'}</small><strong>{Number(revision.totals?.grandTotal || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท</strong></button>)}{history.length === 0 && <p>ยังไม่มี REV. ที่ออกเอกสารแล้ว</p>}</div></section></div>}
     {catalogOpen && <div className="catalog-picker-modal" role="dialog" aria-modal="true" aria-label="เลือกรายการจากคลังราคา"><section><header><div><p>เพิ่มจากราคากลาง</p><h2>เลือกรายการสำหรับ {quote.sections[catalogSection]?.title || 'หมวดงาน'}</h2></div><button onClick={() => setCatalogOpen(false)}>×</button></header><input autoFocus value={catalogQuery} placeholder="ค้นหารหัส รายการ สเปก หรือหมวดงาน" onChange={event => setCatalogQuery(event.target.value)} /><div className="catalog-picker-list">{priceCatalog.filter(item => item.active !== false && `${item.code} ${item.name} ${item.specification} ${item.category}`.toLowerCase().includes(catalogQuery.toLowerCase())).map(item => <button key={item.id} onClick={() => addCatalogItem(item)}><b>{item.code} · {item.name}</b><span>{item.specification || item.category} · {item.unit}</span><strong>{Number(item.companyPrice || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท</strong></button>)}{priceCatalog.length === 0 && <p>กำลังโหลดคลังราคา…</p>}</div></section></div>}
     {exportContext && <div className="pdf-export-host" ref={exportRef} aria-hidden="true"><QuotationPreview quote={exportContext.quote} status={exportContext.status} revision={exportContext.revision} /></div>}
   </div></>;
