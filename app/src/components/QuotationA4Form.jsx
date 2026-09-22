@@ -3,7 +3,7 @@ import { bahtText, money } from '../lib/quotation';
 import { fileToResizedDataURL } from '../firebase/api';
 import SignaturePad from './SignaturePad';
 
-export default function QuotationA4Form({ quote, revision = 0, calculation, locked, actions, edit, sectionEdit, itemEdit, presets = { bankAccounts: [], signatures: [] }, onSaveBankPreset, onDeleteBankPreset, onSaveSignaturePreset, onDeleteSignaturePreset, addItem, addCatalogItem, onSaveItemToCatalog, removeItem, addSection, removeSection }) {
+export default function QuotationA4Form({ quote, revision = 0, calculation, locked, edit, sectionEdit, itemEdit, presets = { bankAccounts: [], signatures: [] }, onSaveBankPreset, onDeleteBankPreset, onSaveSignaturePreset, onDeleteSignaturePreset, addItem, addCatalogItem, onSaveItemToCatalog, removeItem, addSection, removeSection }) {
   const totals = calculation.totals;
   const [signingParty, setSigningParty] = useState('');
   const [selectedBankPreset, setSelectedBankPreset] = useState('');
@@ -33,7 +33,6 @@ export default function QuotationA4Form({ quote, revision = 0, calculation, lock
     finally { event.target.value = ''; }
   };
   return <article className="quote-paper quote-a4-form">
-    <div className="quote-form-actions">{actions}</div>
     <fieldset className="quote-a4-fields" disabled={locked}>
       <header className="quote-heading quote-form-heading">
         <div className="quote-brand-fields">

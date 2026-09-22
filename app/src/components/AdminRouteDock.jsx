@@ -56,7 +56,7 @@ export default function AdminRouteDock({ activePath, actions = [] }) {
     <button className={`route-dock-handle route-dock-${position.side} ${open ? 'is-open' : ''}`} style={handleStyle} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} onClick={() => { if (dragRef.current.suppressClick) { dragRef.current.suppressClick = false; return; } setOpen(value => !value); }} aria-expanded={open} aria-label="เมนูหลัก">{open ? '×' : '☰'}</button>
     {open && <button className="route-dock-backdrop" onClick={() => setOpen(false)} aria-label="ปิดเมนู" />}
     <nav className={`route-dock-menu route-dock-${position.side} ${open ? 'is-open' : ''}`} style={menuStyle} aria-label="เมนูหลัก">
-      {actions.length > 0 ? actions.map(({ id, icon, label, onClick, disabled }) => <button key={id} disabled={disabled} onClick={() => { setOpen(false); onClick(); }}><i>{icon}</i><span>{label}</span></button>) : links.map(([path, icon, label]) => <button key={path} className={activePath === path ? 'active' : ''} onClick={() => { setOpen(false); navigate(path); }}><i>{icon}</i><span>{label}</span></button>)}
+      {actions.length > 0 ? actions.map(({ id, icon, label, onClick, disabled, active }, index) => <button key={id} className={active ? 'active' : ''} style={{ '--dock-index': index }} disabled={disabled} onClick={() => { setOpen(false); onClick(); }}><i>{icon}</i><span>{label}</span></button>) : links.map(([path, icon, label], index) => <button key={path} style={{ '--dock-index': index }} className={activePath === path ? 'active' : ''} onClick={() => { setOpen(false); navigate(path); }}><i>{icon}</i><span>{label}</span></button>)}
     </nav>
   </>;
 }
