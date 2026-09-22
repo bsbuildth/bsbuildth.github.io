@@ -254,6 +254,9 @@
   .reference-document.document-one-page{height:297mm!important;min-height:297mm!important}
   .reference-document.document-one-page .reference-signatures{position:absolute;right:12.7mm;bottom:12mm;left:12.7mm;width:auto;margin:0!important;padding-top:0!important}
   .reference-document.document-one-page .signature-party>p{margin-bottom:9mm}
+  .reference-document .signature-image{top:1mm;height:8mm}
+  .reference-document .signature-party>div{position:relative;z-index:3}
+  .reference-document .signature-party>div span{min-height:4mm;background:#fff}
   .reference-document .quote-watermark{display:none}
   .receipt-paper{min-height:297mm}
 }
