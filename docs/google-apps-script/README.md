@@ -10,10 +10,8 @@
 
 | ชื่อ | ค่า |
 | --- | --- |
-| `FIREBASE_PROJECT_ID` | Firebase project ID ของ BS Build |
-| `FIREBASE_WEB_API_KEY` | ค่า `VITE_FIREBASE_API_KEY` ที่ใช้อยู่แล้วในเว็บ |
-| `DRIVE_ROOT_FOLDER_ID` | ID ของโฟลเดอร์หลักสำหรับรูปสำรวจใน Google Drive |
-| `ALLOWED_EMAILS` | `bsbuildth@gmail.com,songyos2528@gmail.com` |
+| `DRIVE_ROOT_FOLDER_ID` | เว้นว่างได้ ระบบจะสร้างโฟลเดอร์ `BS BUILD - รูปสำรวจหน้างาน` ให้อัตโนมัติ |
+| `ALLOWED_EMAILS` | เว้นว่างได้ ระบบอนุญาต `bsbuildth@gmail.com,songyos2528@gmail.com` อัตโนมัติ |
 
 4. กด **Deploy → New deployment → Web app** แล้วตั้ง `Execute as: Me` และ `Who has access: Anyone` จากนั้นอนุมัติสิทธิ์เพียงครั้งเดียวในบัญชีเจ้าของ Drive.
 5. คัดลอก URL ที่ลงท้าย `/exec` และใส่ในไฟล์ `app/.env.production` และ `app/.env.development.local`:

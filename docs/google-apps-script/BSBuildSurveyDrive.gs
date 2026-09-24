@@ -8,12 +8,22 @@
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
 const MAX_BYTES = 8 * 1024 * 1024;
+// The deploy helper fills only the first two values from the existing public web config.
+// Script properties always take priority and keep this checked-in file free of account data.
+const CONFIG_DEFAULTS = { FIREBASE_PROJECT_ID: '', FIREBASE_WEB_API_KEY: '', ALLOWED_EMAILS: 'bsbuildth@gmail.com,songyos2528@gmail.com' };
 
-function settings_() {
-  const values = PropertiesService.getScriptProperties().getProperties();
-  ['FIREBASE_PROJECT_ID', 'FIREBASE_WEB_API_KEY', 'DRIVE_ROOT_FOLDER_ID', 'ALLOWED_EMAILS'].forEach(key => {
+function settings_(input) {
+  const values = { ...CONFIG_DEFAULTS, ...PropertiesService.getScriptProperties().getProperties() };
+  values.FIREBASE_PROJECT_ID = values.FIREBASE_PROJECT_ID || String((input || {}).firebaseProjectId || '');
+  values.FIREBASE_WEB_API_KEY = values.FIREBASE_WEB_API_KEY || String((input || {}).firebaseApiKey || '');
+  ['FIREBASE_PROJECT_ID', 'FIREBASE_WEB_API_KEY', 'ALLOWED_EMAILS'].forEach(key => {
     if (!values[key]) throw new Error(`ยังไม่ได้ตั้งค่า ${key}`);
   });
+  if (!values.DRIVE_ROOT_FOLDER_ID) {
+    const root = DriveApp.getRootFolder().createFolder('BS BUILD - รูปสำรวจหน้างาน');
+    values.DRIVE_ROOT_FOLDER_ID = root.getId();
+    PropertiesService.getScriptProperties().setProperty('DRIVE_ROOT_FOLDER_ID', values.DRIVE_ROOT_FOLDER_ID);
+  }
   return values;
 }
 
@@ -88,7 +98,7 @@ function doPost(event) {
   let payload = {};
   try {
     payload = JSON.parse(event.postData.contents || '{}');
-    const config = settings_();
+    const config = settings_(payload);
     verify_(payload.token, config);
     if (payload.action !== 'upload') throw new Error('คำสั่งไม่ถูกต้อง');
     if (!payload.updateId || !payload.photoId || !payload.contentBase64) throw new Error('ข้อมูลรูปไม่ครบ');
@@ -113,7 +123,7 @@ function doPost(event) {
     return json_({ ok: true });
   } catch (error) {
     // If the update id is trustworthy enough to be present, surface the error in the app.
-    try { if (payload.updateId) patch_(settings_(), payload.updateId, { status: 'failed', lastError: String(error.message || error).slice(0, 500) }); } catch (ignored) {}
+    try { if (payload.updateId) patch_(settings_(payload), payload.updateId, { status: 'failed', lastError: String(error.message || error).slice(0, 500) }); } catch (ignored) {}
     return json_({ ok: false, message: String(error.message || error) });
   }
 }

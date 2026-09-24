@@ -82,6 +82,7 @@ export async function uploadSiteUpdateWithFreeDrive(update, files, onProgress = 
     onProgress(index, selected.length);
     const payload = {
       action: 'upload', updateId: update.id, operationId: update.operationId, token,
+      firebaseProjectId: import.meta.env.VITE_FIREBASE_PROJECT_ID, firebaseApiKey: import.meta.env.VITE_FIREBASE_API_KEY,
       total: selected.length, order: index + 1, photoId: crypto.randomUUID(),
       name: file.name, mimeType: file.type, bytes: file.size, contentBase64: await toBase64(file),
     };
