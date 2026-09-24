@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { calculateQuote, catalogItemToQuoteItem, demoQuote, newItem, newQuote, quoteItemToCatalogInput, validateIssue } from '../lib/quotation';
 import { approveQuote, changeQuoteStatus, deleteDraftQuote, issueQuote, listQuotes, listRevisions, saveQuote } from '../firebase/quotations';
 import { applyCompanyDefaults, getCompanyDefaults, getDocumentPresets, nextDocumentNumber, saveCompanyDefaults, saveDocumentPresets } from '../firebase/documents';
@@ -13,6 +13,9 @@ import './Quotations.css';
 
 export default function Quotations() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const requestedQuotationId = location.state?.quotationId || '';
+  const [creating, setCreating] = useState(false);
   const [rows, setRows] = useState([]);
   const [selected, setSelected] = useState(null);
   const [quote, setQuote] = useState(newQuote);
@@ -47,16 +50,15 @@ export default function Quotations() {
   useEffect(() => {
     listQuotes().then(data => {
       setRows(data);
-      if (data[0]) {
-        loadedDocument.current = true; setSelected(data[0]); setQuote(structuredClone(data[0].quote)); setDirty(false);
-      }
+      const requested = data.find(row => row.id === requestedQuotationId);
+      if (requested) { loadedDocument.current = true; setSelected(requested); setQuote(structuredClone(requested.quote)); setDirty(false); }
     }).catch(() => setMessage('โหลดเอกสารไม่ได้ กรุณาตรวจการเชื่อมต่อและสิทธิ์ผู้ดูแล'));
     getCompanyDefaults().then(defaults => {
       setCompanyDefaults(defaults);
       if (!touched.current && !loadedDocument.current) setQuote(current => applyCompanyDefaults(current, defaults));
     }).catch(() => setMessage('โหลดข้อมูลบริษัทเริ่มต้นไม่ได้ แต่ยังกรอกเอกสารได้ตามปกติ'));
     getDocumentPresets().then(setDocumentPresets).catch(() => setMessage('โหลดคลังบัญชีและลายเซ็นไม่ได้ แต่ยังกรอกเอกสารได้ตามปกติ'));
-  }, []);
+  }, [requestedQuotationId]);
   useEffect(() => {
     if (!dirty) return;
     const leave = event => { event.preventDefault(); event.returnValue = ''; };
@@ -67,7 +69,7 @@ export default function Quotations() {
   const confirmLeave = () => !dirty || window.confirm('มีข้อมูลที่ยังไม่บันทึก ต้องการละทิ้งหรือไม่?');
   const open = row => {
     if (!confirmLeave()) return;
-    loadedDocument.current = !!row; setSelected(row); setQuote(row ? structuredClone(row.quote) : applyCompanyDefaults(newQuote(), companyDefaults)); setDirty(false); setHistory([]); setHistoryOpen(false); setHistoric(null); setPreviewMode(false); setMessage(''); touched.current = false;
+    loadedDocument.current = !!row; setCreating(!row); setSelected(row); setQuote(row ? structuredClone(row.quote) : applyCompanyDefaults(newQuote(), companyDefaults)); setDirty(false); setHistory([]); setHistoryOpen(false); setHistoric(null); setPreviewMode(false); setMessage(''); touched.current = false;
   };
   const edit = (key, value) => { touched.current = true; setQuote(current => ({ ...current, [key]: value })); setDirty(true); setHistoric(null); setPreviewMode(false); };
   const updateSections = updater => { touched.current = true; setQuote(current => ({ ...current, sections: updater(current.sections) })); setDirty(true); setHistoric(null); setPreviewMode(false); };
@@ -253,7 +255,7 @@ export default function Quotations() {
     <header className="quote-toolbar"><h1>ใบเสนอราคา A4 · REV. {String(displayRevision).padStart(2, '0')}</h1></header>
     <p className="quote-message" role="status" aria-live="polite">{message || 'กรอก แก้ไข เพิ่มรายการ คำนวณ และบันทึกบนแบบฟอร์ม A4 นี้ได้ทันที'}</p>
     <div className="quote-layout"><aside className="quote-sidebar"><label>ค้นหาเอกสาร<input value={search} onChange={event => setSearch(event.target.value)} placeholder="เลข / ลูกค้า / โครงการ / สถานะ" /></label><button disabled={busy} onClick={() => run(async () => { if (confirmLeave()) { const data = await listQuotes(); setRows(data); setMessage('โหลดรายการล่าสุดแล้ว'); } })}>รีเฟรชรายการ</button><p>แสดงล่าสุดไม่เกิน 200 เอกสาร</p>{filteredRows.map(row => <button disabled={busy} className={`${selected?.id === row.id ? 'selected ' : ''}${row.approval?.state === 'approved' ? 'quote-approved' : ''}`} key={row.id} onClick={() => open(row)}><b>{row.quote.number || 'ร่างไม่มีเลข'}</b><span>{row.quote.customer || 'ยังไม่มีชื่อลูกค้า'}</span><small className={row.approval?.state === 'approved' ? 'status-approved' : ''}>{row.status === 'issued' ? (row.approval?.state === 'approved' ? '✓ อนุมัติแล้ว' : 'รออนุมัติ') : ({ draft: 'ร่าง', void: 'ยกเลิก' })[row.status]}</small></button>)}</aside>
-      <main className="quote-a4-stage">{historic ? <section className="quote-history-reader" ref={historyReader}><div className="quote-history-bar"><div><small>โหมดอ่านเอกสารที่ออกแล้ว</small><b>REV. {String(historic.revision).padStart(2, '0')}</b></div><button onClick={() => setHistoric(null)}>← กลับไปฉบับปัจจุบัน</button></div><p className="quote-history-hint">เลื่อนขึ้นลงเพื่ออ่านเอกสารทั้งฉบับ</p><QuotationPreview quote={historic.quote} status="issued" revision={historic.revision} /></section> : previewMode ? <QuotationPreview quote={quote} status={selected?.status || 'draft'} revision={displayRevision} /> : <QuotationA4Form quote={quote} revision={displayRevision} calculation={calculation} locked={locked} edit={edit} sectionEdit={editSection} itemEdit={itemEdit} presets={documentPresets} onSaveBankPreset={saveBankPreset} onDeleteBankPreset={deleteBankPreset} onSaveSignaturePreset={saveSignaturePreset} onDeleteSignaturePreset={deleteSignaturePreset} addItem={sectionIndex => editSection(sectionIndex, section => ({ ...section, items: [...section.items, newItem()] }))} addCatalogItem={openCatalog} onSaveItemToCatalog={saveItemToCatalog} removeItem={(sectionIndex, itemIndex) => editSection(sectionIndex, section => ({ ...section, items: section.items.filter((_, i) => i !== itemIndex) }))} addSection={() => updateSections(sections => [...sections, { id: crypto.randomUUID(), title: 'หมวดใหม่', kind: 'main', items: [newItem()] }])} removeSection={sectionIndex => updateSections(sections => sections.filter((_, i) => i !== sectionIndex))} />}
+      <main className="quote-a4-stage">{!selected && !creating ? <section className="document-picker-empty"><b>เลือกใบเสนอราคาที่ต้องการทำงาน</b><span>แตะรายการด้านซ้าย หรือเลือก “สร้างใบเสนอราคาใหม่” จากเมนู</span></section> : historic ? <section className="quote-history-reader" ref={historyReader}><div className="quote-history-bar"><div><small>โหมดอ่านเอกสารที่ออกแล้ว</small><b>REV. {String(historic.revision).padStart(2, '0')}</b></div><button onClick={() => setHistoric(null)}>← กลับไปฉบับปัจจุบัน</button></div><p className="quote-history-hint">เลื่อนขึ้นลงเพื่ออ่านเอกสารทั้งฉบับ</p><QuotationPreview quote={historic.quote} status="issued" revision={historic.revision} /></section> : previewMode ? <QuotationPreview quote={quote} status={selected?.status || 'draft'} revision={displayRevision} /> : <QuotationA4Form quote={quote} revision={displayRevision} calculation={calculation} locked={locked} edit={edit} sectionEdit={editSection} itemEdit={itemEdit} presets={documentPresets} onSaveBankPreset={saveBankPreset} onDeleteBankPreset={deleteBankPreset} onSaveSignaturePreset={saveSignaturePreset} onDeleteSignaturePreset={deleteSignaturePreset} addItem={sectionIndex => editSection(sectionIndex, section => ({ ...section, items: [...section.items, newItem()] }))} addCatalogItem={openCatalog} onSaveItemToCatalog={saveItemToCatalog} removeItem={(sectionIndex, itemIndex) => editSection(sectionIndex, section => ({ ...section, items: section.items.filter((_, i) => i !== itemIndex) }))} addSection={() => updateSections(sections => [...sections, { id: crypto.randomUUID(), title: 'หมวดใหม่', kind: 'main', items: [newItem()] }])} removeSection={sectionIndex => updateSections(sections => sections.filter((_, i) => i !== sectionIndex))} />}
       </main>
     </div>
     {aiShareOpen && <AiShareDialog busy={busy} onClose={() => setAiShareOpen(false)} onShare={sharePdfWithAi} onDownload={downloadPdfForAi} />}

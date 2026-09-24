@@ -55,14 +55,22 @@ export function getReceiptPaymentAvailability(receipt, rows = []) {
   const paidInstallmentIndexes = new Set(issued.map(row => String(row.receipt?.installmentIndex ?? '')).filter(value => /^\d+$/.test(value)));
   const availableInstallments = schedule.map((part, index) => ({ ...part, index })).filter(part => !paidInstallmentIndexes.has(String(part.index)));
   const scheduled = schedule.length > 0;
+  const paidTotal = issued.reduce((sum, row) => sum + (Number(row.totals?.total) || 0), 0);
+  const remainingTotal = Math.max(0, (Number(receipt?.paymentTotal) || 0) - paidTotal);
   return {
     scheduled,
     issuedCount: issued.length,
+    remainingTotal,
     paidInstallmentIndexes,
     availableInstallments,
     showFullAmount: !scheduled && issued.length === 0,
     canIssue: scheduled ? availableInstallments.length > 0 : issued.length === 0,
   };
+}
+
+export function selectReceiptRemaining(receipt, amount) {
+  if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('ไม่มียอดคงเหลือสำหรับออกใบเสร็จ');
+  return { ...receipt, installmentIndex: 'remaining', items: [{ id: crypto.randomUUID(), description: `รับชำระยอดคงเหลือตามใบเสนอราคา ${receipt.quoteNumber}`, amount: (amount / 100).toFixed(2) }] };
 }
 
 export function selectReceiptInstallment(receipt, value) {

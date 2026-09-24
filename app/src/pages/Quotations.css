@@ -279,3 +279,5 @@
 /* Clear status colors for day-to-day work lists. */
 .quote-sidebar button.quote-approved{background:linear-gradient(90deg,#e6f7e9,#fffdf8);border-left-color:#20945d}.quote-sidebar button.quote-approved:hover{background:#d7f2df}.quote-sidebar small.status-approved,.quote-sidebar small.status-issued{color:#167347;font-weight:800}.quote-sidebar small.status-draft{color:#8a6a28;font-weight:700}
 .receipt-installment-help{display:block;margin-top:.45rem;color:#17634d;font-size:.8rem;font-weight:800}
+
+.document-picker-empty{display:grid;place-items:center;gap:.45rem;min-height:280px;padding:2rem;text-align:center;border:1px solid #c6d8cf;background:#fffdf8;color:#174b47}.document-picker-empty b{font-size:1.1rem}.document-picker-empty span{max-width:280px;color:#638078;font-size:.9rem}@media(max-width:700px){.document-picker-empty{min-height:180px;margin-top:.75rem}}
