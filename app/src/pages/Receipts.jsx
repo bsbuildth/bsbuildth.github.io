@@ -32,7 +32,7 @@ export default function Receipts() {
   }, [receipt]);
 
   useEffect(() => {
-    listQuotes().then(data => setQuotes(data.filter(row => row.status === 'issued'))).catch(() => setMessage('โหลดใบเสนอราคาไม่ได้ กรุณาลองเปิดหน้านี้ใหม่'));
+    listQuotes().then(data => setQuotes(data.filter(row => row.status === 'issued' && row.approval?.state === 'approved'))).catch(() => setMessage('โหลดใบเสนอราคาไม่ได้ กรุณาลองเปิดหน้านี้ใหม่'));
     listReceipts().then(setRows).catch(() => setMessage('โหลดใบเสร็จไม่ได้ กรุณาตรวจการเชื่อมต่อและสิทธิ์ผู้ดูแล'));
     getCompanyDefaults().then(defaults => {
       setCompanyDefaults(defaults);
@@ -103,7 +103,7 @@ export default function Receipts() {
           setSelected(null); setReceipt(next); setDirty(true); setPreviewMode(false); touched.current = true;
           setMessage('เลือกงวดชำระด้านล่าง แล้วตรวจยอดก่อนบันทึก');
         } catch (error) { setMessage(error.message); }
-      }}><option value="">— เลือกใบเสนอราคาที่ออกแล้ว —</option>{quotes.map(row => <option key={row.id} value={row.id}>{row.quote.number} · {row.quote.customer}</option>)}</select></label>
+      }}><option value="">— เลือกงานที่อนุมัติแล้ว —</option>{quotes.map(row => <option key={row.id} value={row.id}>{row.quote.number} · {row.quote.customer}</option>)}</select></label>
       {!!receipt.paymentSchedule?.length && <label>งวดชำระ <select disabled={locked} value={receipt.installmentIndex ?? ''} onChange={event => {
         try {
           const next = selectReceiptInstallment(receipt, event.target.value);

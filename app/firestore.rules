@@ -30,6 +30,15 @@ service cloud.firestore {
             && request.resource.data.revision == resource.data.revision + 1
             && getAfter(/databases/$(database)/documents/quotations/$(id)/revisions/$(string(request.resource.data.revision))).data.quote == request.resource.data.quote
             && getAfter(/databases/$(database)/documents/quotationNumbers/$(request.resource.data.quote.number)).data.quotationId == id)
+          || (resource.data.status == 'issued' && request.resource.data.status == 'issued'
+            && request.resource.data.quote == resource.data.quote
+            && request.resource.data.revision == resource.data.revision
+            && !('approval' in resource.data)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['approval','version','updatedAt','updatedBy'])
+            && request.resource.data.approval.state == 'approved'
+            && request.resource.data.approval.revision == resource.data.revision
+            && request.resource.data.approval.quoteNumber == resource.data.quote.number
+            && request.resource.data.approval.total == resource.data.totals.total)
           || (resource.data.status == 'issued' && request.resource.data.status in ['draft','void']
             && request.resource.data.quote == resource.data.quote && request.resource.data.revision == resource.data.revision
             && request.resource.data.reason is string && request.resource.data.reason.size() > 0)
@@ -60,7 +69,9 @@ service cloud.firestore {
         && (
           (resource.data.status == 'draft' && request.resource.data.status == 'draft')
           || (resource.data.status == 'draft' && request.resource.data.status == 'issued'
-            && getAfter(/databases/$(database)/documents/receiptNumbers/$(request.resource.data.receipt.number)).data.receiptId == id)
+            && getAfter(/databases/$(database)/documents/receiptNumbers/$(request.resource.data.receipt.number)).data.receiptId == id
+            && (request.resource.data.receipt.quoteNumber == ''
+              || get(/databases/$(database)/documents/quotations/$(get(/databases/$(database)/documents/quotationNumbers/$(request.resource.data.receipt.quoteNumber)).data.quotationId)).data.approval.state == 'approved'))
         );
       allow delete: if false;
     }

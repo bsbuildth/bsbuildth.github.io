@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { calculateQuote, catalogItemToQuoteItem, demoQuote, newItem, newQuote, quoteItemToCatalogInput, validateIssue } from '../lib/quotation';
-import { changeQuoteStatus, deleteDraftQuote, issueQuote, listQuotes, listRevisions, saveQuote } from '../firebase/quotations';
+import { approveQuote, changeQuoteStatus, deleteDraftQuote, issueQuote, listQuotes, listRevisions, saveQuote } from '../firebase/quotations';
 import { applyCompanyDefaults, getCompanyDefaults, getDocumentPresets, nextDocumentNumber, saveCompanyDefaults, saveDocumentPresets } from '../firebase/documents';
 import { listPriceCatalog, savePriceCatalogItem } from '../firebase/priceCatalog';
 import QuotationA4Form from '../components/QuotationA4Form';
@@ -124,6 +124,11 @@ export default function Quotations() {
     if (!window.confirm('ออกใบเสนอราคาฉบับนี้? ระบบจะเก็บสำเนาที่แก้ย้อนหลังไม่ได้')) { setMessage('ยังไม่ได้ออกเอกสาร'); return; }
     await issueQuote(selected.id, selected.version); await reload(selected.id); setMessage('ออกเอกสารแล้ว สามารถพิมพ์หรือบันทึก PDF ได้');
   });
+  const approve = () => run(async () => {
+    if (!selected || selected.status !== 'issued' || dirty) throw new Error('กรุณาบันทึกและออกใบเสนอราคาก่อนอนุมัติงาน');
+    if (!window.confirm(`ยืนยันอนุมัติงาน ${quote.number}? ระบบจะล็อก REV. ${String(selected.revision).padStart(2, '0')} และยอด ${Number(calculation.totals?.total || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท เป็นยอดสัญญา`)) { setMessage('ยังไม่ได้อนุมัติงาน'); return; }
+    await approveQuote(selected.id, selected.version); await reload(selected.id); setMessage('อนุมัติงานแล้ว สามารถออกใบเสร็จและติดตามยอดคงค้างได้');
+  });
   const transition = status => run(async () => {
     const reason = window.prompt(status === 'void' ? 'เหตุผลที่ยกเลิกเอกสาร' : 'เหตุผลที่แก้ไขราคาใน REV. ใหม่');
     if (!reason?.trim()) { setMessage('ไม่ได้เปลี่ยนสถานะ'); return; }
@@ -227,11 +232,12 @@ export default function Quotations() {
     { id: 'save', icon: '✓', label: 'คำนวณและบันทึก', onClick: save, disabled: locked || !dirty || !!calculation.error },
     { id: 'preview', icon: '◫', label: previewMode ? '← กลับมาแก้ไข' : 'ดูตัวอย่าง', onClick: () => setPreviewMode(current => !current), disabled: !!calculation.error, active: previewMode },
     { id: 'issue', icon: '◆', label: `ออกเอกสาร REV. ${String(displayRevision || 1).padStart(2, '0')}`, onClick: issue, disabled: locked || dirty || !selected },
+    { id: 'approve', icon: '✓', label: selected?.approval?.state === 'approved' ? 'งานอนุมัติแล้ว' : 'อนุมัติงานและล็อกยอด', onClick: approve, disabled: busy || dirty || selected?.status !== 'issued' || selected?.approval?.state === 'approved', active: selected?.approval?.state === 'approved' },
     { id: 'copy', icon: '⧉', label: 'ทำสำเนา', onClick: copy, disabled: busy },
     { id: 'print', icon: '⎙', label: 'พิมพ์ / PDF', onClick: print, disabled: busy || dirty || !selected },
     { id: 'share', icon: '↗', label: 'แชร์ PDF ให้ AI ตรวจ', onClick: () => setAiShareOpen(true), disabled: busy || dirty || !selected || !!calculation.error },
     { id: 'history', icon: '↶', label: 'ประวัติ REV.', onClick: showRevisionHistory, disabled: busy || !selected },
-    { id: 'receipt', icon: '◫', label: 'ใบเสร็จ', onClick: () => navigate('/admin/receipts', { state: { quote: structuredClone(quote), totals: calculation.totals } }), disabled: busy || selected?.status !== 'issued' },
+    { id: 'receipt', icon: '◫', label: 'ใบเสร็จ', onClick: () => navigate('/admin/receipts', { state: { quote: structuredClone(quote), totals: calculation.totals } }), disabled: busy || selected?.status !== 'issued' || selected?.approval?.state !== 'approved' },
     { id: 'defaults', icon: '▣', label: 'จำข้อมูลบริษัท', onClick: () => run(async () => { const defaults = await saveCompanyDefaults(quote); setCompanyDefaults(defaults); setMessage('บันทึกข้อมูลบริษัทเป็นค่าเริ่มต้นแล้ว'); }), disabled: busy || locked },
     { id: 'demo', icon: '◇', label: 'โหลดตัวอย่าง', onClick: () => { if (confirmLeave()) { setSelected(null); setQuote(applyCompanyDefaults(demoQuote(), companyDefaults)); setDirty(true); setHistoric(null); setPreviewMode(false); setHistory([]); touched.current = true; } }, disabled: busy },
     ...(selected?.status === 'draft' && selected.revision === 0 ? [{ id: 'delete', icon: '×', label: 'ลบร่าง', onClick: removeDraft, disabled: busy || dirty }] : []),
@@ -246,7 +252,7 @@ export default function Quotations() {
   return <><AdminRouteDock activePath="/admin/quotations" actions={dockActions} /><div className="quotation-workspace">
     <header className="quote-toolbar"><h1>ใบเสนอราคา A4 · REV. {String(displayRevision).padStart(2, '0')}</h1></header>
     <p className="quote-message" role="status" aria-live="polite">{message || 'กรอก แก้ไข เพิ่มรายการ คำนวณ และบันทึกบนแบบฟอร์ม A4 นี้ได้ทันที'}</p>
-    <div className="quote-layout"><aside className="quote-sidebar"><label>ค้นหาเอกสาร<input value={search} onChange={event => setSearch(event.target.value)} placeholder="เลข / ลูกค้า / โครงการ / สถานะ" /></label><button disabled={busy} onClick={() => run(async () => { if (confirmLeave()) { const data = await listQuotes(); setRows(data); setMessage('โหลดรายการล่าสุดแล้ว'); } })}>รีเฟรชรายการ</button><p>แสดงล่าสุดไม่เกิน 200 เอกสาร</p>{filteredRows.map(row => <button disabled={busy} className={selected?.id === row.id ? 'selected' : ''} key={row.id} onClick={() => open(row)}><b>{row.quote.number || 'ร่างไม่มีเลข'}</b><span>{row.quote.customer || 'ยังไม่มีชื่อลูกค้า'}</span><small>{({ draft: 'ร่าง', issued: 'ออกแล้ว', void: 'ยกเลิก' })[row.status]}</small></button>)}</aside>
+    <div className="quote-layout"><aside className="quote-sidebar"><label>ค้นหาเอกสาร<input value={search} onChange={event => setSearch(event.target.value)} placeholder="เลข / ลูกค้า / โครงการ / สถานะ" /></label><button disabled={busy} onClick={() => run(async () => { if (confirmLeave()) { const data = await listQuotes(); setRows(data); setMessage('โหลดรายการล่าสุดแล้ว'); } })}>รีเฟรชรายการ</button><p>แสดงล่าสุดไม่เกิน 200 เอกสาร</p>{filteredRows.map(row => <button disabled={busy} className={selected?.id === row.id ? 'selected' : ''} key={row.id} onClick={() => open(row)}><b>{row.quote.number || 'ร่างไม่มีเลข'}</b><span>{row.quote.customer || 'ยังไม่มีชื่อลูกค้า'}</span><small>{row.status === 'issued' ? (row.approval?.state === 'approved' ? 'อนุมัติแล้ว' : 'รออนุมัติ') : ({ draft: 'ร่าง', void: 'ยกเลิก' })[row.status]}</small></button>)}</aside>
       <main className="quote-a4-stage">{historic ? <section className="quote-history-reader" ref={historyReader}><div className="quote-history-bar"><div><small>โหมดอ่านเอกสารที่ออกแล้ว</small><b>REV. {String(historic.revision).padStart(2, '0')}</b></div><button onClick={() => setHistoric(null)}>← กลับไปฉบับปัจจุบัน</button></div><p className="quote-history-hint">เลื่อนขึ้นลงเพื่ออ่านเอกสารทั้งฉบับ</p><QuotationPreview quote={historic.quote} status="issued" revision={historic.revision} /></section> : previewMode ? <QuotationPreview quote={quote} status={selected?.status || 'draft'} revision={displayRevision} /> : <QuotationA4Form quote={quote} revision={displayRevision} calculation={calculation} locked={locked} edit={edit} sectionEdit={editSection} itemEdit={itemEdit} presets={documentPresets} onSaveBankPreset={saveBankPreset} onDeleteBankPreset={deleteBankPreset} onSaveSignaturePreset={saveSignaturePreset} onDeleteSignaturePreset={deleteSignaturePreset} addItem={sectionIndex => editSection(sectionIndex, section => ({ ...section, items: [...section.items, newItem()] }))} addCatalogItem={openCatalog} onSaveItemToCatalog={saveItemToCatalog} removeItem={(sectionIndex, itemIndex) => editSection(sectionIndex, section => ({ ...section, items: section.items.filter((_, i) => i !== itemIndex) }))} addSection={() => updateSections(sections => [...sections, { id: crypto.randomUUID(), title: 'หมวดใหม่', kind: 'main', items: [newItem()] }])} removeSection={sectionIndex => updateSections(sections => sections.filter((_, i) => i !== sectionIndex))} />}
       </main>
     </div>

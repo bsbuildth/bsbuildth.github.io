@@ -49,12 +49,36 @@ export async function issueQuote(id, expected) {
     tx.update(ref, { quote, status: 'issued', revision, version: expected + 1, updatedAt: serverTimestamp() });
   });
 }
+export async function approveQuote(id, expected) {
+  await runTransaction(db, async tx => {
+    const ref = doc(db, 'quotations', id);
+    const current = await tx.get(ref);
+    checkVersion(current, expected);
+    const data = current.data();
+    if (data.status !== 'issued') throw new Error('อนุมัติได้เฉพาะใบเสนอราคาที่ออกเอกสารแล้ว');
+    if (data.approval?.state === 'approved') throw new Error('ใบเสนอราคานี้ได้รับการอนุมัติแล้ว');
+    tx.update(ref, {
+      approval: {
+        state: 'approved',
+        revision: data.revision,
+        quoteNumber: data.quote.number,
+        total: Number(data.totals?.total) || 0,
+        approvedAt: serverTimestamp(),
+        approvedBy: auth.currentUser.uid,
+      },
+      version: expected + 1,
+      updatedAt: serverTimestamp(),
+      updatedBy: auth.currentUser.uid,
+    });
+  });
+}
 export async function changeQuoteStatus(id, expected, status, reason) {
   if (!['draft', 'void'].includes(status) || !reason.trim()) throw new Error('กรุณาระบุเหตุผล');
   await runTransaction(db, async tx => {
     const ref = doc(db, 'quotations', id); const current = await tx.get(ref);
     checkVersion(current, expected);
-    if (current.data().status !== 'issued') throw new Error('เปลี่ยนสถานะได้เฉพาะเอกสารที่ออกแล้ว');
-    tx.update(ref, { status, reason, version: expected + 1, updatedAt: serverTimestamp(), updatedBy: auth.currentUser.uid });
+    const data = current.data();
+    if (data.status !== 'issued') throw new Error('เปลี่ยนสถานะได้เฉพาะเอกสารที่ออกแล้ว');
+    tx.update(ref, { status, reason, approval: status === 'draft' ? null : data.approval || null, version: expected + 1, updatedAt: serverTimestamp(), updatedBy: auth.currentUser.uid });
   });
 }

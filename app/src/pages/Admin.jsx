@@ -830,8 +830,20 @@ const Admin = ({ setIsAuthenticated }) => {
   const issuedQuotations = quotationRows.filter(row => row.status === 'issued');
   const draftQuotations = quotationRows.filter(row => row.status === 'draft');
   const issuedReceipts = receiptRows.filter(row => row.status === 'issued');
-  const quotationValue = issuedQuotations.reduce((sum, row) => sum + (Number(row.totals?.total) || 0), 0);
   const receiptRevenue = issuedReceipts.reduce((sum, row) => sum + (Number(row.totals?.total) || 0), 0);
+  const issuedReceiptByQuote = issuedReceipts.reduce((all, row) => {
+    const quoteNumber = String(row.receipt?.quoteNumber || '').trim().toUpperCase();
+    if (quoteNumber) all[quoteNumber] = (all[quoteNumber] || 0) + (Number(row.totals?.total) || 0);
+    return all;
+  }, {});
+  const approvedWork = issuedQuotations.filter(row => row.approval?.state === 'approved').map(row => {
+    const approved = Number(row.approval?.total) || 0;
+    const paid = issuedReceiptByQuote[String(row.approval?.quoteNumber || row.quote?.number || '').trim().toUpperCase()] || 0;
+    return { ...row, approved, paid, outstanding: Math.max(approved - paid, 0), overpaid: Math.max(paid - approved, 0) };
+  });
+  const approvedWorkValue = approvedWork.reduce((sum, row) => sum + row.approved, 0);
+  const paidWorkValue = approvedWork.reduce((sum, row) => sum + row.paid, 0);
+  const outstandingWorkValue = approvedWork.reduce((sum, row) => sum + row.outstanding, 0);
   const currentMonth = new Date().toISOString().slice(0, 7);
   const currentMonthReceipts = issuedReceipts.filter(row => String(row.receipt?.date || '').startsWith(currentMonth));
   const currentMonthRevenue = currentMonthReceipts.reduce((sum, row) => sum + (Number(row.totals?.total) || 0), 0);
@@ -950,7 +962,7 @@ const Admin = ({ setIsAuthenticated }) => {
         </div>
 
         <div className="admin-stat-grid">
-          <button onClick={() => navigate('/admin/quotations')}><span className="admin-stat-icon blue">QT</span><small>ใบเสนอราคาที่ออกแล้ว</small><strong>{issuedQuotations.length}</strong><em>มูลค่า {money(quotationValue)} บาท</em></button>
+          <button onClick={() => navigate('/admin/quotations')}><span className="admin-stat-icon blue">QT</span><small>งานที่อนุมัติแล้ว</small><strong>{approvedWork.length}</strong><em>ยอดสัญญา {money(approvedWorkValue)} บาท</em></button>
           <button onClick={() => navigate('/admin/quotations')}><span className="admin-stat-icon amber">ร่าง</span><small>ใบเสนอราคารอดำเนินการ</small><strong>{draftQuotations.length}</strong><em>แตะเพื่อทำงานต่อ</em></button>
           <button onClick={() => navigate('/admin/receipts')}><span className="admin-stat-icon green">RC</span><small>รายได้จากใบเสร็จที่ออกแล้ว</small><strong>{money(receiptRevenue)}</strong><em>{issuedReceipts.length} ฉบับ · ไม่รวมร่างและเอกสารยกเลิก</em></button>
           <button onClick={() => setActiveTab('inbox')}><span className="admin-stat-icon violet">IN</span><small>ข้อความจากลูกค้า</small><strong>{contacts.length}</strong><em>เปิดกล่องข้อความ</em></button>
@@ -960,6 +972,12 @@ const Admin = ({ setIsAuthenticated }) => {
           <div><span className="admin-eyebrow">รายได้ที่บันทึกแล้ว</span><h3>สรุปจากใบเสร็จรับเงินที่ออกเอกสาร</h3><p>นับเฉพาะใบเสร็จสถานะ “ออกแล้ว” จึงไม่รวมใบเสนอราคา ฉบับร่าง และเอกสารที่ยกเลิก</p></div>
           <div className="admin-revenue-values"><span><small>รายได้สะสม</small><b>{money(receiptRevenue)} <em>บาท</em></b></span><span><small>เดือนนี้</small><b>{money(currentMonthRevenue)} <em>บาท</em></b><i>{currentMonthReceipts.length} ใบเสร็จ</i></span><span><small>เฉลี่ยต่อใบเสร็จ</small><b>{money(averageReceiptRevenue)} <em>บาท</em></b></span></div>
           <button onClick={() => navigate('/admin/receipts')}>ดูใบเสร็จทั้งหมด →</button>
+        </section>
+
+        <section className="admin-project-finance" aria-label="ติดตามยอดงานที่อนุมัติ">
+          <header><div><span className="admin-eyebrow">งานที่อนุมัติแล้ว</span><h3>ติดตามยอดรับชำระและยอดคงค้าง</h3></div><button onClick={() => navigate('/admin/quotations')}>จัดการใบเสนอราคา →</button></header>
+          <div className="admin-project-finance-totals"><span><small>ยอดงานอนุมัติ</small><b>{money(approvedWorkValue)} บาท</b></span><span><small>จ่ายแล้ว</small><b>{money(paidWorkValue)} บาท</b></span><span><small>คงค้าง</small><b>{money(outstandingWorkValue)} บาท</b></span></div>
+          {approvedWork.length === 0 ? <p className="admin-empty-state">ยังไม่มีงานที่อนุมัติ เปิดใบเสนอราคาแล้วเลือก “อนุมัติงานและล็อกยอด” เพื่อเริ่มติดตามยอด</p> : <div className="admin-project-finance-list">{approvedWork.slice(0, 8).map(row => <button key={row.id} onClick={() => navigate('/admin/quotations')}><span><b>{row.quote?.project || row.quote?.customer || row.quote?.number}</b><small>{row.approval?.quoteNumber || row.quote?.number} · REV. {String(row.approval?.revision || row.revision || 0).padStart(2, '0')}</small></span><span><small>อนุมัติ</small><b>{money(row.approved)}</b></span><span><small>จ่ายแล้ว</small><b>{money(row.paid)}</b></span><span className={row.outstanding ? 'is-outstanding' : 'is-paid'}><small>{row.overpaid ? 'เกินยอด' : row.outstanding ? 'คงค้าง' : 'ชำระครบ'}</small><b>{money(row.overpaid || row.outstanding)}</b></span></button>)}</div>}
         </section>
 
         <div className="admin-work-grid">
