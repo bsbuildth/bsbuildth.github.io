@@ -1,13 +1,16 @@
-import { addDoc, collection, deleteDoc, doc, getDocs, limit, orderBy, query, serverTimestamp, Timestamp, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, limit, orderBy, query, serverTimestamp, Timestamp, updateDoc } from 'firebase/firestore';
 import { auth, db } from './config';
 
 const maxSourceBytes = 12 * 1024 * 1024;
 const acceptedTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']);
 
+export const appsScriptSurveyUrl = import.meta.env.VITE_SITE_SURVEY_APPS_SCRIPT_URL || '';
+export const usesFreeDriveBridge = Boolean(appsScriptSurveyUrl);
+
 export function validateSitePhotos(files) {
   const list = Array.from(files || []);
   if (!list.length) throw new Error('เลือกรูปอย่างน้อย 1 รูป');
-  if (list.length > 20) throw new Error('เลือกรูปได้ไม่เกิน 20 รูปต่อครั้ง');
+  if (list.length > (usesFreeDriveBridge ? 5 : 20)) throw new Error(`โหมด Drive ฟรีเลือกรูปได้ไม่เกิน ${usesFreeDriveBridge ? 5 : 20} รูปต่อครั้ง`);
   list.forEach(file => {
     if (!acceptedTypes.has(file.type)) throw new Error('รองรับ JPG, PNG, WebP และ HEIC');
     if (file.size > maxSourceBytes) throw new Error(`${file.name} มีขนาดเกิน 12 MB`);
@@ -36,11 +39,58 @@ export async function createSiteUpdate({ project, updateDate, note }) {
   const operationId = crypto.randomUUID();
   const ref = await addDoc(collection(db, 'siteUpdates'), {
     projectId: String(project.id), projectName: project.title || 'โครงการไม่มีชื่อ', projectSource: project.source || 'website', quoteId: project.quoteId || '', quoteNumber: project.quoteNumber || '', updateDate,
-    note: String(note || '').trim().slice(0, 2000), status: 'uploading', operationId,
+    note: String(note || '').trim().slice(0, 2000), status: 'uploading', operationId, expectedPhotoCount: 0,
     photos: [], driveFolderId: '', driveUrl: '', createdBy: auth.currentUser?.uid || '',
     createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
   });
   return { id: ref.id, operationId };
+}
+
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+    reader.onerror = () => reject(new Error(`อ่านไฟล์ ${file.name} ไม่สำเร็จ`));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function waitForDrivePhoto(updateId, expectedCount) {
+  const started = Date.now();
+  while (Date.now() - started < 90000) {
+    const snapshot = await getDoc(doc(db, 'siteUpdates', updateId));
+    const data = snapshot.data() || {};
+    if (data.status === 'failed') throw new Error(data.lastError || 'ส่งรูปเข้า Drive ไม่สำเร็จ');
+    if ((data.photos || []).length >= expectedCount) return data;
+    await new Promise(resolve => setTimeout(resolve, 1200));
+  }
+  throw new Error('Drive ใช้เวลานานกว่าปกติ กรุณากดรีเฟรชเพื่อตรวจสอบผล');
+}
+
+// Apps Script cannot reliably answer browser CORS preflight requests.  A plain-text
+// no-cors request is intentional: the script records the confirmed result in Firestore,
+// which we then read back using the signed-in Firebase session.
+export async function uploadSiteUpdateWithFreeDrive(update, files, onProgress = () => {}) {
+  if (!appsScriptSurveyUrl) throw new Error('ยังไม่ได้ตั้งค่า Google Apps Script สำหรับ Drive ฟรี');
+  const selected = validateSitePhotos(files);
+  if (selected.some(file => file.size > 8 * 1024 * 1024)) throw new Error('โหมด Drive ฟรีรองรับรูปละไม่เกิน 8 MB');
+  const token = await auth.currentUser?.getIdToken();
+  if (!token) throw new Error('กรุณาเข้าสู่ระบบใหม่ก่อนส่งรูป');
+  await updateDoc(doc(db, 'siteUpdates', update.id), { expectedPhotoCount: selected.length, updatedAt: serverTimestamp() });
+  for (let index = 0; index < selected.length; index += 1) {
+    const file = selected[index];
+    onProgress(index, selected.length);
+    const payload = {
+      action: 'upload', updateId: update.id, operationId: update.operationId, token,
+      total: selected.length, order: index + 1, photoId: crypto.randomUUID(),
+      name: file.name, mimeType: file.type, bytes: file.size, contentBase64: await toBase64(file),
+    };
+    await fetch(appsScriptSurveyUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+    await waitForDrivePhoto(update.id, index + 1);
+    onProgress(index + 1, selected.length);
+  }
+  const current = await waitForDrivePhoto(update.id, selected.length);
+  return { photos: current.photos || [], folderId: current.driveFolderId || '', driveUrl: current.driveUrl || '' };
 }
 
 export async function completeSiteUpdate(updateId, { photos, folderId, driveUrl }) {
