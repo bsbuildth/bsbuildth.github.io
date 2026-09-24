@@ -70,7 +70,7 @@ service cloud.firestore {
           (resource.data.status == 'draft' && request.resource.data.status == 'draft')
           || (resource.data.status == 'draft' && request.resource.data.status == 'issued'
             && getAfter(/databases/$(database)/documents/receiptNumbers/$(request.resource.data.receipt.number)).data.receiptId == id
-            && (request.resource.data.receipt.quoteNumber == ''
+            && (!('quoteNumber' in request.resource.data.receipt) || request.resource.data.receipt.quoteNumber == ''
               || get(/databases/$(database)/documents/quotations/$(get(/databases/$(database)/documents/quotationNumbers/$(request.resource.data.receipt.quoteNumber)).data.quotationId)).data.approval.state == 'approved'))
         );
       allow delete: if false;
