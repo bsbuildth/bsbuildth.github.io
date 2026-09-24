@@ -35,7 +35,7 @@ export async function createSiteUpdateProject(title) {
 export async function createSiteUpdate({ project, updateDate, note }) {
   const operationId = crypto.randomUUID();
   const ref = await addDoc(collection(db, 'siteUpdates'), {
-    projectId: String(project.id), projectName: project.title || 'โครงการไม่มีชื่อ', projectSource: project.source || 'website', updateDate,
+    projectId: String(project.id), projectName: project.title || 'โครงการไม่มีชื่อ', projectSource: project.source || 'website', quoteId: project.quoteId || '', quoteNumber: project.quoteNumber || '', updateDate,
     note: String(note || '').trim().slice(0, 2000), status: 'uploading', operationId,
     photos: [], driveFolderId: '', driveUrl: '', createdBy: auth.currentUser?.uid || '',
     createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
