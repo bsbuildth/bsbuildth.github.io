@@ -42,6 +42,29 @@ export function newReceipt(source) {
   };
 }
 
+
+
+const normalQuoteNumber = value => String(value || '').trim().toUpperCase();
+
+// Issued receipts are the source of truth for payment availability.  A scheduled
+// quotation never offers its full amount after it has started receiving payments.
+export function getReceiptPaymentAvailability(receipt, rows = []) {
+  const quoteNumber = normalQuoteNumber(receipt?.quoteNumber);
+  const issued = rows.filter(row => row?.status === 'issued' && normalQuoteNumber(row.receipt?.quoteNumber) === quoteNumber);
+  const schedule = Array.isArray(receipt?.paymentSchedule) ? receipt.paymentSchedule : [];
+  const paidInstallmentIndexes = new Set(issued.map(row => String(row.receipt?.installmentIndex ?? '')).filter(value => /^\d+$/.test(value)));
+  const availableInstallments = schedule.map((part, index) => ({ ...part, index })).filter(part => !paidInstallmentIndexes.has(String(part.index)));
+  const scheduled = schedule.length > 0;
+  return {
+    scheduled,
+    issuedCount: issued.length,
+    paidInstallmentIndexes,
+    availableInstallments,
+    showFullAmount: !scheduled && issued.length === 0,
+    canIssue: scheduled ? availableInstallments.length > 0 : issued.length === 0,
+  };
+}
+
 export function selectReceiptInstallment(receipt, value) {
   const index = value === '' ? null : Number(value);
   const installment = index === null ? null : receipt.paymentSchedule?.[index];

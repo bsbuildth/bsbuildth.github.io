@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { calculateReceipt, newReceipt, newReceiptItem, validateReceipt, selectReceiptInstallment } from '../lib/receipt';
+import { calculateReceipt, getReceiptPaymentAvailability, newReceipt, newReceiptItem, validateReceipt, selectReceiptInstallment } from '../lib/receipt';
 import { calculateQuote, money } from '../lib/quotation';
 import { listQuotes } from '../firebase/quotations';
 import { issueReceipt, listReceipts, saveReceipt } from '../firebase/receipts';
@@ -26,6 +26,7 @@ export default function Receipts() {
   const operation = useRef(false);
   const touched = useRef(!!source);
   const locked = busy || (!!selected && selected.status !== 'draft');
+  const paymentAvailability = useMemo(() => getReceiptPaymentAvailability(receipt, rows), [receipt, rows]);
   const calculation = useMemo(() => {
     try { return { totals: calculateReceipt(receipt), error: '' }; }
     catch (error) { return { totals: null, error: error.message || 'ยังคำนวณยอดไม่ได้' }; }
@@ -73,6 +74,7 @@ export default function Receipts() {
   });
   const issue = () => run(async () => {
     if (!selected || dirty) throw new Error('กรุณาบันทึกร่างล่าสุดก่อนออกใบเสร็จ');
+    if (!paymentAvailability.canIssue) throw new Error('งวดนี้ออกใบเสร็จแล้ว หรือไม่มีงวดคงค้างสำหรับใบเสนอราคานี้');
     validateReceipt(receipt);
     if (!window.confirm('ออกใบเสร็จฉบับนี้? หลังออกแล้วจะแก้ไขไม่ได้')) { setMessage('ยังไม่ได้ออกใบเสร็จ'); return; }
     await issueReceipt(selected.id, selected.version); await reload(selected.id); setMessage('ออกใบเสร็จแล้ว พร้อมพิมพ์ต้นฉบับและสำเนา');
@@ -99,9 +101,12 @@ export default function Receipts() {
         const row = quotes.find(q => q.id === event.target.value);
         if (!row || !confirmLeave()) return;
         try {
-          const next = newReceipt({ quote: row.quote, totals: calculateQuote(row.quote) });
+          const base = newReceipt({ quote: row.quote, totals: calculateQuote(row.quote) });
+          const availability = getReceiptPaymentAvailability(base, rows);
+          if (!availability.canIssue) { setMessage('งานนี้ชำระครบแล้ว จึงไม่สามารถออกใบเสร็จซ้ำได้'); return; }
+          const next = availability.scheduled ? selectReceiptInstallment(base, String(availability.availableInstallments[0].index)) : base;
           setSelected(null); setReceipt(next); setDirty(true); setPreviewMode(false); touched.current = true;
-          setMessage('เลือกงวดชำระด้านล่าง แล้วตรวจยอดก่อนบันทึก');
+          setMessage(availability.scheduled ? `เลือกเฉพาะงวดที่ยังไม่ชำระ (เหลือ ${availability.availableInstallments.length} งวด)` : 'ตรวจยอดก่อนบันทึก');
         } catch (error) { setMessage(error.message); }
       }}><option value="">— เลือกงานที่อนุมัติแล้ว —</option>{quotes.map(row => <option key={row.id} value={row.id}>{row.quote.number} · {row.quote.customer}</option>)}</select></label>
       {!!receipt.paymentSchedule?.length && <label>งวดชำระ <select disabled={locked} value={receipt.installmentIndex ?? ''} onChange={event => {
@@ -110,7 +115,7 @@ export default function Receipts() {
           setReceipt(next); setDirty(true); setPreviewMode(false); touched.current = true;
           setMessage('ดึงยอดและรายละเอียดงวดจากใบเสนอราคาแล้ว กรุณาตรวจสอบก่อนบันทึก');
         } catch (error) { setMessage(error.message); }
-      }}><option value="">ยอดเต็มใบเสนอราคา · {money(receipt.paymentTotal || 0)} บาท</option>{receipt.paymentSchedule.map((part, i) => <option key={i} value={String(i)}>{part.label} · {part.percent}% · {money(part.amount)} บาท · {part.condition}</option>)}</select></label>}
+      }}>{paymentAvailability.showFullAmount && <option value="">ยอดเต็มใบเสนอราคา · {money(receipt.paymentTotal || 0)} บาท</option>}{paymentAvailability.availableInstallments.map(part => <option key={part.index} value={String(part.index)}>{part.label} · {part.percent}% · {money(part.amount)} บาท · {part.condition}</option>)}</select>{paymentAvailability.scheduled && <small className="receipt-installment-help">ชำระแล้ว {paymentAvailability.paidInstallmentIndexes.size} งวด · เลือกได้อีก {paymentAvailability.availableInstallments.length} งวด</small>}</label>}
     </div>
     <div className="quote-layout"><aside className="quote-sidebar"><label>ค้นหาใบเสร็จ<input value={search} onChange={event => setSearch(event.target.value)} placeholder="เลข / ผู้ชำระ / โครงการ / ใบเสนอราคา" /></label><button disabled={busy} onClick={() => run(async () => { const data = await listReceipts(); setRows(data); setMessage('โหลดรายการล่าสุดแล้ว'); })}>รีเฟรชรายการ</button>{filteredRows.map(row => <button disabled={busy} className={selected?.id === row.id ? 'selected' : ''} key={row.id} onClick={() => open(row)}><b>{row.receipt.number || 'ร่างไม่มีเลข'}</b><span>{row.receipt.payer || 'ยังไม่มีชื่อผู้ชำระ'}</span><small className={row.status === 'issued' ? 'status-issued' : 'status-draft'}>{row.status === 'issued' ? '🔒 ออกแล้ว · ล็อก' : 'ร่าง'}</small></button>)}</aside>
       <main className="quote-a4-stage">{previewMode ? <><div className="quote-preview-actions">{actions}</div><ReceiptPreview receipt={receipt} status={selected?.status || 'draft'} /></> : <ReceiptA4Form receipt={receipt} calculation={calculation} locked={locked} actions={actions} edit={edit} itemEdit={itemEdit} addItem={() => edit('items', [...receipt.items, newReceiptItem()])} removeItem={index => edit('items', receipt.items.filter((_, i) => i !== index))} />}</main>

@@ -40,8 +40,14 @@ export async function issueReceipt(id, expected) {
     const totals = validateReceipt(receipt);
     const numberRef = doc(db, 'receiptNumbers', receipt.number);
     const number = await tx.get(numberRef);
+    const quoteNumber = String(receipt.quoteNumber || '').trim().toUpperCase();
+    const installmentIndex = String(receipt.installmentIndex ?? '');
+    const installmentRef = quoteNumber && /^\d+$/.test(installmentIndex) ? doc(db, 'receiptInstallments', `${quoteNumber}-${installmentIndex}`) : null;
+    const installment = installmentRef ? await tx.get(installmentRef) : null;
     if (number.exists() && number.data().receiptId !== id) throw new Error('เลขใบเสร็จนี้ถูกใช้แล้ว');
+    if (installment?.exists() && installment.data().receiptId !== id) throw new Error('งวดชำระนี้ออกใบเสร็จแล้ว');
     tx.set(numberRef, { receiptId: id });
+    if (installmentRef) tx.set(installmentRef, { receiptId: id, quoteNumber, installmentIndex });
     tx.update(ref, { receipt, totals, status: 'issued', version: expected + 1, issuedAt: serverTimestamp(), issuedBy: auth.currentUser.uid, updatedAt: serverTimestamp() });
   });
 }

@@ -75,6 +75,15 @@ service cloud.firestore {
         );
       allow delete: if false;
     }
+    match /receiptInstallments/{id} {
+      allow read: if admin();
+      allow create: if admin()
+        && request.resource.data.keys().hasOnly(['receiptId','quoteNumber','installmentIndex'])
+        && getAfter(/databases/$(database)/documents/receipts/$(request.resource.data.receiptId)).data.status == 'issued'
+        && getAfter(/databases/$(database)/documents/receipts/$(request.resource.data.receiptId)).data.receipt.quoteNumber == request.resource.data.quoteNumber
+        && string(getAfter(/databases/$(database)/documents/receipts/$(request.resource.data.receiptId)).data.receipt.installmentIndex) == request.resource.data.installmentIndex;
+      allow update, delete: if false;
+    }
     match /receiptNumbers/{number} {
       allow read: if admin();
       allow create: if admin()
