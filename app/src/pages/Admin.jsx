@@ -831,6 +831,11 @@ const Admin = ({ setIsAuthenticated }) => {
   const draftQuotations = quotationRows.filter(row => row.status === 'draft');
   const issuedReceipts = receiptRows.filter(row => row.status === 'issued');
   const quotationValue = issuedQuotations.reduce((sum, row) => sum + (Number(row.totals?.total) || 0), 0);
+  const receiptRevenue = issuedReceipts.reduce((sum, row) => sum + (Number(row.totals?.total) || 0), 0);
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const currentMonthReceipts = issuedReceipts.filter(row => String(row.receipt?.date || '').startsWith(currentMonth));
+  const currentMonthRevenue = currentMonthReceipts.reduce((sum, row) => sum + (Number(row.totals?.total) || 0), 0);
+  const averageReceiptRevenue = issuedReceipts.length ? Math.round(receiptRevenue / issuedReceipts.length) : 0;
   const recentDocuments = [
     ...quotationRows.map(row => ({ ...row, kind: 'quotation', number: row.quote?.number, party: row.quote?.customer, total: row.totals?.total })),
     ...receiptRows.map(row => ({ ...row, kind: 'receipt', number: row.receipt?.number, party: row.receipt?.payer, total: row.totals?.total })),
@@ -947,9 +952,15 @@ const Admin = ({ setIsAuthenticated }) => {
         <div className="admin-stat-grid">
           <button onClick={() => navigate('/admin/quotations')}><span className="admin-stat-icon blue">QT</span><small>ใบเสนอราคาที่ออกแล้ว</small><strong>{issuedQuotations.length}</strong><em>มูลค่า {money(quotationValue)} บาท</em></button>
           <button onClick={() => navigate('/admin/quotations')}><span className="admin-stat-icon amber">ร่าง</span><small>ใบเสนอราคารอดำเนินการ</small><strong>{draftQuotations.length}</strong><em>แตะเพื่อทำงานต่อ</em></button>
-          <button onClick={() => navigate('/admin/receipts')}><span className="admin-stat-icon green">RC</span><small>ใบเสร็จที่ออกแล้ว</small><strong>{issuedReceipts.length}</strong><em>จากทั้งหมด {receiptRows.length} ฉบับ</em></button>
+          <button onClick={() => navigate('/admin/receipts')}><span className="admin-stat-icon green">RC</span><small>รายได้จากใบเสร็จที่ออกแล้ว</small><strong>{money(receiptRevenue)}</strong><em>{issuedReceipts.length} ฉบับ · ไม่รวมร่างและเอกสารยกเลิก</em></button>
           <button onClick={() => setActiveTab('inbox')}><span className="admin-stat-icon violet">IN</span><small>ข้อความจากลูกค้า</small><strong>{contacts.length}</strong><em>เปิดกล่องข้อความ</em></button>
         </div>
+
+        <section className="admin-revenue-summary" aria-label="สรุปรายได้จากใบเสร็จรับเงิน">
+          <div><span className="admin-eyebrow">รายได้ที่บันทึกแล้ว</span><h3>สรุปจากใบเสร็จรับเงินที่ออกเอกสาร</h3><p>นับเฉพาะใบเสร็จสถานะ “ออกแล้ว” จึงไม่รวมใบเสนอราคา ฉบับร่าง และเอกสารที่ยกเลิก</p></div>
+          <div className="admin-revenue-values"><span><small>รายได้สะสม</small><b>{money(receiptRevenue)} <em>บาท</em></b></span><span><small>เดือนนี้</small><b>{money(currentMonthRevenue)} <em>บาท</em></b><i>{currentMonthReceipts.length} ใบเสร็จ</i></span><span><small>เฉลี่ยต่อใบเสร็จ</small><b>{money(averageReceiptRevenue)} <em>บาท</em></b></span></div>
+          <button onClick={() => navigate('/admin/receipts')}>ดูใบเสร็จทั้งหมด →</button>
+        </section>
 
         <div className="admin-work-grid">
           <div className="admin-recent-card"><header><div><span className="admin-eyebrow">เอกสารล่าสุด</span><h3>รายการที่กำลังทำงาน</h3></div><button onClick={() => { setDocumentLoading(true); setDocumentError(''); fetchDocuments(); }} disabled={documentLoading}>{documentLoading ? 'กำลังโหลด…' : 'รีเฟรช'}</button></header>{documentError && <p className="admin-document-error">{documentError}</p>}{!documentLoading && !documentError && recentDocuments.length === 0 && <div className="admin-empty-state"><b>ยังไม่มีเอกสาร</b><span>เริ่มสร้างใบเสนอราคาแรกได้จากปุ่มด้านบน</span></div>}<div className="admin-document-list">{recentDocuments.map(row => <button key={`${row.kind}-${row.id}`} onClick={() => navigate(row.kind === 'quotation' ? '/admin/quotations' : '/admin/receipts')}><span className={`admin-doc-kind ${row.kind}`}>{row.kind === 'quotation' ? 'QT' : 'RC'}</span><span className="admin-doc-main"><b>{row.number || (row.kind === 'quotation' ? 'ร่างใบเสนอราคา' : 'ร่างใบเสร็จ')}</b><small>{row.party || 'ยังไม่ระบุชื่อ'} · {documentDate(row.updatedAt)}</small></span><span className="admin-doc-value"><b>{Number.isSafeInteger(row.total) ? `${money(row.total)} บาท` : '—'}</b><small className={`status-${row.status}`}>{({ draft: 'ฉบับร่าง', issued: 'ออกแล้ว', void: 'ยกเลิก' })[row.status] || row.status}</small></span></button>)}</div></div>
