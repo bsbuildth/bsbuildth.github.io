@@ -950,6 +950,7 @@ const Admin = ({ setIsAuthenticated }) => {
         <button className="admin-dock-row" onClick={() => { navigate('/admin/receipts'); setDockOpen(false); }}><i>◫</i><span>ใบเสร็จรับเงิน</span></button>
         <button className="admin-dock-row" onClick={() => { navigate('/admin/prices'); setDockOpen(false); }}><i>⌁</i><span>คลังราคา</span></button>
         <button className="admin-dock-row" onClick={() => { navigate('/admin/site-updates'); setDockOpen(false); }}><i>◉</i><span>อัปเดตรูปหน้างาน</span></button>
+        <button className="admin-dock-row" onClick={() => { navigate('/admin/site-survey'); setDockOpen(false); }}><i>⌑</i><span>สำรวจหน้างาน</span></button>
         <button className={`admin-dock-row ${activeTab === 'inbox' ? 'active' : ''}`} onClick={() => chooseTab('inbox')}><i>✉</i><span>ข้อความลูกค้า</span></button>
         <button className="admin-dock-row admin-dock-more" onClick={() => { setMoreOpen(true); setDockOpen(false); }}><i>···</i><span>เพิ่มเติม</span><b>›</b></button>
       </nav>
@@ -958,7 +959,7 @@ const Admin = ({ setIsAuthenticated }) => {
       <section className="admin-workspace" style={{ display: activeTab === 'overview' ? 'block' : 'none' }}>
         <div className="admin-workspace-hero">
           <div><span className="admin-eyebrow">ภาพรวมวันนี้ · {new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}</span><h2>เริ่มงานที่สำคัญก่อน</h2><p>สร้างเอกสาร เลือกราคากลาง และติดตามงานล่าสุดจากหน้าเดียว</p></div>
-          <div className="admin-primary-actions"><button onClick={() => navigate('/admin/quotations')}><b>＋ สร้างใบเสนอราคา</b><span>เพิ่มรายการจากคลังราคาได้</span></button><button onClick={() => navigate('/admin/receipts')}><b>＋ ออกใบเสร็จรับเงิน</b><span>เลือกงวดจากใบเสนอราคา</span></button><button onClick={() => navigate('/admin/prices')}><b>คลังราคา 2569</b><span>ค้นหาและปรับราคา</span></button><button onClick={() => navigate('/admin/site-updates')}><b>◉ อัปเดตรูปหน้างาน</b><span>ถ่ายรูปและส่งเข้า Drive</span></button></div>
+          <div className="admin-primary-actions"><button onClick={() => navigate('/admin/quotations')}><b>＋ สร้างใบเสนอราคา</b><span>เพิ่มรายการจากคลังราคาได้</span></button><button onClick={() => navigate('/admin/receipts')}><b>＋ ออกใบเสร็จรับเงิน</b><span>เลือกงวดจากใบเสนอราคา</span></button><button onClick={() => navigate('/admin/prices')}><b>คลังราคา 2569</b><span>ค้นหาและปรับราคา</span></button><button onClick={() => navigate('/admin/site-survey')}><b>⌑ สำรวจหน้างาน</b><span>วัดพื้นที่และบันทึกจุดทำงาน</span></button><button onClick={() => navigate('/admin/site-updates')}><b>◉ อัปเดตรูปหน้างาน</b><span>ถ่ายรูปและส่งเข้า Drive</span></button></div>
         </div>
 
         <div className="admin-stat-grid">
