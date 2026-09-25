@@ -94,6 +94,31 @@ export async function uploadSiteUpdateWithFreeDrive(update, files, onProgress = 
   return { photos: current.photos || [], folderId: current.driveFolderId || '', driveUrl: current.driveUrl || '' };
 }
 
+export async function uploadSurveyPhotosWithFreeDrive(survey, files, onProgress = () => {}) {
+  if (!appsScriptSurveyUrl) throw new Error('ยังไม่ได้ตั้งค่า Google Apps Script สำหรับ Drive ฟรี');
+  const selected = validateSitePhotos(files.map(item => item.file));
+  if (selected.some(file => file.size > 8 * 1024 * 1024)) throw new Error('โหมด Drive ฟรีรองรับรูปละไม่เกิน 8 MB');
+  const token = await auth.currentUser?.getIdToken();
+  if (!token) throw new Error('กรุณาเข้าสู่ระบบใหม่ก่อนส่งรูป');
+  await updateDoc(doc(db, 'siteSurveys', survey.id), { expectedPhotoCount: selected.length, photoStatus: 'uploading', updatedAt: serverTimestamp() });
+  for (let index = 0; index < files.length; index += 1) {
+    const { file, measurementId } = files[index]; onProgress(index, files.length);
+    const payload = { action: 'surveyUpload', surveyId: survey.id, operationId: survey.operationId, token,
+      firebaseProjectId: import.meta.env.VITE_FIREBASE_PROJECT_ID, firebaseApiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+      total: files.length, order: index + 1, photoId: crypto.randomUUID(), measurementId,
+      name: file.name, mimeType: file.type, bytes: file.size, contentBase64: await toBase64(file) };
+    await fetch(appsScriptSurveyUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+    const started = Date.now();
+    while (Date.now() - started < 90000) {
+      const data = (await getDoc(doc(db, 'siteSurveys', survey.id))).data() || {};
+      if (data.photoStatus === 'failed') throw new Error(data.lastError || 'ส่งรูปเข้า Drive ไม่สำเร็จ');
+      if ((data.photos || []).length >= index + 1) break;
+      await new Promise(resolve => setTimeout(resolve, 1200));
+    }
+    onProgress(index + 1, files.length);
+  }
+}
+
 export async function completeSiteUpdate(updateId, { photos, folderId, driveUrl }) {
   await updateDoc(doc(db, 'siteUpdates', updateId), { status: 'saved', photos, driveFolderId: folderId, driveUrl, previewExpiresAt: null, updatedAt: serverTimestamp() });
 }

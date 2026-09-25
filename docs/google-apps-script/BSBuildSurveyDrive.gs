@@ -49,8 +49,8 @@ function safe_(value, fallback) {
   return output || fallback;
 }
 
-function firestoreUrl_(config, updateId) {
-  return `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(config.FIREBASE_PROJECT_ID)}/databases/(default)/documents/siteUpdates/${encodeURIComponent(updateId)}`;
+function firestoreUrl_(config, id, collection) {
+  return `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(config.FIREBASE_PROJECT_ID)}/databases/(default)/documents/${collection || 'siteUpdates'}/${encodeURIComponent(id)}`;
 }
 
 function firestoreRequest_(url, options) {
@@ -67,7 +67,7 @@ function unpack_(fields) {
     const map = (item.mapValue || {}).fields || {};
     return Object.keys(map).reduce((out, field) => { out[field] = map[field].stringValue || map[field].integerValue || map[field].doubleValue || ''; return out; }, {});
   });
-  return { projectName: text('projectName'), updateDate: text('updateDate'), operationId: text('operationId'), driveFolderId: text('driveFolderId'), expectedPhotoCount: number('expectedPhotoCount'), photos: array('photos') };
+  return { projectName: text('projectName'), updateDate: text('updateDate') || text('surveyDate'), operationId: text('operationId'), driveFolderId: text('driveFolderId'), expectedPhotoCount: number('expectedPhotoCount'), photos: array('photos') };
 }
 
 function value_(input) {
@@ -77,9 +77,9 @@ function value_(input) {
   return { stringValue: String(input || '') };
 }
 
-function patch_(config, updateId, fields) {
+function patch_(config, updateId, fields, collection) {
   const mask = Object.keys(fields).map(name => `updateMask.fieldPaths=${encodeURIComponent(name)}`).join('&');
-  return firestoreRequest_(`${firestoreUrl_(config, updateId)}?${mask}`, { method: 'patch', contentType: 'application/json', payload: JSON.stringify({ fields: Object.keys(fields).reduce((out, key) => { out[key] = value_(fields[key]); return out; }, {}) }) });
+  return firestoreRequest_(`${firestoreUrl_(config, updateId, collection)}?${mask}`, { method: 'patch', contentType: 'application/json', payload: JSON.stringify({ fields: Object.keys(fields).reduce((out, key) => { out[key] = value_(fields[key]); return out; }, {}) }) });
 }
 
 function folder_(parent, name) {
@@ -100,12 +100,14 @@ function doPost(event) {
     payload = JSON.parse(event.postData.contents || '{}');
     const config = settings_(payload);
     verify_(payload.token, config);
-    if (payload.action !== 'upload') throw new Error('คำสั่งไม่ถูกต้อง');
-    if (!payload.updateId || !payload.photoId || !payload.contentBase64) throw new Error('ข้อมูลรูปไม่ครบ');
+    if (!['upload', 'surveyUpload'].includes(payload.action)) throw new Error('คำสั่งไม่ถูกต้อง');
+    const collection = payload.action === 'surveyUpload' ? 'siteSurveys' : 'siteUpdates';
+    const documentId = payload.surveyId || payload.updateId;
+    if (!documentId || !payload.photoId || !payload.contentBase64) throw new Error('ข้อมูลรูปไม่ครบ');
     if (!IMAGE_TYPES.includes(payload.mimeType)) throw new Error('รองรับเฉพาะ JPG, PNG, WebP และ HEIC');
     if (Number(payload.bytes) > MAX_BYTES) throw new Error('รูปมีขนาดเกิน 8 MB');
 
-    const document = firestoreRequest_(firestoreUrl_(config, payload.updateId), { method: 'get' });
+    const document = firestoreRequest_(firestoreUrl_(config, documentId, collection), { method: 'get' });
     const update = unpack_(document.fields);
     if (!update.operationId || update.operationId !== payload.operationId) throw new Error('รายการอัปโหลดไม่ถูกต้อง');
     if (update.photos.some(photo => photo.id === payload.photoId)) return json_({ ok: true, duplicate: true });
@@ -114,16 +116,16 @@ function doPost(event) {
     const raw = Utilities.base64Decode(payload.contentBase64);
     const blob = Utilities.newBlob(raw, payload.mimeType, safe_(payload.name, `photo-${payload.order}.jpg`));
     const file = folder.createFile(blob);
-    const photo = { id: payload.photoId, name: safe_(payload.name, `รูปที่ ${payload.order}`), caption: '', order: Number(payload.order), driveFileId: file.getId(), driveUrl: file.getUrl(), syncStatus: 'done' };
+    const photo = { id: payload.photoId, measurementId: String(payload.measurementId || ''), name: safe_(payload.name, `รูปที่ ${payload.order}`), caption: '', order: Number(payload.order), driveFileId: file.getId(), driveUrl: file.getUrl(), syncStatus: 'done' };
     const photos = update.photos.concat([photo]);
-    patch_(config, payload.updateId, {
+    patch_(config, documentId, {
       photos, driveFolderId: folder.getId(), driveUrl: folder.getUrl(),
-      status: photos.length >= Number(payload.total) ? 'saved' : 'uploading', lastError: '',
-    });
+      ...(collection === 'siteSurveys' ? { photoStatus: photos.length >= Number(payload.total) ? 'saved' : 'uploading' } : { status: photos.length >= Number(payload.total) ? 'saved' : 'uploading' }), lastError: '',
+    }, collection);
     return json_({ ok: true });
   } catch (error) {
     // If the update id is trustworthy enough to be present, surface the error in the app.
-    try { if (payload.updateId) patch_(settings_(payload), payload.updateId, { status: 'failed', lastError: String(error.message || error).slice(0, 500) }); } catch (ignored) {}
+    try { const id = payload.surveyId || payload.updateId; if (id) patch_(settings_(payload), id, payload.action === 'surveyUpload' ? { photoStatus: 'failed', lastError: String(error.message || error).slice(0, 500) } : { status: 'failed', lastError: String(error.message || error).slice(0, 500) }, payload.action === 'surveyUpload' ? 'siteSurveys' : 'siteUpdates'); } catch (ignored) {}
     return json_({ ok: false, message: String(error.message || error) });
   }
 }
