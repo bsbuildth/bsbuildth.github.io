@@ -121,5 +121,8 @@ service cloud.firestore {
     match /siteUpdateProjects/{id} {
       allow read, create, update, delete: if admin();
     }
+    match /siteSurveys/{id} {
+      allow read, create, update, delete: if admin();
+    }
   }
 }

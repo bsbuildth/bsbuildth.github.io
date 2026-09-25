@@ -8,6 +8,7 @@ const links = [
   ['/admin/receipts', '◫', 'ใบเสร็จรับเงิน'],
   ['/admin/prices', '⌁', 'คลังราคา'],
   ['/admin/site-updates', '◉', 'อัปเดตรูปหน้างาน'],
+  ['/admin/site-survey', '⌑', 'สำรวจหน้างาน'],
 ];
 
 export default function AdminRouteDock({ activePath, actions = [] }) {
