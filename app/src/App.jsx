@@ -27,7 +27,6 @@ const Receipts = lazy(() => import('./pages/Receipts'));
 const PriceCatalog = lazy(() => import('./pages/PriceCatalog'));
 const SiteUpdates = lazy(() => import('./pages/SiteUpdates'));
 const SiteSurvey = lazy(() => import('./pages/SiteSurvey'));
-const SiteSurveyReports = lazy(() => import('./pages/SiteSurveyReports'));
 
 const MainSite = () => {
   const [show, setShow] = useState({});
