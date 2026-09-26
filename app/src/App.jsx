@@ -117,7 +117,7 @@ function App() {
       <Route path="/admin/prices" element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<PriceCatalog />} />} />
       <Route path="/admin/site-updates" element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<SiteUpdates />} />} />
       <Route path="/admin/site-survey" element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<SiteSurvey />} />} />
-      <Route path="/admin/site-survey-reports" element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<SiteSurveyReports />} />} />
+      <Route path="/admin/site-survey-reports" element={<Navigate to="/admin/site-survey" replace />} />
       <Route path="*" element={<main className="container"><h1>ไม่พบหน้านี้</h1><a href="/">กลับหน้าแรก</a></main>} />
     </Routes></Suspense>
   );
