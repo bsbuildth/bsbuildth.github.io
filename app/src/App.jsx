@@ -27,6 +27,7 @@ const Receipts = lazy(() => import('./pages/Receipts'));
 const PriceCatalog = lazy(() => import('./pages/PriceCatalog'));
 const SiteUpdates = lazy(() => import('./pages/SiteUpdates'));
 const SiteSurvey = lazy(() => import('./pages/SiteSurvey'));
+const SiteSurveyReports = lazy(() => import('./pages/SiteSurveyReports'));
 
 const MainSite = () => {
   const [show, setShow] = useState({});
@@ -116,6 +117,7 @@ function App() {
       <Route path="/admin/prices" element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<PriceCatalog />} />} />
       <Route path="/admin/site-updates" element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<SiteUpdates />} />} />
       <Route path="/admin/site-survey" element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<SiteSurvey />} />} />
+      <Route path="/admin/site-survey-reports" element={<ProtectedRoute isAuthenticated={isAuthenticated} element={<SiteSurveyReports />} />} />
       <Route path="*" element={<main className="container"><h1>ไม่พบหน้านี้</h1><a href="/">กลับหน้าแรก</a></main>} />
     </Routes></Suspense>
   );
