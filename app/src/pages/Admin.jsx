@@ -136,6 +136,10 @@ const Admin = ({ setIsAuthenticated }) => {
   const dockDragRef = React.useRef({ active: false, moved: false, suppressClick: false });
   const [quotationRows, setQuotationRows] = useState([]);
   const [receiptRows, setReceiptRows] = useState([]);
+  const [documentQuery, setDocumentQuery] = useState('');
+  const [documentKind, setDocumentKind] = useState('all');
+  const [documentStatus, setDocumentStatus] = useState('all');
+  const [documentLimit, setDocumentLimit] = useState(10);
   const [documentLoading, setDocumentLoading] = useState(true);
   const [documentError, setDocumentError] = useState('');
   const navigate = useNavigate();
@@ -848,10 +852,20 @@ const Admin = ({ setIsAuthenticated }) => {
   const currentMonthReceipts = issuedReceipts.filter(row => String(row.receipt?.date || '').startsWith(currentMonth));
   const currentMonthRevenue = currentMonthReceipts.reduce((sum, row) => sum + (Number(row.totals?.total) || 0), 0);
   const averageReceiptRevenue = issuedReceipts.length ? Math.round(receiptRevenue / issuedReceipts.length) : 0;
-  const recentDocuments = [
+  const allDocuments = [
     ...quotationRows.map(row => ({ ...row, kind: 'quotation', number: row.quote?.number, party: row.quote?.customer, total: row.totals?.total })),
     ...receiptRows.map(row => ({ ...row, kind: 'receipt', number: row.receipt?.number, party: row.receipt?.payer, total: row.totals?.total })),
-  ].sort((a, b) => (b.updatedAt?.toMillis?.() || 0) - (a.updatedAt?.toMillis?.() || 0)).slice(0, 8);
+  ].sort((a, b) => (b.updatedAt?.toMillis?.() || 0) - (a.updatedAt?.toMillis?.() || 0));
+  const recentDocuments = allDocuments.filter(row => {
+    const matchesText = `${row.number || ''} ${row.party || ''}`.toLowerCase().includes(documentQuery.toLowerCase());
+    return matchesText && (documentKind === 'all' || row.kind === documentKind) && (documentStatus === 'all' || row.status === documentStatus);
+  });
+  const exportDocuments = () => {
+    const header = ['ประเภท','เลขที่','ลูกค้า','สถานะ','REV','ยอดเงิน','อัปเดต'];
+    const entries = recentDocuments.map(row => [row.kind === 'quotation' ? 'ใบเสนอราคา' : 'ใบเสร็จ', row.number || 'ร่าง', row.party || '', row.kind === 'quotation' ? (row.status === 'issued' ? (row.approval?.state === 'approved' ? 'อนุมัติแล้ว' : 'รออนุมัติ') : row.status === 'void' ? 'ยกเลิก' : 'ร่าง') : row.status === 'issued' ? 'ชำระแล้ว' : row.status === 'void' ? 'ยกเลิก' : 'ร่าง', row.kind === 'quotation' ? `REV. ${String(row.revision || 0).padStart(2, '0')}` : '', Number(row.total || 0), documentDate(row.updatedAt)]);
+    const csv = '\ufeff' + [header, ...entries].map(row => row.map(value => `"${String(value).replaceAll('"','""')}"`).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); const link = document.createElement('a'); link.href = url; link.download = `BS-Build-Documents-${new Date().toISOString().slice(0,10)}.csv`; link.click(); URL.revokeObjectURL(url);
+  };
   const secondaryTabs = [
     { key: 'projects', label: 'ผลงาน', icon: '▣' },
     { key: 'references', label: 'รูปอ้างอิง', icon: '◇' },
@@ -963,11 +977,11 @@ const Admin = ({ setIsAuthenticated }) => {
           <div className="admin-primary-actions"><button onClick={() => navigate('/admin/quotations')}><b>＋ สร้างใบเสนอราคา</b><span>เพิ่มรายการจากคลังราคาได้</span></button><button onClick={() => navigate('/admin/receipts')}><b>＋ ออกใบเสร็จรับเงิน</b><span>เลือกงวดจากใบเสนอราคา</span></button><button onClick={() => navigate('/admin/prices')}><b>คลังราคา 2569</b><span>ค้นหาและปรับราคา</span></button><button onClick={() => navigate('/admin/site-survey')}><b>⌑ สำรวจหน้างาน</b><span>วัดพื้นที่และบันทึกจุดทำงาน</span></button><button onClick={() => navigate('/admin/site-survey-reports')}><b>▧ รายงานสำรวจ</b><span>ดูพื้นที่ รูป และพิกัด</span></button><button onClick={() => navigate('/admin/site-updates')}><b>◉ อัปเดตรูปหน้างาน</b><span>ถ่ายรูปและส่งเข้า Drive</span></button></div>
         </div>
 
-        <div className="admin-stat-grid">
-          <button onClick={() => navigate('/admin/quotations')}><span className="admin-stat-icon blue">QT</span><small>งานที่อนุมัติแล้ว</small><strong>{approvedWork.length}</strong><em>ยอดสัญญา {money(approvedWorkValue)} บาท</em></button>
-          <button onClick={() => navigate('/admin/quotations')}><span className="admin-stat-icon amber">ร่าง</span><small>ใบเสนอราคารอดำเนินการ</small><strong>{draftQuotations.length}</strong><em>แตะเพื่อทำงานต่อ</em></button>
-          <button onClick={() => navigate('/admin/receipts')}><span className="admin-stat-icon green">RC</span><small>รายได้จากใบเสร็จที่ออกแล้ว</small><strong>{money(receiptRevenue)}</strong><em>{issuedReceipts.length} ฉบับ · ไม่รวมร่างและเอกสารยกเลิก</em></button>
-          <button onClick={() => setActiveTab('inbox')}><span className="admin-stat-icon violet">IN</span><small>ข้อความจากลูกค้า</small><strong>{contacts.length}</strong><em>เปิดกล่องข้อความ</em></button>
+        <div className="admin-stat-grid admin-kpi-grid">
+          <button onClick={() => navigate('/admin/quotations')}><span className="admin-stat-icon blue">QT</span><small>ยอดงานอนุมัติ</small><strong>{money(approvedWorkValue)}</strong><em>{approvedWork.length} โครงการที่ล็อกยอดแล้ว</em></button>
+          <button onClick={() => navigate('/admin/receipts')}><span className="admin-stat-icon green">✓</span><small>ยอดรับชำระสะสม</small><strong>{money(paidWorkValue)}</strong><em>{issuedReceipts.length} ใบเสร็จที่ชำระแล้ว</em></button>
+          <button onClick={() => navigate('/admin/receipts')}><span className="admin-stat-icon amber">!</span><small>ยอดคงค้างชำระ</small><strong>{money(outstandingWorkValue)}</strong><em>{approvedWork.filter(row => row.outstanding > 0).length} งานรอรับชำระ</em></button>
+          <button onClick={() => navigate('/admin/quotations')}><span className="admin-stat-icon violet">REV</span><small>ใบเสนอราคารอดำเนินการ</small><strong>{draftQuotations.length}</strong><em>แตะเพื่อทำงานต่อ</em></button>
         </div>
 
         <section className="admin-revenue-summary" aria-label="สรุปรายได้จากใบเสร็จรับเงิน">
@@ -983,7 +997,7 @@ const Admin = ({ setIsAuthenticated }) => {
         </section>
 
         <div className="admin-work-grid">
-          <div className="admin-recent-card"><header><div><span className="admin-eyebrow">เอกสารล่าสุด</span><h3>รายการที่กำลังทำงาน</h3></div><button onClick={() => { setDocumentLoading(true); setDocumentError(''); fetchDocuments(); }} disabled={documentLoading}>{documentLoading ? 'กำลังโหลด…' : 'รีเฟรช'}</button></header>{documentError && <p className="admin-document-error">{documentError}</p>}{!documentLoading && !documentError && recentDocuments.length === 0 && <div className="admin-empty-state"><b>ยังไม่มีเอกสาร</b><span>เริ่มสร้างใบเสนอราคาแรกได้จากปุ่มด้านบน</span></div>}<div className="admin-document-list">{recentDocuments.map(row => <button key={`${row.kind}-${row.id}`} onClick={() => navigate(row.kind === 'quotation' ? '/admin/quotations' : '/admin/receipts', { state: row.kind === 'quotation' ? { quotationId: row.id } : { receiptId: row.id } })}><span className={`admin-doc-kind ${row.kind}`}>{row.kind === 'quotation' ? 'QT' : 'RC'}</span><span className="admin-doc-main"><b>{row.number || (row.kind === 'quotation' ? 'ร่างใบเสนอราคา' : 'ร่างใบเสร็จ')}</b><small>{row.party || 'ยังไม่ระบุชื่อ'} · {documentDate(row.updatedAt)}</small></span><span className="admin-doc-value"><b>{Number.isSafeInteger(row.total) ? `${money(row.total)} บาท` : '—'}</b><small className={`status-${row.status}`}>{({ draft: 'ฉบับร่าง', issued: 'ออกแล้ว', void: 'ยกเลิก' })[row.status] || row.status}</small></span></button>)}</div></div>
+          <div className="admin-recent-card"><header><div><span className="admin-eyebrow">เอกสารล่าสุด</span><h3>ค้นหาและจัดการเอกสาร</h3></div><button onClick={() => { setDocumentLoading(true); setDocumentError(''); fetchDocuments(); }} disabled={documentLoading}>{documentLoading ? 'กำลังโหลด…' : 'รีเฟรช'}</button></header><div className="admin-document-toolbar"><input value={documentQuery} onChange={event=>{setDocumentQuery(event.target.value);setDocumentLimit(10);}} placeholder="ค้นหาลูกค้า หรือเลขที่เอกสาร"/><select value={documentKind} onChange={event=>{setDocumentKind(event.target.value);setDocumentLimit(10);}}><option value="all">ทุกประเภท</option><option value="quotation">ใบเสนอราคา</option><option value="receipt">ใบเสร็จ</option></select><select value={documentStatus} onChange={event=>{setDocumentStatus(event.target.value);setDocumentLimit(10);}}><option value="all">ทุกสถานะ</option><option value="draft">ร่าง</option><option value="issued">ออกแล้ว</option><option value="void">ยกเลิก</option></select><button onClick={exportDocuments} disabled={!recentDocuments.length}>Export CSV</button></div>{documentError && <p className="admin-document-error">{documentError}</p>}{!documentLoading && !documentError && recentDocuments.length === 0 && <div className="admin-empty-state"><b>ไม่พบเอกสาร</b><span>ลองเปลี่ยนคำค้นหาหรือตัวกรอง</span></div>}<div className="admin-document-list">{recentDocuments.slice(0,documentLimit).map(row => <button key={`${row.kind}-${row.id}`} onClick={() => navigate(row.kind === 'quotation' ? '/admin/quotations' : '/admin/receipts', { state: row.kind === 'quotation' ? { quotationId: row.id } : { receiptId: row.id } })}><span className={`admin-doc-kind ${row.kind}`}>{row.kind === 'quotation' ? 'QT' : 'RC'}</span><span className="admin-doc-main"><b>{row.number || (row.kind === 'quotation' ? 'ร่างใบเสนอราคา' : 'ร่างใบเสร็จ')} {row.kind === 'quotation' && row.status === 'issued' ? `· REV. ${String(row.revision || 0).padStart(2,'0')}` : ''}</b><small>{row.party || 'ยังไม่ระบุชื่อ'} · {documentDate(row.updatedAt)}</small></span><span className="admin-doc-value"><b>{Number.isSafeInteger(row.total) ? `${money(row.total)} บาท` : '—'}</b><small className={`status-${row.status}`}>{row.kind === 'receipt' && row.status === 'issued' ? 'ชำระแล้ว' : row.kind === 'quotation' && row.status === 'issued' ? (row.approval?.state === 'approved' ? 'อนุมัติแล้ว' : 'รออนุมัติ') : ({ draft: 'ฉบับร่าง', void: 'ยกเลิก' })[row.status] || row.status}</small></span></button>)}</div>{recentDocuments.length > documentLimit && <button className="admin-load-more" onClick={()=>setDocumentLimit(value=>value+10)}>โหลดเพิ่มเติม ({recentDocuments.length-documentLimit})</button>}</div>
           <aside className="admin-quick-card"><span className="admin-eyebrow">ทางลัดงานประจำ</span><h3>จัดการได้ทันที</h3><button onClick={() => navigate('/admin/quotations')}><b>ใบเสนอราคา</b><span>สร้าง แก้ไข REV. เซ็น และแชร์ PDF</span><i>→</i></button><button onClick={() => navigate('/admin/prices')}><b>คลังราคา 2569</b><span>ต้นทุน ค่าแรง และราคาบริษัท</span><i>→</i></button><button onClick={() => navigate('/admin/receipts')}><b>ใบเสร็จรับเงิน</b><span>เลือกงวดจากใบเสนอราคาแล้วออกเอกสาร</span><i>→</i></button><button onClick={() => setActiveTab('projects')}><b>ผลงานเว็บไซต์</b><span>เพิ่มรูปและอัปเดตโครงการ</span><i>→</i></button></aside>
         </div>
       </section>
